@@ -7,8 +7,8 @@ using Orleans.Streams;
 
 namespace OrleansR.Groups
 {
-    [StorageProvider(ProviderName = "GroupState")]
-    public class GroupGrain : Grain<GroupState>, IGroupGrain
+    [StorageProvider(ProviderName = Constants.STORAGE_PROVIDER)]
+    internal class GroupGrain : Grain<GroupState>, IGroupGrain
     {
         private IStreamProvider _streamProvider;
 

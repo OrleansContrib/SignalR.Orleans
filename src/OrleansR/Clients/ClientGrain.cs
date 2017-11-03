@@ -5,7 +5,7 @@ using Orleans.Streams;
 
 namespace OrleansR.Clients
 {
-    public class ClientGrain : Grain<ClientState>, IClientGrain
+    internal class ClientGrain : Grain<ClientState>, IClientGrain
     {
         private IStreamProvider _streamProvider;
         private IAsyncStream<ClientMessage> _serverStream;
