@@ -1,4 +1,4 @@
-namespace OrleansR.Clients
+namespace SignalR.Orleans.Clients
 {
     public class ClientMessage
     {

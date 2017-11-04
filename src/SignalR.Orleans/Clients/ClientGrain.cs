@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Orleans;
 using Orleans.Streams;
 
-namespace OrleansR.Clients
+namespace SignalR.Orleans.Clients
 {
     internal class ClientGrain : Grain<ClientState>, IClientGrain
     {

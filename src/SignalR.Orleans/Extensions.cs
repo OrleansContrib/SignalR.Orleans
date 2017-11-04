@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.SignalR;
 using Orleans;
 using Orleans.Hosting;
 using Orleans.Runtime.Configuration;
-using OrleansR;
-using OrleansR.Clients;
-using OrleansR.Groups;
+using SignalR.Orleans;
+using SignalR.Orleans.Clients;
+using SignalR.Orleans.Groups;
 
 namespace Microsoft.Extensions.DependencyInjection
 {

@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using OrleansR.Clients;
+using SignalR.Orleans.Clients;
 using Orleans;
 using Orleans.Providers;
 using Orleans.Streams;
 
-namespace OrleansR.Groups
+namespace SignalR.Orleans.Groups
 {
     [StorageProvider(ProviderName = Constants.STORAGE_PROVIDER)]
     internal class GroupGrain : Grain<GroupState>, IGroupGrain

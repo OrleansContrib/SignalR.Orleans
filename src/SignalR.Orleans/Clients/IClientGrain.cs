@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Orleans;
 
-namespace OrleansR.Clients
+namespace SignalR.Orleans.Clients
 {
     public interface IClientGrain : IGrainWithStringKey
     {

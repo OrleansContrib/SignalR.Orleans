@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\OrleansR\OrleansR.csproj" />
+    <ProjectReference Include="..\..\src\SignalR.Orleans\SignalR.Orleans.csproj" />
   </ItemGroup>
 
 </Project>

@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Internal.Protocol;
 using Microsoft.Extensions.Logging;
-using OrleansR.Clients;
-using OrleansR.Groups;
+using SignalR.Orleans.Clients;
+using SignalR.Orleans.Groups;
 using Newtonsoft.Json;
 using Orleans;
 using Orleans.Streams;
 
-namespace OrleansR
+namespace SignalR.Orleans
 {
     public class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>, IDisposable
     {

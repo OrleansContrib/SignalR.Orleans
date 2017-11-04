@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Orleans;
 
-namespace OrleansR.Groups
+namespace SignalR.Orleans.Groups
 {
     public interface IGroupGrain : IGrainWithStringKey
     {

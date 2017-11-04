@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
-using OrleansR.Clients;
-using OrleansR.Groups;
+using SignalR.Orleans.Clients;
+using SignalR.Orleans.Groups;
 using Orleans.Runtime;
 using Orleans.Serialization;
 
-namespace OrleansR
+namespace SignalR.Orleans
 {
     public class HubMessageSerializer : IExternalSerializer
     {

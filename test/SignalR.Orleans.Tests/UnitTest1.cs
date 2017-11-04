@@ -1,7 +1,7 @@
 using System;
 using Xunit;
 
-namespace OrleansR.Tests
+namespace SignalR.Orleans.Tests
 {
     public class UnitTest1
     {

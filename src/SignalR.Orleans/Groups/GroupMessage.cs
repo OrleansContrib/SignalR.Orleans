@@ -1,4 +1,4 @@
-namespace OrleansR.Groups
+namespace SignalR.Orleans.Groups
 {
     public class GroupMessage
     {

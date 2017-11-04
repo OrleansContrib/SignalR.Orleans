@@ -1,6 +1,6 @@
 using System;
 
-namespace OrleansR
+namespace SignalR.Orleans
 {
     public static class Constants
     {
