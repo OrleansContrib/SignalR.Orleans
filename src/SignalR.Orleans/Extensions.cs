@@ -12,7 +12,7 @@ namespace Microsoft.Extensions.DependencyInjection
 {
     public static class OrleansDependencyInjectionExtensions
     {
-        public static ClusterConfiguration AddOrleansSignalR(this ClusterConfiguration config)
+        public static ClusterConfiguration AddSignalR(this ClusterConfiguration config)
         {
             config.Globals.SerializationProviders.Add(typeof(HubMessageSerializer).GetTypeInfo());
             config.AddSimpleMessageStreamProvider(Constants.STREAM_PROVIDER);
@@ -20,41 +20,41 @@ namespace Microsoft.Extensions.DependencyInjection
             return config;
         }
 
-        public static ClientConfiguration AddOrleansSignalR(this ClientConfiguration config)
+        public static ClientConfiguration AddSignalR(this ClientConfiguration config)
         {
             config.SerializationProviders.Add(typeof(HubMessageSerializer).GetTypeInfo());
             config.AddSimpleMessageStreamProvider(Constants.STREAM_PROVIDER);
             return config;
         }
 
-        public static ISiloHostBuilder UseOrleansSignalR(this ISiloHostBuilder builder)
+        public static ISiloHostBuilder UseSignalR(this ISiloHostBuilder builder)
         {
             return builder
                 .AddApplicationPartsFromReferences(typeof(ClientGrain).Assembly)
                 .AddApplicationPartsFromReferences(typeof(GroupGrain).Assembly);
         }
 
-        public static IClientBuilder UseOrleansSignalR(this IClientBuilder builder)
+        public static IClientBuilder UseSignalR(this IClientBuilder builder)
         {
             return builder
                 .AddApplicationPartsFromReferences(typeof(IClientGrain).Assembly)
                 .AddApplicationPartsFromReferences(typeof(IGroupGrain).Assembly);
         }
 
-        public static ISignalRBuilder AddOrleansSignalR(this ISignalRBuilder builder, IClientBuilder clientBuilder)
+        public static ISignalRBuilder AddOrleans(this ISignalRBuilder builder, IClientBuilder clientBuilder)
         {
             var client = clientBuilder.Build();
             client.Connect().Wait();
             return builder.AddOrleansSignalR(client);
         }
 
-        public static ISignalRBuilder AddOrleansSignalR(this ISignalRBuilder builder, IClusterClient clusterClient)
+        public static ISignalRBuilder AddOrleans(this ISignalRBuilder builder, IClusterClient clusterClient)
         {
             builder.Services.AddSingleton(typeof(IClusterClient), clusterClient);
             return builder.AddOrleansSignalR();
         }
 
-        public static ISignalRBuilder AddOrleansSignalR(this ISignalRBuilder builder)
+        public static ISignalRBuilder AddOrleans(this ISignalRBuilder builder)
         {
             builder.Services.AddSingleton(typeof(HubLifetimeManager<>), typeof(OrleansHubLifetimeManager<>));
             return builder;
