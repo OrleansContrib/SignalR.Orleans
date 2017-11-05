@@ -45,13 +45,13 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             var client = clientBuilder.Build();
             client.Connect().Wait();
-            return builder.AddOrleansSignalR(client);
+            return builder.AddOrleans(client);
         }
 
         public static ISignalRBuilder AddOrleans(this ISignalRBuilder builder, IClusterClient clusterClient)
         {
             builder.Services.AddSingleton(typeof(IClusterClient), clusterClient);
-            return builder.AddOrleansSignalR();
+            return builder.AddOrleans();
         }
 
         public static ISignalRBuilder AddOrleans(this ISignalRBuilder builder)
