@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/dotnet/orleans/blob/gh-pages/assets/logo.png" alt="SignalR.Orleans" width="600px"> 
+  <img src="https://github.com/dotnet/orleans/blob/gh-pages/assets/logo.png" alt="SignalR.Orleans" width="300px"> 
   <h1>SignalR.Orleans</h1>
 </p>
 
@@ -21,48 +21,55 @@ Installation is performed via [NuGet](https://www.nuget.org/packages/SignalR.Orl
 
 From Package Manager:
 
-> Install-Package SignalR.Orleans -Version 1.0.0-preview-1
+> PS> Install-Package SignalR.Orleans -Version 1.0.0-preview-1
 
 .Net CLI:
 
-> dotnet add package SignalR.Orleans --version 1.0.0-preview-1
+> \# dotnet add package SignalR.Orleans --version 1.0.0-preview-1
 
 Packet: 
 
-> paket add SignalR.Orleans --version 1.0.0-preview-1
-
+> \# paket add SignalR.Orleans --version 1.0.0-preview-1
 
 Code Examples
 =============
 
-At SignalR application configuration (`ISignalRBuilder`):
+First we need to have an Orleans cluster up and running.
 
 ```c#
-signalRBuilder.AddOrleans();
+var siloConfg = ClusterConfiguration.LocalhostPrimarySilo().AddSignalR();
+var silo = new SiloHostBuilder()
+    .UseConfiguration(siloConfg)
+    .UseSignalR()
+    .Build();
+await silo.StartAsync();
 ```
 
-In your Orleans Client configuration (`ClientConfiguration`):
+Now your SignalR aplication needs to connect to the Orleans Cluster by using an Orleans Client.
 
 ```c#
-clientConfiguration.AddSignalR();
+var clientConfig = ClientConfiguration.LocalhostSilo()
+                .AddSignalR();
+var client = new ClientBuilder()
+    .UseConfiguration(clientConfig)
+    .UseSignalR()
+    .Build();
+await client.Connect();
 ```
 
-In your Orleans client builder (`IClientBuilder`):
+Somewhere in your `Startup.cs`:
 
 ```c#
-clientBuilder.UseSignalR();
+public void ConfigureServices(IServiceCollection services)
+{
+    ...
+
+    services.AddSignalR()
+            .AddOrleans(client);
+    ...
+}
 ```
 
-In your Orleans silo builder (`ISiloHostBuilder`):
-
-```c#
-siloBuilder..UseSignalR();
-```
-
-In your Orleans cluster configuration (`ClusterConfiguration`):
-
-```c#
-clusterConfiguration.AddSignalR();
-```
+Great! Now you have an Orleans backplane built in Orleans!
 
 PRs and feedback is **very** welcome!
