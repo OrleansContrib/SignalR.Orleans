@@ -28,8 +28,8 @@ namespace Microsoft.Extensions.DependencyInjection
             }
             config.AddMemoryStorageProvider(Constants.STORAGE_PROVIDER);
             return config;
-
         }
+
         public static ClientConfiguration AddSignalR(this ClientConfiguration config)
         {
             config.FallbackSerializationProvider = typeof(ILBasedSerializer).GetTypeInfo();
