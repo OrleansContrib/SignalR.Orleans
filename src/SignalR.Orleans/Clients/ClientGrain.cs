@@ -1,10 +1,12 @@
 using System;
 using System.Threading.Tasks;
 using Orleans;
+using Orleans.Providers;
 using Orleans.Streams;
 
 namespace SignalR.Orleans.Clients
 {
+    [StorageProvider(ProviderName = Constants.STORAGE_PROVIDER)]
     internal class ClientGrain : Grain<ClientState>, IClientGrain
     {
         private IStreamProvider _streamProvider;
@@ -33,7 +35,12 @@ namespace SignalR.Orleans.Clients
             return this.WriteStateAsync();
         }
 
-        public Task OnDisconnect() => this._clientDisconnectStream.OnNextAsync(this.GetPrimaryKeyString());
+        public async Task OnDisconnect()
+        {
+            await this.ClearStateAsync();
+            await this._clientDisconnectStream.OnNextAsync(this.GetPrimaryKeyString());
+            this.DeactivateOnIdle();
+        }
     }
 
     public class ClientState

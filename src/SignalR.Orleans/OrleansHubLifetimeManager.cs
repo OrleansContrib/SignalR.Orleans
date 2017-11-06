@@ -23,7 +23,7 @@ namespace SignalR.Orleans
         private IStreamProvider _streamProvider;
         private IAsyncStream<ClientMessage> _serverStream;
         private IAsyncStream<AllMessage> _allStream;
-        private readonly string _hubTypeName = typeof(THub).FullName;
+        private readonly string _hubTypeName = typeof(THub).FullName.Replace('+', '.');
 
         private readonly JsonSerializer _serializer = new JsonSerializer
         {
@@ -47,7 +47,7 @@ namespace SignalR.Orleans
         {
             this._streamProvider = this._clusterClient.GetStreamProvider(Constants.STREAM_PROVIDER);
             this._serverStream = this._streamProvider.GetStream<ClientMessage>(_serverId, Constants.SERVERS_STREAM);
-            this._allStream = this._streamProvider.GetStream<AllMessage>(Constants.ALL_STREAM_ID, typeof(THub).FullName);
+            this._allStream = this._streamProvider.GetStream<AllMessage>(Constants.ALL_STREAM_ID, this._hubTypeName);
 
             var subscribeTasks = new List<Task>();
             var allStreamHandlers = await _allStream.GetAllSubscriptionHandles();
@@ -79,22 +79,23 @@ namespace SignalR.Orleans
 
         private Task ProcessAllMessage(AllMessage message)
         {
-            List<Task> allTasks;
+            List<Task> allTasks = new List<Task>(this._connections.Count);
             var payload = (InvocationMessage)message.Payload;
-            if (message.ExcludedIds != null)
+            
+            foreach (var connection in this._connections)
             {
-                allTasks = new List<Task>(this._connections.Count);
-                foreach (var connection in this._connections)
+                if (connection.ConnectionAbortedToken != null &&
+                    connection.ConnectionAbortedToken.IsCancellationRequested)
+                    continue;
+
+                if (message.ExcludedIds != null && message.ExcludedIds.Contains(connection.ConnectionId))
                 {
-                    if (!message.ExcludedIds.Contains(connection.ConnectionId))
-                    {
-                        allTasks.Add(this.InvokeLocal(connection, payload));
-                    }
+                    continue;
                 }
-            }
-            else
-            {
-                allTasks = this._connections.Select(conn => this.InvokeLocal(conn, payload)).ToList();
+                else
+                {
+                    allTasks.Add(this.InvokeLocal(connection, payload));
+                }
             }
             return Task.WhenAll(allTasks);
         }
@@ -169,11 +170,11 @@ namespace SignalR.Orleans
             }
         }
 
-        public override Task OnDisconnectedAsync(HubConnectionContext connection)
+        public override async Task OnDisconnectedAsync(HubConnectionContext connection)
         {
-            this._connections.Remove(connection);
             var client = this._clusterClient.GetGrain<IClientGrain>(connection.ConnectionId);
-            return client.OnDisconnect();
+            await client.OnDisconnect();
+            this._connections.Remove(connection);
         }
 
         public override Task RemoveGroupAsync(string connectionId, string groupName)

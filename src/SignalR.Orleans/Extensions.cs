@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.SignalR;
 using Orleans;
 using Orleans.Hosting;
 using Orleans.Runtime.Configuration;
+using Orleans.Serialization;
 using SignalR.Orleans;
 using SignalR.Orleans.Clients;
 using SignalR.Orleans.Groups;
@@ -15,13 +16,23 @@ namespace Microsoft.Extensions.DependencyInjection
         public static ClusterConfiguration AddSignalR(this ClusterConfiguration config)
         {
             config.Globals.SerializationProviders.Add(typeof(HubMessageSerializer).GetTypeInfo());
+            config.Globals.FallbackSerializationProvider = typeof(ILBasedSerializer).GetTypeInfo();
             config.AddSimpleMessageStreamProvider(Constants.STREAM_PROVIDER);
+            try
+            {
+                config.AddMemoryStorageProvider("PubSubStore");
+            }
+            catch
+            {
+                // PubSubStore was already added. Do nothing.
+            }
             config.AddMemoryStorageProvider(Constants.STORAGE_PROVIDER);
             return config;
-        }
 
+        }
         public static ClientConfiguration AddSignalR(this ClientConfiguration config)
         {
+            config.FallbackSerializationProvider = typeof(ILBasedSerializer).GetTypeInfo();
             config.SerializationProviders.Add(typeof(HubMessageSerializer).GetTypeInfo());
             config.AddSimpleMessageStreamProvider(Constants.STREAM_PROVIDER);
             return config;
