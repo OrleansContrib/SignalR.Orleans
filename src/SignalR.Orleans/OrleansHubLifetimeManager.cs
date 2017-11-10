@@ -18,7 +18,7 @@ namespace SignalR.Orleans
     {
         private readonly HubConnectionList _connections = new HubConnectionList();
         private ILogger _logger;
-        private IClusterClient _clusterClient;
+        private readonly IClusterClient _clusterClient;
         private readonly Guid _serverId;
         private IStreamProvider _streamProvider;
         private IAsyncStream<ClientMessage> _serverStream;
@@ -88,14 +88,8 @@ namespace SignalR.Orleans
                     connection.ConnectionAbortedToken.IsCancellationRequested)
                     continue;
 
-                if (message.ExcludedIds != null && message.ExcludedIds.Contains(connection.ConnectionId))
-                {
-                    continue;
-                }
-                else
-                {
+                if (message.ExcludedIds == null || !message.ExcludedIds.Contains(connection.ConnectionId))
                     allTasks.Add(this.InvokeLocal(connection, payload));
-                }
             }
             return Task.WhenAll(allTasks);
         }
@@ -151,8 +145,12 @@ namespace SignalR.Orleans
 
         public override Task InvokeUserAsync(string userId, string methodName, object[] args)
         {
-            // TODO: Check with @davidfowl what is this method for
-            throw new NotImplementedException();
+            if (string.IsNullOrWhiteSpace(userId)) throw new ArgumentNullException(nameof(userId));
+            if (string.IsNullOrWhiteSpace(methodName)) throw new ArgumentNullException(nameof(methodName));
+
+            var message = new InvocationMessage(Guid.NewGuid().ToString(), nonBlocking: true, target: methodName, arguments: args);
+            var grain = this._clusterClient.GetGrain<IClientGrain>(userId);
+            return grain.SendMessage(message);
         }
 
         public override async Task OnConnectedAsync(HubConnectionContext connection)
