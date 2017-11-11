@@ -18,7 +18,7 @@ namespace SignalR.Orleans
     {
         private readonly HubConnectionList _connections = new HubConnectionList();
         private ILogger _logger;
-        private IClusterClient _clusterClient;
+        private readonly IClusterClient _clusterClient;
         private readonly Guid _serverId;
         private IStreamProvider _streamProvider;
         private IAsyncStream<ClientMessage> _serverStream;
@@ -79,23 +79,17 @@ namespace SignalR.Orleans
 
         private Task ProcessAllMessage(AllMessage message)
         {
-            List<Task> allTasks = new List<Task>(this._connections.Count);
+            var allTasks = new List<Task>(this._connections.Count);
             var payload = (InvocationMessage)message.Payload;
             
             foreach (var connection in this._connections)
             {
-                if (connection.ConnectionAbortedToken != null &&
+	            if (connection.ConnectionAbortedToken != null &&
                     connection.ConnectionAbortedToken.IsCancellationRequested)
                     continue;
 
-                if (message.ExcludedIds != null && message.ExcludedIds.Contains(connection.ConnectionId))
-                {
-                    continue;
-                }
-                else
-                {
-                    allTasks.Add(this.InvokeLocal(connection, payload));
-                }
+	            if (message.ExcludedIds == null || !message.ExcludedIds.Contains(connection.ConnectionId))
+		            allTasks.Add(this.InvokeLocal(connection, payload));
             }
             return Task.WhenAll(allTasks);
         }
