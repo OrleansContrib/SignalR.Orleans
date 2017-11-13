@@ -24,6 +24,7 @@ namespace SignalR.Orleans
         private IAsyncStream<ClientMessage> _serverStream;
         private IAsyncStream<AllMessage> _allStream;
         private readonly string _hubTypeName = typeof(THub).FullName.Replace('+', '.');
+        private const string UserGroupPrefix = "user::";
 
         private readonly JsonSerializer _serializer = new JsonSerializer
         {
@@ -145,8 +146,10 @@ namespace SignalR.Orleans
 
         public override Task InvokeUserAsync(string userId, string methodName, object[] args)
         {
-            // TODO: Check with @davidfowl what is this method for
-            throw new NotImplementedException();
+	        if (string.IsNullOrWhiteSpace(userId)) throw new ArgumentNullException(nameof(userId));
+	        if (string.IsNullOrWhiteSpace(methodName)) throw new ArgumentNullException(nameof(methodName));
+
+			return InvokeGroupAsync(BuildUserGroup(userId), methodName, args);
         }
 
         public override async Task OnConnectedAsync(HubConnectionContext connection)
@@ -154,6 +157,12 @@ namespace SignalR.Orleans
             try
             {
                 this._connections.Add(connection);
+
+                if (connection.User.Identity.IsAuthenticated)
+                {
+                    await this.AddGroupAsync(connection.ConnectionId, BuildUserGroup(connection.User.Identity.Name));
+                }
+
                 var client = this._clusterClient.GetGrain<IClientGrain>(connection.ConnectionId);
                 await client.OnConnect(this._serverId);
             }
@@ -168,6 +177,12 @@ namespace SignalR.Orleans
         {
             var client = this._clusterClient.GetGrain<IClientGrain>(connection.ConnectionId);
             await client.OnDisconnect();
+
+            if (connection.User.Identity.IsAuthenticated)
+            {
+                await this.RemoveGroupAsync(connection.ConnectionId, BuildUserGroup(connection.User.Identity.Name));
+            }
+
             this._connections.Remove(connection);
         }
 
@@ -176,6 +191,8 @@ namespace SignalR.Orleans
             var group = this._clusterClient.GetGrain<IGroupGrain>(groupName);
             return group.RemoveMember(connectionId);
         }
+
+        private string BuildUserGroup(string userId) => $"{UserGroupPrefix}{userId}";
 
         private async Task InvokeLocal(HubConnectionContext connection, HubMessage hubMessage)
         {
