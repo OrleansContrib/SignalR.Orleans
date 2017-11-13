@@ -24,7 +24,7 @@ namespace SignalR.Orleans
         private IAsyncStream<ClientMessage> _serverStream;
         private IAsyncStream<AllMessage> _allStream;
         private readonly string _hubTypeName = typeof(THub).FullName.Replace('+', '.');
-        private const string UserGroupPrefix = "User-Group::";
+        private const string UserGroupPrefix = "user::";
 
         private readonly JsonSerializer _serializer = new JsonSerializer
         {
