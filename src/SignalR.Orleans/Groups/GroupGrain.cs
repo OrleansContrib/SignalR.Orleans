@@ -8,7 +8,7 @@ namespace SignalR.Orleans.Groups
     {
     }
 
-	public class GroupState : ConnectionGroupState
+    internal class GroupState : ConnectionGroupState
     {
     }
 }

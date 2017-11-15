@@ -8,7 +8,7 @@ namespace SignalR.Orleans.Users
     {
     }
 
-    public class UserState : ConnectionGroupState
+    internal class UserState : ConnectionGroupState
     {
     }
 }
