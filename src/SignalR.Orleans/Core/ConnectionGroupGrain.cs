@@ -40,8 +40,11 @@ namespace SignalR.Orleans.Core
 
         public virtual async Task RemoveMember(string connectionId)
         {
-            await this.State.Members[connectionId]?.UnsubscribeAsync();
-            this.State.Members.Remove(connectionId);
+            if (State.Members.ContainsKey(connectionId))
+            {
+                await this.State.Members[connectionId].UnsubscribeAsync();
+                this.State.Members.Remove(connectionId);
+            }
             if (this.State.Members.Count == 0)
             {
                 await this.ClearStateAsync();
@@ -66,7 +69,7 @@ namespace SignalR.Orleans.Core
         }
     }
 
-    public abstract class ConnectionGroupState
+    internal abstract class ConnectionGroupState
     {
         public Dictionary<string, StreamSubscriptionHandle<string>> Members { get; set; } = new Dictionary<string, StreamSubscriptionHandle<string>>();
     }
