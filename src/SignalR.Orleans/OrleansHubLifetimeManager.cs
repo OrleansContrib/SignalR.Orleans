@@ -1,16 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Internal.Protocol;
 using Microsoft.Extensions.Logging;
-using SignalR.Orleans.Clients;
-using SignalR.Orleans.Groups;
 using Newtonsoft.Json;
 using Orleans;
 using Orleans.Streams;
+using SignalR.Orleans.Clients;
+using SignalR.Orleans.Groups;
+using SignalR.Orleans.Users;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace SignalR.Orleans
 {
@@ -82,15 +82,15 @@ namespace SignalR.Orleans
         {
             var allTasks = new List<Task>(this._connections.Count);
             var payload = (InvocationMessage)message.Payload;
-            
+
             foreach (var connection in this._connections)
             {
-	            if (connection.ConnectionAbortedToken != null &&
+                if (connection.ConnectionAbortedToken != null &&
                     connection.ConnectionAbortedToken.IsCancellationRequested)
                     continue;
 
-	            if (message.ExcludedIds == null || !message.ExcludedIds.Contains(connection.ConnectionId))
-		            allTasks.Add(this.InvokeLocal(connection, payload));
+                if (message.ExcludedIds == null || !message.ExcludedIds.Contains(connection.ConnectionId))
+                    allTasks.Add(this.InvokeLocal(connection, payload));
             }
             return Task.WhenAll(allTasks);
         }
@@ -146,10 +146,12 @@ namespace SignalR.Orleans
 
         public override Task InvokeUserAsync(string userId, string methodName, object[] args)
         {
-	        if (string.IsNullOrWhiteSpace(userId)) throw new ArgumentNullException(nameof(userId));
-	        if (string.IsNullOrWhiteSpace(methodName)) throw new ArgumentNullException(nameof(methodName));
+            if (string.IsNullOrWhiteSpace(userId)) throw new ArgumentNullException(nameof(userId));
+            if (string.IsNullOrWhiteSpace(methodName)) throw new ArgumentNullException(nameof(methodName));
 
-			return InvokeGroupAsync(BuildUserGroup(userId), methodName, args);
+            var message = new InvocationMessage(Guid.NewGuid().ToString(), nonBlocking: true, target: methodName, arguments: args);
+            var user = this._clusterClient.GetGrain<IUserGrain>(userId);
+            return user.SendMessage(message);
         }
 
         public override async Task OnConnectedAsync(HubConnectionContext connection)
@@ -160,7 +162,9 @@ namespace SignalR.Orleans
 
                 if (connection.User.Identity.IsAuthenticated)
                 {
-                    await this.AddGroupAsync(connection.ConnectionId, BuildUserGroup(connection.User.Identity.Name));
+                    //TODO: Switch `connection.User.Identity.Name` with `connection.UserIdentifier` when next signalr will be published.
+                    var user = this._clusterClient.GetGrain<IUserGrain>(connection.User.Identity.Name);
+                    await user.AddMember(connection.ConnectionId);
                 }
 
                 var client = this._clusterClient.GetGrain<IClientGrain>(connection.ConnectionId);
@@ -180,7 +184,9 @@ namespace SignalR.Orleans
 
             if (connection.User.Identity.IsAuthenticated)
             {
-                await this.RemoveGroupAsync(connection.ConnectionId, BuildUserGroup(connection.User.Identity.Name));
+                //TODO: Switch `connection.User.Identity.Name` with `connection.UserIdentifier` when next signalr will be published.
+                var user = this._clusterClient.GetGrain<IUserGrain>(connection.User.Identity.Name);
+                await user.RemoveMember(connection.ConnectionId);
             }
 
             this._connections.Remove(connection);
@@ -191,8 +197,6 @@ namespace SignalR.Orleans
             var group = this._clusterClient.GetGrain<IGroupGrain>(groupName);
             return group.RemoveMember(connectionId);
         }
-
-        private string BuildUserGroup(string userId) => $"{UserGroupPrefix}{userId}";
 
         private async Task InvokeLocal(HubConnectionContext connection, HubMessage hubMessage)
         {
