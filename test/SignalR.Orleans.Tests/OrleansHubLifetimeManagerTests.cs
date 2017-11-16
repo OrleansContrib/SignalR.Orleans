@@ -1,15 +1,13 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using System.Threading.Tasks;
-using System.Threading.Tasks.Channels;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Internal.Protocol;
 using Microsoft.AspNetCore.SignalR.Tests;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using SignalR.Orleans;
-using SignalR.Orleans.Tests;
+using System;
+using System.Threading.Tasks;
+using System.Threading.Tasks.Channels;
 using Xunit;
 
 namespace SignalR.Orleans.Tests
@@ -118,8 +116,16 @@ namespace SignalR.Orleans.Tests
         [Fact]
         public async Task InvokeConnectionAsyncOnNonExistentConnectionDoesNotThrow()
         {
+            //TODO: to fix this test requires to mock the `ClientGrain` and set `State.ServerId`
             var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.Client);
             await manager.InvokeConnectionAsync("NotARealConnectionId", "Hello", new object[] { "World" });
+        }
+
+        [Fact]
+        public async Task InvokeConnectionAsyncOnNonExistentConnectionWithoutCallingOnConnectThrowsException()
+        {
+            var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.Client);
+            await Assert.ThrowsAsync<InvalidOperationException>(() => manager.InvokeConnectionAsync("NotARealConnectionId", "Hello", new object[] { "World" }));
         }
 
         [Fact]
