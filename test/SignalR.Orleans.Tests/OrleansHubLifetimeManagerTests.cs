@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Channels;
+using SignalR.Orleans.Clients;
 using Xunit;
 
 namespace SignalR.Orleans.Tests
@@ -116,9 +117,11 @@ namespace SignalR.Orleans.Tests
         [Fact]
         public async Task InvokeConnectionAsyncOnNonExistentConnectionDoesNotThrow()
         {
-            //TODO: to fix this test requires to mock the `ClientGrain` and set `State.ServerId`
+            var invalidConnection = "NotARealConnectionId";
+            var grain = this._fixture.Client.GetGrain<IClientGrain>(invalidConnection);
+            await grain.OnConnect(Guid.NewGuid());
             var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.Client);
-            await manager.InvokeConnectionAsync("NotARealConnectionId", "Hello", new object[] { "World" });
+            await manager.InvokeConnectionAsync(invalidConnection, "Hello", new object[] { "World" });
         }
 
         [Fact]
