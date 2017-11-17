@@ -24,14 +24,6 @@ namespace SignalR.Orleans
         private IAsyncStream<ClientMessage> _serverStream;
         private IAsyncStream<AllMessage> _allStream;
         private readonly string _hubTypeName = typeof(THub).FullName.Replace('+', '.');
-        private const string UserGroupPrefix = "user::";
-
-        private readonly JsonSerializer _serializer = new JsonSerializer
-        {
-            TypeNameAssemblyFormatHandling = TypeNameAssemblyFormatHandling.Simple,
-            TypeNameHandling = TypeNameHandling.All,
-            Formatting = Formatting.None
-        };
 
         public OrleansHubLifetimeManager(
             ILogger<OrleansHubLifetimeManager<THub>> logger,
@@ -162,7 +154,7 @@ namespace SignalR.Orleans
 
                 if (connection.User.Identity.IsAuthenticated)
                 {
-                    //TODO: Switch `connection.User.Identity.Name` with `connection.UserIdentifier` when next signalr will be published.
+                    //TODO: replace `connection.User.Identity.Name` with `connection.UserIdentifier` when next signalr will be published.
                     var user = this._clusterClient.GetGrain<IUserGrain>(connection.User.Identity.Name);
                     await user.AddMember(connection.ConnectionId);
                 }
@@ -184,7 +176,7 @@ namespace SignalR.Orleans
 
             if (connection.User.Identity.IsAuthenticated)
             {
-                //TODO: Switch `connection.User.Identity.Name` with `connection.UserIdentifier` when next signalr will be published.
+                //TODO: replace `connection.User.Identity.Name` with `connection.UserIdentifier` when next signalr will be published.
                 var user = this._clusterClient.GetGrain<IUserGrain>(connection.User.Identity.Name);
                 await user.RemoveMember(connection.ConnectionId);
             }
