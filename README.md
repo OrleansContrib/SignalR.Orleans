@@ -26,9 +26,9 @@ From Package Manager:
 
 > \# dotnet add package SignalR.Orleans --version 1.0.0-preview-1
 
-Packet: 
+Paket: 
 
-> \# packet add SignalR.Orleans --version 1.0.0-preview-1
+> \# paket add SignalR.Orleans --version 1.0.0-preview-1
 
 # Configuration
 
