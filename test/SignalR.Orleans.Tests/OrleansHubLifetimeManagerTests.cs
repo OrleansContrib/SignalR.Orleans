@@ -9,13 +9,15 @@ using System;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Channels;
 using SignalR.Orleans.Clients;
+using SignalR.Orleans.Core;
+using SignalR.Orleans.Groups;
 using Xunit;
 
 namespace SignalR.Orleans.Tests
 {
     public class OrleansHubLifetimeManagerTests : IClassFixture<OrleansFixture>
     {
-        private OrleansFixture _fixture;
+        private readonly OrleansFixture _fixture;
 
         public OrleansHubLifetimeManagerTests(OrleansFixture fixture)
         {
@@ -118,8 +120,8 @@ namespace SignalR.Orleans.Tests
         public async Task InvokeConnectionAsyncOnNonExistentConnectionDoesNotThrow()
         {
             var invalidConnection = "NotARealConnectionId";
-            var grain = this._fixture.Client.GetGrain<IClientGrain>(invalidConnection);
-            await grain.OnConnect(Guid.NewGuid());
+            var grain = this._fixture.Client.GetGrain<IClientGrain>(Utils.BuildGrainName("MyHub", invalidConnection));
+            await grain.OnConnect(Guid.NewGuid(), "MyHub", invalidConnection);
             var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.Client);
             await manager.InvokeConnectionAsync(invalidConnection, "Hello", new object[] { "World" });
         }
@@ -218,9 +220,9 @@ namespace SignalR.Orleans.Tests
 
                 await manager1.OnConnectedAsync(connection);
 
-                await manager1.AddGroupAsync(connection.ConnectionId, "name");
+                await manager1.AddGroupAsync(connection.ConnectionId, "tupac");
 
-                await manager2.InvokeGroupAsync("name", "Hello", new object[] { "World" });
+                await manager2.InvokeGroupAsync("tupac", "Hello", new object[] { "World" });
 
                 AssertMessage(output);
             }
@@ -239,13 +241,13 @@ namespace SignalR.Orleans.Tests
 
                 await manager.OnConnectedAsync(connection);
 
-                await manager.AddGroupAsync(connection.ConnectionId, "name");
+                await manager.AddGroupAsync(connection.ConnectionId, "dre");
 
                 await manager.OnDisconnectedAsync(connection);
 
-                await manager.InvokeGroupAsync("name", "Hello", new object[] { "World" });
-
-                Assert.False(output.In.TryRead(out var item));
+                var grain = this._fixture.Client.GetGrain<IGroupGrain>(Utils.BuildGrainName("MyHub", "dre"));
+                var result = await grain.Count();
+                Assert.Equal(0, result);
             }
         }
 
@@ -262,7 +264,7 @@ namespace SignalR.Orleans.Tests
 
                 await manager.OnConnectedAsync(connection);
 
-                await manager.RemoveGroupAsync(connection.ConnectionId, "name");
+                await manager.RemoveGroupAsync(connection.ConnectionId, "does-not-exists");
             }
         }
 
@@ -280,7 +282,7 @@ namespace SignalR.Orleans.Tests
 
                 await manager1.OnConnectedAsync(connection);
 
-                await manager2.RemoveGroupAsync(connection.ConnectionId, "name");
+                await manager2.RemoveGroupAsync(connection.ConnectionId, "does-not-exist-server");
             }
         }
 
@@ -298,9 +300,9 @@ namespace SignalR.Orleans.Tests
 
                 await manager1.OnConnectedAsync(connection);
 
-                await manager2.AddGroupAsync(connection.ConnectionId, "name");
+                await manager2.AddGroupAsync(connection.ConnectionId, "ice-cube");
 
-                await manager2.InvokeGroupAsync("name", "Hello", new object[] { "World" });
+                await manager2.InvokeGroupAsync("ice-cube", "Hello", new object[] { "World" });
 
                 AssertMessage(output);
             }
@@ -319,13 +321,12 @@ namespace SignalR.Orleans.Tests
 
                 await manager.OnConnectedAsync(connection);
 
-                await manager.AddGroupAsync(connection.ConnectionId, "name");
-                await manager.AddGroupAsync(connection.ConnectionId, "name");
+                await manager.AddGroupAsync(connection.ConnectionId, "dmx");
+                await manager.AddGroupAsync(connection.ConnectionId, "dmx");
 
-                await manager.InvokeGroupAsync("name", "Hello", new object[] { "World" });
-
-                AssertMessage(output);
-                Assert.False(output.In.TryRead(out var item));
+                var grain = this._fixture.Client.GetGrain<IGroupGrain>(Utils.BuildGrainName("MyHub", "dmx"));
+                var result = await grain.Count();
+                Assert.Equal(1, result);
             }
         }
 
@@ -343,10 +344,10 @@ namespace SignalR.Orleans.Tests
 
                 await manager1.OnConnectedAsync(connection);
 
-                await manager1.AddGroupAsync(connection.ConnectionId, "name");
-                await manager2.AddGroupAsync(connection.ConnectionId, "name");
+                await manager1.AddGroupAsync(connection.ConnectionId, "easye");
+                await manager2.AddGroupAsync(connection.ConnectionId, "easye");
 
-                await manager2.InvokeGroupAsync("name", "Hello", new object[] { "World" });
+                await manager2.InvokeGroupAsync("easye", "Hello", new object[] { "World" });
 
                 AssertMessage(output);
                 Assert.False(output.In.TryRead(out var item));
@@ -367,15 +368,15 @@ namespace SignalR.Orleans.Tests
 
                 await manager1.OnConnectedAsync(connection);
 
-                await manager1.AddGroupAsync(connection.ConnectionId, "name");
+                await manager1.AddGroupAsync(connection.ConnectionId, "snoop");
 
-                await manager2.InvokeGroupAsync("name", "Hello", new object[] { "World" });
+                await manager2.InvokeGroupAsync("snoop", "Hello", new object[] { "World" });
 
                 AssertMessage(output);
 
-                await manager2.RemoveGroupAsync(connection.ConnectionId, "name");
+                await manager2.RemoveGroupAsync(connection.ConnectionId, "snoop");
 
-                await manager2.InvokeGroupAsync("name", "Hello", new object[] { "World" });
+                await manager2.InvokeGroupAsync("snoop", "Hello", new object[] { "World" });
 
                 Assert.False(output.In.TryRead(out var item));
             }

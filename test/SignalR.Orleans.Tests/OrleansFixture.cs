@@ -8,8 +8,8 @@ namespace SignalR.Orleans.Tests
 {
     public class OrleansFixture : IDisposable
     {
-        public ISiloHost Silo { get; private set; }
-        public IClusterClient Client { get; private set; }
+        public ISiloHost Silo { get; }
+        public IClusterClient Client { get; }
 
         public OrleansFixture()
         {

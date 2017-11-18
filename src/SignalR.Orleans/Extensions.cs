@@ -13,7 +13,8 @@ namespace Microsoft.Extensions.DependencyInjection
     {
         public static ClusterConfiguration AddSignalR(this ClusterConfiguration config)
         {
-            config.Globals.SerializationProviders.Add(typeof(HubMessageSerializer).GetTypeInfo());
+            // TODO: Check with @galvesribeiro if its needed, to be fixed or deleted.
+            // config.Globals.SerializationProviders.Add(typeof(HubMessageSerializer).GetTypeInfo());
             config.Globals.FallbackSerializationProvider = typeof(ILBasedSerializer).GetTypeInfo();
             config.AddSimpleMessageStreamProvider(Constants.STREAM_PROVIDER);
             try
@@ -30,8 +31,9 @@ namespace Microsoft.Extensions.DependencyInjection
 
         public static ClientConfiguration AddSignalR(this ClientConfiguration config)
         {
+            // TODO: Check with @galvesribeiro if its needed, to be fixed or deleted.
+            // config.SerializationProviders.Add(typeof(HubMessageSerializer).GetTypeInfo());
             config.FallbackSerializationProvider = typeof(ILBasedSerializer).GetTypeInfo();
-            config.SerializationProviders.Add(typeof(HubMessageSerializer).GetTypeInfo());
             config.AddSimpleMessageStreamProvider(Constants.STREAM_PROVIDER);
             return config;
         }
