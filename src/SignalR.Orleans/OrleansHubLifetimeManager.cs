@@ -37,31 +37,17 @@ namespace SignalR.Orleans
         {
             this._streamProvider = this._clusterClient.GetStreamProvider(Constants.STREAM_PROVIDER);
             this._serverStream = this._streamProvider.GetStream<ClientMessage>(_serverId, Constants.SERVERS_STREAM);
-            this._allStream = this._streamProvider.GetStream<AllMessage>(Constants.ALL_STREAM_ID, this._hubName);
+            this._allStream = this._streamProvider.GetStream<AllMessage>(Constants.ALL_STREAM_ID, Constants.STREAM_PER_HUBNAME(this._hubName));
 
             var subscribeTasks = new List<Task>();
             var allStreamHandlers = await _allStream.GetAllSubscriptionHandles();
-            if (allStreamHandlers != null && allStreamHandlers.Count > 0)
-            {
-                foreach (var handler in allStreamHandlers)
-                {
-                    subscribeTasks.Add(handler.ResumeAsync((msg, token) => this.ProcessAllMessage(msg)));
-                }
-            }
-            else
+            if (allStreamHandlers != null)
             {
                 subscribeTasks.Add(this._allStream.SubscribeAsync((msg, token) => this.ProcessAllMessage(msg)));
             }
 
             var serverStreamHandlers = await _serverStream.GetAllSubscriptionHandles();
-            if (serverStreamHandlers != null && serverStreamHandlers.Count > 0)
-            {
-                foreach (var handler in serverStreamHandlers)
-                {
-                    subscribeTasks.Add(handler.ResumeAsync((msg, token) => this.ProcessServerMessage(msg)));
-                }
-            }
-            else
+            if (serverStreamHandlers != null)
             {
                 subscribeTasks.Add(this._serverStream.SubscribeAsync((msg, token) => this.ProcessServerMessage(msg)));
             }

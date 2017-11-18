@@ -11,5 +11,6 @@ namespace SignalR.Orleans
         public static readonly Guid CLIENT_DISCONNECT_STREAM_ID = Guid.Parse("bdcff7e7-3734-48ab-8599-17d915011b85");
         public static readonly Guid ALL_STREAM_ID = Guid.Parse("fbe53ecd-d896-4916-8281-5571d6733566");
 
+        public static string STREAM_PER_HUBNAME(string hubName) => $"registered-hub::{hubName}".ToLower();
     }
 }
