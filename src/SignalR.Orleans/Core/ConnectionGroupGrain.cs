@@ -2,6 +2,7 @@
 using Orleans.Streams;
 using SignalR.Orleans.Clients;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace SignalR.Orleans.Core
@@ -9,17 +10,18 @@ namespace SignalR.Orleans.Core
     internal abstract class ConnectionGroupGrain<TGrainState> : Grain<TGrainState>, IConnectionGroupGrain where TGrainState : ConnectionGroupState, new()
     {
         private IStreamProvider _streamProvider;
+        private StreamSubscriptionHandle<string>[] _subscriptions;
 
         public override async Task OnActivateAsync()
         {
             this._streamProvider = this.GetStreamProvider(Constants.STREAM_PROVIDER);
             var clientDisconnectStream = this._streamProvider.GetStream<string>(Constants.CLIENT_DISCONNECT_STREAM_ID, Constants.CLIENT_DISCONNECT_STREAM);
 
-            var subscriptionTasks = new List<Task>();
-            var subscriptions = await clientDisconnectStream.GetAllSubscriptionHandles();
-            if (subscriptions != null && subscriptions.Count > 0)
+            var subscriptionTasks = new List<Task<StreamSubscriptionHandle<string>>>();
+            var subscriptionHandles = await clientDisconnectStream.GetAllSubscriptionHandles();
+            if (subscriptionHandles != null && subscriptionHandles.Count > 0)
             {
-                foreach (var subscription in subscriptions)
+                foreach (var subscription in subscriptionHandles)
                 {
                     subscriptionTasks.Add(subscription.ResumeAsync(async (item, token) => await this.RemoveMember(item)));
                 }
@@ -28,8 +30,7 @@ namespace SignalR.Orleans.Core
             {
                 subscriptionTasks.Add(clientDisconnectStream.SubscribeAsync((item, token) => this.RemoveMember(item)));
             }
-
-            await Task.WhenAll(subscriptionTasks);
+            _subscriptions = await Task.WhenAll(subscriptionTasks);
         }
 
         public virtual async Task AddMember(string hubName, string connectionId)
@@ -53,6 +54,8 @@ namespace SignalR.Orleans.Core
             }
             if (this.State.Members.Count == 0)
             {
+                var tasks = _subscriptions.Select(subscription => subscription.UnsubscribeAsync()).ToList();
+                await Task.WhenAll(tasks);
                 await this.ClearStateAsync();
                 this.DeactivateOnIdle();
             }
