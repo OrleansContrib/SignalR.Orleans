@@ -78,7 +78,7 @@ Great! Now you have an Orleans backplane built in Orleans!
 ## Hub Context
 `HubContext` gives you the ability to communicate with the client from orleans grains (outside the hub).
 
-Ideal usage: Receiving server push notifications from message brokers, web hooks, etc. You will first update your grain state and then push signalr message to the client.
+Sample usage: Receiving server push notifications from message brokers, web hooks, etc. Ideally first update your grain state and then push signalr message to the client.
 
 ### Example: 
 ```cs
