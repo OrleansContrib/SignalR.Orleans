@@ -10,9 +10,9 @@ namespace SignalR.Orleans.Core
         private readonly IGrainFactory _grainFactory;
         private readonly string _hubName;
 
-        public HubContext(IGrainFactory grain)
+        public HubContext(IGrainFactory grainFactory)
         {
-            _grainFactory = grain;
+            _grainFactory = grainFactory;
             var hubType = typeof(THub);
             _hubName = hubType.IsInterface && hubType.Name.StartsWith("I")
                 ? hubType.Name.Substring(1)
