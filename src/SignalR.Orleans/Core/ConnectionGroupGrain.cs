@@ -22,36 +22,36 @@ namespace SignalR.Orleans.Core
             {
                 foreach (var subscription in subscriptionHandles)
                 {
-                    subscriptionTasks.Add(subscription.ResumeAsync(async (item, token) => await this.RemoveMember(item)));
+                    subscriptionTasks.Add(subscription.ResumeAsync(async (connectionId, token) => await this.RemoveMember(connectionId)));
                 }
             }
             else
             {
-                subscriptionTasks.Add(clientDisconnectStream.SubscribeAsync((item, token) => this.RemoveMember(item)));
+                subscriptionTasks.Add(clientDisconnectStream.SubscribeAsync((connectionId, token) => this.RemoveMember(connectionId)));
             }
             _subscriptions = await Task.WhenAll(subscriptionTasks);
         }
 
         public virtual async Task AddMember(string hubName, string connectionId)
         {
-            if (!this.State.Members.Contains(connectionId))
+            if (!this.State.Connections.Contains(connectionId))
             {
                 if (string.IsNullOrWhiteSpace(State.HubName))
                 {
                     State.HubName = hubName;
                 }
-                this.State.Members.Add(connectionId);
+                this.State.Connections.Add(connectionId);
                 await this.WriteStateAsync();
             }
         }
 
         public virtual async Task RemoveMember(string connectionId)
         {
-            if (State.Members.Contains(connectionId))
+            if (State.Connections.Contains(connectionId))
             {
-                this.State.Members.Remove(connectionId);
+                this.State.Connections.Remove(connectionId);
             }
-            if (this.State.Members.Count == 0)
+            if (this.State.Connections.Count == 0)
             {
                 var tasks = _subscriptions.Select(subscription => subscription.UnsubscribeAsync()).ToList();
                 await Task.WhenAll(tasks);
@@ -67,9 +67,9 @@ namespace SignalR.Orleans.Core
         public virtual Task SendMessage(object message)
         {
             var tasks = new List<Task>();
-            foreach (var member in this.State.Members)
+            foreach (var connectionId in this.State.Connections)
             {
-                var client = GrainFactory.GetClientGrain(State.HubName, member);
+                var client = GrainFactory.GetClientGrain(State.HubName, connectionId);
                 tasks.Add(client.SendMessage(message));
             }
 
@@ -78,13 +78,13 @@ namespace SignalR.Orleans.Core
 
         public Task<int> Count()
         {
-            return Task.FromResult(State.Members.Count);
+            return Task.FromResult(State.Connections.Count);
         }
     }
 
     internal abstract class ConnectionGroupState
     {
-        public HashSet<string> Members { get; set; } = new HashSet<string>();
+        public HashSet<string> Connections { get; set; } = new HashSet<string>();
         public string HubName { get; set; }
     }
 }
