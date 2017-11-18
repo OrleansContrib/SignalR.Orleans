@@ -19,8 +19,9 @@ namespace SignalR.Orleans.Core
                 : hubType.Name;
         }
 
-        public IUserGrain User(string key) => _grainFactory.GetGrain<IUserGrain>(Utils.BuildGrainName(_hubTypeName, key));
-        public IGroupGrain Group(string key) => _grainFactory.GetGrain<IGroupGrain>(Utils.BuildGrainName(_hubTypeName, key));
-        public IClientGrain Client(string key) => _grainFactory.GetGrain<IClientGrain>(Utils.BuildGrainName(_hubTypeName, key));
+        public IClientGrain Client(string connectionId) => _grainFactory.GetClientGrain(_hubTypeName, connectionId);
+        public IGroupGrain Group(string groupName) => _grainFactory.GetGroupGrain(_hubTypeName, groupName);
+        public IUserGrain User(string userId) => _grainFactory.GetUserGrain(_hubTypeName, userId);
+
     }
 }

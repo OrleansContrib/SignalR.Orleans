@@ -5,12 +5,10 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Internal.Protocol;
 using Microsoft.AspNetCore.SignalR.Tests;
 using Microsoft.Extensions.Logging;
+using Orleans;
 using System;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Channels;
-using SignalR.Orleans.Clients;
-using SignalR.Orleans.Core;
-using SignalR.Orleans.Groups;
 using Xunit;
 
 namespace SignalR.Orleans.Tests
@@ -120,7 +118,7 @@ namespace SignalR.Orleans.Tests
         public async Task InvokeConnectionAsyncOnNonExistentConnectionDoesNotThrow()
         {
             var invalidConnection = "NotARealConnectionId";
-            var grain = this._fixture.Client.GetGrain<IClientGrain>(Utils.BuildGrainName("MyHub", invalidConnection));
+            var grain = this._fixture.Client.GetClientGrain("MyHub", invalidConnection);
             await grain.OnConnect(Guid.NewGuid(), "MyHub", invalidConnection);
             var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.Client);
             await manager.InvokeConnectionAsync(invalidConnection, "Hello", new object[] { "World" });
@@ -245,7 +243,7 @@ namespace SignalR.Orleans.Tests
 
                 await manager.OnDisconnectedAsync(connection);
 
-                var grain = this._fixture.Client.GetGrain<IGroupGrain>(Utils.BuildGrainName("MyHub", "dre"));
+                var grain = this._fixture.Client.GetGroupGrain("MyHub", "dre");
                 var result = await grain.Count();
                 Assert.Equal(0, result);
             }
@@ -324,7 +322,7 @@ namespace SignalR.Orleans.Tests
                 await manager.AddGroupAsync(connection.ConnectionId, "dmx");
                 await manager.AddGroupAsync(connection.ConnectionId, "dmx");
 
-                var grain = this._fixture.Client.GetGrain<IGroupGrain>(Utils.BuildGrainName("MyHub", "dmx"));
+                var grain = this._fixture.Client.GetGroupGrain("MyHub", "dmx");
                 var result = await grain.Count();
                 Assert.Equal(1, result);
             }

@@ -1,8 +1,8 @@
-using System;
 using Microsoft.Extensions.DependencyInjection;
 using Orleans;
 using Orleans.Hosting;
 using Orleans.Runtime.Configuration;
+using System;
 
 namespace SignalR.Orleans.Tests
 {
@@ -13,9 +13,11 @@ namespace SignalR.Orleans.Tests
 
         public OrleansFixture()
         {
-            var siloConfg = ClusterConfiguration.LocalhostPrimarySilo().AddSignalR();
+            var siloConfig = ClusterConfiguration.LocalhostPrimarySilo()
+                .AddSignalR();
+
             var silo = new SiloHostBuilder()
-                .UseConfiguration(siloConfg)
+                .UseConfiguration(siloConfig)
                 .UseSignalR()
                 .Build();
             silo.StartAsync().Wait();
@@ -23,7 +25,11 @@ namespace SignalR.Orleans.Tests
 
             var clientConfig = ClientConfiguration.LocalhostSilo()
                 .AddSignalR();
-            var client = new ClientBuilder().UseConfiguration(clientConfig).UseSignalR().Build();
+
+            var client = new ClientBuilder().UseConfiguration(clientConfig)
+                .UseSignalR()
+                .Build();
+
             client.Connect().Wait();
             this.Client = client;
         }

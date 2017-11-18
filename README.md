@@ -28,7 +28,7 @@ From Package Manager:
 
 Packet: 
 
-> \# paket add SignalR.Orleans --version 1.0.0-preview-1
+> \# packet add SignalR.Orleans --version 1.0.0-preview-1
 
 # Configuration
 
@@ -36,9 +36,11 @@ Packet:
 First we need to have an Orleans cluster up and running.
 
 ```cs
-var siloConfg = ClusterConfiguration.LocalhostPrimarySilo().AddSignalR();
+var siloConfig = ClusterConfiguration.LocalhostPrimarySilo()
+    .AddSignalR();
+
 var silo = new SiloHostBuilder()
-    .UseConfiguration(siloConfg)
+    .UseConfiguration(siloConfig)
     .UseSignalR()
     .Build();
 await silo.StartAsync();
@@ -49,7 +51,8 @@ Now your SignalR aplication needs to connect to the Orleans Cluster by using an 
 
 ```cs
 var clientConfig = ClientConfiguration.LocalhostSilo()
-                .AddSignalR();
+    .AddSignalR();
+
 var client = new ClientBuilder()
     .UseConfiguration(clientConfig)
     .UseSignalR()

@@ -1,6 +1,5 @@
 ﻿using Orleans;
 using Orleans.Streams;
-using SignalR.Orleans.Clients;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -70,7 +69,7 @@ namespace SignalR.Orleans.Core
             var tasks = new List<Task>();
             foreach (var member in this.State.Members)
             {
-                var client = GrainFactory.GetGrain<IClientGrain>(Utils.BuildGrainName(State.HubName, member));
+                var client = GrainFactory.GetClientGrain(State.HubName, member);
                 tasks.Add(client.SendMessage(message));
             }
 
