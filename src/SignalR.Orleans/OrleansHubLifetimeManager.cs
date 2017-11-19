@@ -30,7 +30,9 @@ namespace SignalR.Orleans
             this._logger = logger;
             this._clusterClient = clusterClient;
 
+            _logger.LogInformation("Initializing: Orleans HubLifetimeManager {hubName} (serverId: {serverId})...", _hubName, _serverId);
             this.SetupStreams().Wait();
+            _logger.LogInformation("Initialized complete: Orleans HubLifetimeManager {hubName} (serverId: {serverId})", _hubName, _serverId);
         }
 
         private async Task SetupStreams()
@@ -143,10 +145,11 @@ namespace SignalR.Orleans
                 var client = this._clusterClient.GetClientGrain(_hubName, connection.ConnectionId);
                 await client.OnConnect(this._serverId, _hubName, connection.ConnectionId);
             }
-            catch (Exception exc)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "An error has occurred 'OnConnectedAsync' while adding connection {connectionId} [hub: {hubName} (serverId: {serverId})]", connection?.ConnectionId, _hubName, _serverId);
                 this._connections.Remove(connection);
-                throw exc;
+                throw ex;
             }
         }
 
