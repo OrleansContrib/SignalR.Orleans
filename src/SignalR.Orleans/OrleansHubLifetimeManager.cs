@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace SignalR.Orleans
 {
-	public class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>, IDisposable
+    public class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>, IDisposable
     {
         private readonly HubConnectionList _connections = new HubConnectionList();
         private ILogger _logger;

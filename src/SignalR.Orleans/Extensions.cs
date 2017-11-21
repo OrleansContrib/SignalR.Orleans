@@ -2,10 +2,8 @@ using Microsoft.AspNetCore.SignalR;
 using Orleans;
 using Orleans.Hosting;
 using Orleans.Runtime.Configuration;
-using Orleans.Serialization;
 using SignalR.Orleans;
 using SignalR.Orleans.Clients;
-using System.Reflection;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -13,9 +11,6 @@ namespace Microsoft.Extensions.DependencyInjection
     {
         public static ClusterConfiguration AddSignalR(this ClusterConfiguration config)
         {
-            // TODO: Check with @galvesribeiro if its needed, to be fixed or deleted.
-            // config.Globals.SerializationProviders.Add(typeof(HubMessageSerializer).GetTypeInfo());
-            config.Globals.FallbackSerializationProvider = typeof(ILBasedSerializer).GetTypeInfo();
             config.AddSimpleMessageStreamProvider(Constants.STREAM_PROVIDER);
             try
             {
@@ -31,9 +26,6 @@ namespace Microsoft.Extensions.DependencyInjection
 
         public static ClientConfiguration AddSignalR(this ClientConfiguration config)
         {
-            // TODO: Check with @galvesribeiro if its needed, to be fixed or deleted.
-            // config.SerializationProviders.Add(typeof(HubMessageSerializer).GetTypeInfo());
-            config.FallbackSerializationProvider = typeof(ILBasedSerializer).GetTypeInfo();
             config.AddSimpleMessageStreamProvider(Constants.STREAM_PROVIDER);
             return config;
         }

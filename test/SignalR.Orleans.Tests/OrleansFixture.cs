@@ -2,7 +2,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Orleans;
 using Orleans.Hosting;
 using Orleans.Runtime.Configuration;
+using Orleans.Serialization;
 using System;
+using System.Reflection;
 
 namespace SignalR.Orleans.Tests
 {
@@ -15,7 +17,7 @@ namespace SignalR.Orleans.Tests
         {
             var siloConfig = ClusterConfiguration.LocalhostPrimarySilo()
                 .AddSignalR();
-
+            siloConfig.Globals.FallbackSerializationProvider = typeof(ILBasedSerializer).GetTypeInfo();
             var silo = new SiloHostBuilder()
                 .UseConfiguration(siloConfig)
                 .UseSignalR()
@@ -25,6 +27,8 @@ namespace SignalR.Orleans.Tests
 
             var clientConfig = ClientConfiguration.LocalhostSilo()
                 .AddSignalR();
+
+            clientConfig.FallbackSerializationProvider = typeof(ILBasedSerializer).GetTypeInfo();
 
             var client = new ClientBuilder().UseConfiguration(clientConfig)
                 .UseSignalR()
