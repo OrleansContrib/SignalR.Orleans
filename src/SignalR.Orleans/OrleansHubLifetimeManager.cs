@@ -1,12 +1,10 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Internal.Protocol;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Orleans;
 using Orleans.Streams;
 using SignalR.Orleans.Clients;
-using SignalR.Orleans.Groups;
-using SignalR.Orleans.Users;
+using SignalR.Orleans.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +21,7 @@ namespace SignalR.Orleans
         private IStreamProvider _streamProvider;
         private IAsyncStream<ClientMessage> _serverStream;
         private IAsyncStream<AllMessage> _allStream;
-        private readonly string _hubTypeName = typeof(THub).FullName.Replace('+', '.');
+        private readonly string _hubName = typeof(THub).Name;
 
         public OrleansHubLifetimeManager(
             ILogger<OrleansHubLifetimeManager<THub>> logger,
@@ -33,38 +31,26 @@ namespace SignalR.Orleans
             this._logger = logger;
             this._clusterClient = clusterClient;
 
+            _logger.LogInformation("Initializing: Orleans HubLifetimeManager {hubName} (serverId: {serverId})...", _hubName, _serverId);
             this.SetupStreams().Wait();
+            _logger.LogInformation("Initialized complete: Orleans HubLifetimeManager {hubName} (serverId: {serverId})", _hubName, _serverId);
         }
 
         private async Task SetupStreams()
         {
             this._streamProvider = this._clusterClient.GetStreamProvider(Constants.STREAM_PROVIDER);
             this._serverStream = this._streamProvider.GetStream<ClientMessage>(_serverId, Constants.SERVERS_STREAM);
-            this._allStream = this._streamProvider.GetStream<AllMessage>(Constants.ALL_STREAM_ID, this._hubTypeName);
+            this._allStream = this._streamProvider.GetStream<AllMessage>(Constants.ALL_STREAM_ID, Utils.BuildStreamHubName(this._hubName));
 
             var subscribeTasks = new List<Task>();
             var allStreamHandlers = await _allStream.GetAllSubscriptionHandles();
-            if (allStreamHandlers != null && allStreamHandlers.Count > 0)
-            {
-                foreach (var handler in allStreamHandlers)
-                {
-                    subscribeTasks.Add(handler.ResumeAsync((msg, token) => this.ProcessAllMessage(msg)));
-                }
-            }
-            else
+            if (allStreamHandlers != null)
             {
                 subscribeTasks.Add(this._allStream.SubscribeAsync((msg, token) => this.ProcessAllMessage(msg)));
             }
 
             var serverStreamHandlers = await _serverStream.GetAllSubscriptionHandles();
-            if (serverStreamHandlers != null && serverStreamHandlers.Count > 0)
-            {
-                foreach (var handler in serverStreamHandlers)
-                {
-                    subscribeTasks.Add(handler.ResumeAsync((msg, token) => this.ProcessServerMessage(msg)));
-                }
-            }
-            else
+            if (serverStreamHandlers != null)
             {
                 subscribeTasks.Add(this._serverStream.SubscribeAsync((msg, token) => this.ProcessServerMessage(msg)));
             }
@@ -97,8 +83,8 @@ namespace SignalR.Orleans
 
         public override Task AddGroupAsync(string connectionId, string groupName)
         {
-            var group = this._clusterClient.GetGrain<IGroupGrain>(groupName);
-            return group.Add(connectionId);
+            var group = this._clusterClient.GetGroupGrain(_hubName, groupName);
+            return group.Add(_hubName, connectionId);
         }
 
         public override Task InvokeAllAsync(string methodName, object[] args)
@@ -131,9 +117,8 @@ namespace SignalR.Orleans
             if (string.IsNullOrWhiteSpace(groupName)) throw new ArgumentNullException(nameof(groupName));
             if (string.IsNullOrWhiteSpace(methodName)) throw new ArgumentNullException(nameof(methodName));
 
-            var message = new InvocationMessage(Guid.NewGuid().ToString(), nonBlocking: true, target: methodName, arguments: args);
-            var group = this._clusterClient.GetGrain<IGroupGrain>(groupName);
-            return group.SendMessage(message);
+            var group = this._clusterClient.GetGroupGrain(_hubName, groupName);
+            return group.SendSignalRMessage(methodName, args);
         }
 
         public override Task InvokeUserAsync(string userId, string methodName, object[] args)
@@ -141,9 +126,8 @@ namespace SignalR.Orleans
             if (string.IsNullOrWhiteSpace(userId)) throw new ArgumentNullException(nameof(userId));
             if (string.IsNullOrWhiteSpace(methodName)) throw new ArgumentNullException(nameof(methodName));
 
-            var message = new InvocationMessage(Guid.NewGuid().ToString(), nonBlocking: true, target: methodName, arguments: args);
-            var user = this._clusterClient.GetGrain<IUserGrain>(userId);
-            return user.SendMessage(message);
+            var user = this._clusterClient.GetUserGrain(_hubName, userId);
+            return user.SendSignalRMessage(methodName, args);
         }
 
         public override async Task OnConnectedAsync(HubConnectionContext connection)
@@ -155,29 +139,30 @@ namespace SignalR.Orleans
                 if (connection.User.Identity.IsAuthenticated)
                 {
                     //TODO: replace `connection.User.Identity.Name` with `connection.UserIdentifier` when next signalr will be published.
-                    var user = this._clusterClient.GetGrain<IUserGrain>(connection.User.Identity.Name);
-                    await user.Add(connection.ConnectionId);
+                    var user = this._clusterClient.GetUserGrain(_hubName, connection.User.Identity.Name);
+                    await user.Add(_hubName, connection.ConnectionId);
                 }
 
-                var client = this._clusterClient.GetGrain<IClientGrain>(connection.ConnectionId);
-                await client.OnConnect(this._serverId);
+                var client = this._clusterClient.GetClientGrain(_hubName, connection.ConnectionId);
+                await client.OnConnect(this._serverId, _hubName, connection.ConnectionId);
             }
-            catch (Exception exc)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "An error has occurred 'OnConnectedAsync' while adding connection {connectionId} [hub: {hubName} (serverId: {serverId})]", connection?.ConnectionId, _hubName, _serverId);
                 this._connections.Remove(connection);
-                throw exc;
+                throw ex;
             }
         }
 
         public override async Task OnDisconnectedAsync(HubConnectionContext connection)
         {
-            var client = this._clusterClient.GetGrain<IClientGrain>(connection.ConnectionId);
+            var client = this._clusterClient.GetClientGrain(_hubName, connection.ConnectionId);
             await client.OnDisconnect();
 
             if (connection.User.Identity.IsAuthenticated)
             {
                 //TODO: replace `connection.User.Identity.Name` with `connection.UserIdentifier` when next signalr will be published.
-                var user = this._clusterClient.GetGrain<IUserGrain>(connection.User.Identity.Name);
+                var user = this._clusterClient.GetUserGrain(_hubName, connection.User.Identity.Name);
                 await user.Remove(connection.ConnectionId);
             }
 
@@ -186,7 +171,7 @@ namespace SignalR.Orleans
 
         public override Task RemoveGroupAsync(string connectionId, string groupName)
         {
-            var group = this._clusterClient.GetGrain<IGroupGrain>(groupName);
+            var group = this._clusterClient.GetGroupGrain(_hubName, groupName);
             return group.Remove(connectionId);
         }
 
@@ -203,7 +188,7 @@ namespace SignalR.Orleans
 
         private Task InvokeExternal(string connectionId, object hubMessage)
         {
-            var client = this._clusterClient.GetGrain<IClientGrain>(connectionId);
+            var client = this._clusterClient.GetClientGrain(_hubName, connectionId);
             return client.SendMessage(hubMessage);
         }
 

@@ -1,6 +1,11 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using Microsoft.AspNetCore.SignalR.Internal;
+using Microsoft.AspNetCore.SignalR.Internal.Encoders;
+using Microsoft.AspNetCore.SignalR.Internal.Protocol;
+using Microsoft.AspNetCore.Sockets;
+using Microsoft.AspNetCore.Sockets.Internal;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,22 +13,16 @@ using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Channels;
-using Microsoft.AspNetCore.SignalR.Internal;
-using Microsoft.AspNetCore.SignalR.Internal.Encoders;
-using Microsoft.AspNetCore.SignalR.Internal.Protocol;
-using Microsoft.AspNetCore.Sockets;
-using Microsoft.AspNetCore.Sockets.Internal;
-using Newtonsoft.Json;
 
-namespace Microsoft.AspNetCore.SignalR.Tests
+namespace SignalR.Orleans.Tests
 {
     public class TestClient : IDisposable
     {
         private static int _id;
         private readonly HubProtocolReaderWriter _protocolReaderWriter;
         private readonly IInvocationBinder _invocationBinder;
-        private CancellationTokenSource _cts;
-        private ChannelConnection<byte[]> _transport;
+        private readonly CancellationTokenSource _cts;
+        private readonly ChannelConnection<byte[]> _transport;
 
 
         public DefaultConnectionContext Connection { get; }
@@ -42,7 +41,7 @@ namespace Microsoft.AspNetCore.SignalR.Tests
             Connection = new DefaultConnectionContext(Guid.NewGuid().ToString(), _transport, Application);
 
             var claimValue = Interlocked.Increment(ref _id).ToString();
-            var claims = new List<Claim>{ new Claim(ClaimTypes.Name, claimValue) };
+            var claims = new List<Claim> { new Claim(ClaimTypes.Name, claimValue) };
             if (addClaimId)
             {
                 claims.Add(new Claim(ClaimTypes.NameIdentifier, claimValue));

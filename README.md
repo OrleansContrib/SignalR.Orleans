@@ -14,8 +14,7 @@
 **SignalR.Orleans** is a package that allow us to enhance the _real-time_ capabilities of SignalR by leveraging Orleans distributed cloud platform capabilities.
 
 
-Installation
-============
+# Installation
 
 Installation is performed via [NuGet](https://www.nuget.org/packages/SignalR.Orleans/)
 
@@ -27,29 +26,33 @@ From Package Manager:
 
 > \# dotnet add package SignalR.Orleans --version 1.0.0-preview-1
 
-Packet: 
+Paket: 
 
 > \# paket add SignalR.Orleans --version 1.0.0-preview-1
 
-Code Examples
-=============
+# Configuration
 
+## Silo
 First we need to have an Orleans cluster up and running.
 
-```c#
-var siloConfg = ClusterConfiguration.LocalhostPrimarySilo().AddSignalR();
+```cs
+var siloConfig = ClusterConfiguration.LocalhostPrimarySilo()
+    .AddSignalR();
+
 var silo = new SiloHostBuilder()
-    .UseConfiguration(siloConfg)
+    .UseConfiguration(siloConfig)
     .UseSignalR()
     .Build();
 await silo.StartAsync();
 ```
 
+## Client
 Now your SignalR aplication needs to connect to the Orleans Cluster by using an Orleans Client.
 
-```c#
+```cs
 var clientConfig = ClientConfiguration.LocalhostSilo()
-                .AddSignalR();
+    .AddSignalR();
+
 var client = new ClientBuilder()
     .UseConfiguration(clientConfig)
     .UseSignalR()
@@ -59,7 +62,7 @@ await client.Connect();
 
 Somewhere in your `Startup.cs`:
 
-```c#
+```cs
 public void ConfigureServices(IServiceCollection services)
 {
     ...
@@ -69,7 +72,28 @@ public void ConfigureServices(IServiceCollection services)
     ...
 }
 ```
-
 Great! Now you have an Orleans backplane built in Orleans!
 
-PRs and feedback is **very** welcome!
+# Features
+## Hub Context
+`HubContext` gives you the ability to communicate with the client from orleans grains (outside the hub).
+
+Sample usage: Receiving server push notifications from message brokers, web hooks, etc. Ideally first update your grain state and then push signalr message to the client.
+
+### Example: 
+```cs
+public class UserNotificationGrain : Grain<UserNotificationState>, IUserNotificationGrain
+{
+	private HubContext<IUserNotificationHub> _hubContext;
+
+	public override async Task OnActivateAsync()
+	{
+		_hubContext = GrainFactory.GetHub<IUserNotificationHub>();
+		// some code...
+		await _hubContext.User(this.GetPrimaryKeyString()).SendSignalRMessage("Broadcast", State.UserNotification);
+	}
+}
+```
+
+# Contributions
+PRs and feedback are **very** welcome!

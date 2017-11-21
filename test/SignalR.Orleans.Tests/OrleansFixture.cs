@@ -1,21 +1,25 @@
-using System;
 using Microsoft.Extensions.DependencyInjection;
 using Orleans;
 using Orleans.Hosting;
 using Orleans.Runtime.Configuration;
+using Orleans.Serialization;
+using System;
+using System.Reflection;
 
 namespace SignalR.Orleans.Tests
 {
     public class OrleansFixture : IDisposable
     {
-        public ISiloHost Silo { get; private set; }
-        public IClusterClient Client { get; private set; }
+        public ISiloHost Silo { get; }
+        public IClusterClient Client { get; }
 
         public OrleansFixture()
         {
-            var siloConfg = ClusterConfiguration.LocalhostPrimarySilo().AddSignalR();
+            var siloConfig = ClusterConfiguration.LocalhostPrimarySilo()
+                .AddSignalR();
+            siloConfig.Globals.FallbackSerializationProvider = typeof(ILBasedSerializer).GetTypeInfo();
             var silo = new SiloHostBuilder()
-                .UseConfiguration(siloConfg)
+                .UseConfiguration(siloConfig)
                 .UseSignalR()
                 .Build();
             silo.StartAsync().Wait();
@@ -23,7 +27,13 @@ namespace SignalR.Orleans.Tests
 
             var clientConfig = ClientConfiguration.LocalhostSilo()
                 .AddSignalR();
-            var client = new ClientBuilder().UseConfiguration(clientConfig).UseSignalR().Build();
+
+            clientConfig.FallbackSerializationProvider = typeof(ILBasedSerializer).GetTypeInfo();
+
+            var client = new ClientBuilder().UseConfiguration(clientConfig)
+                .UseSignalR()
+                .Build();
+
             client.Connect().Wait();
             this.Client = client;
         }
