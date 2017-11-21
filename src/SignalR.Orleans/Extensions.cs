@@ -1,5 +1,3 @@
-using System;
-using System.Reflection;
 using Microsoft.AspNetCore.SignalR;
 using Orleans;
 using Orleans.Hosting;
@@ -7,7 +5,7 @@ using Orleans.Runtime.Configuration;
 using Orleans.Serialization;
 using SignalR.Orleans;
 using SignalR.Orleans.Clients;
-using SignalR.Orleans.Groups;
+using System.Reflection;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -41,15 +39,13 @@ namespace Microsoft.Extensions.DependencyInjection
         public static ISiloHostBuilder UseSignalR(this ISiloHostBuilder builder)
         {
             return builder
-                .AddApplicationPartsFromReferences(typeof(ClientGrain).Assembly)
-                .AddApplicationPartsFromReferences(typeof(GroupGrain).Assembly);
+                .AddApplicationPartsFromReferences(typeof(ClientGrain).Assembly);
         }
 
         public static IClientBuilder UseSignalR(this IClientBuilder builder)
         {
             return builder
-                .AddApplicationPartsFromReferences(typeof(IClientGrain).Assembly)
-                .AddApplicationPartsFromReferences(typeof(IGroupGrain).Assembly);
+                .AddApplicationPartsFromReferences(typeof(IClientGrain).Assembly);
         }
 
         public static ISignalRBuilder AddOrleans(this ISignalRBuilder builder, IClientBuilder clientBuilder)
