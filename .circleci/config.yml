@@ -1,0 +1,16 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: microsoft/dotnet
+    steps:
+      - checkout
+      - run:
+          name: restore
+          command: dotnet restore
+      - run:
+          name: build
+          command: dotnet build -c Release
+      - run:
+          name: test
+          command: dotnet test test/SignalR.Orleans.Tests/SignalR.Orleans.Tests.csproj -c Release

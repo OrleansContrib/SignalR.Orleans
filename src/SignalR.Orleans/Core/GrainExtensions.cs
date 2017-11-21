@@ -26,12 +26,12 @@ namespace Orleans
         }
 
         internal static IClientGrain GetClientGrain(this IGrainFactory factory, string hubName, string connectionId)
-            => factory.GetGrain<IClientGrain>(Utils.BuildGrainName(hubName, connectionId));
+            => factory.GetGrain<IClientGrain>(Utils.BuildGrainId(hubName, connectionId));
 
         internal static IGroupGrain GetGroupGrain(this IGrainFactory factory, string hubName, string groupName)
-            => factory.GetGrain<IGroupGrain>(Utils.BuildGrainName(hubName, groupName));
+            => factory.GetGrain<IGroupGrain>(Utils.BuildGrainId(hubName, groupName));
 
         internal static IUserGrain GetUserGrain(this IGrainFactory factory, string hubName, string userId)
-            => factory.GetGrain<IUserGrain>(Utils.BuildGrainName(hubName, userId));
+            => factory.GetGrain<IUserGrain>(Utils.BuildGrainId(hubName, userId));
     }
 }

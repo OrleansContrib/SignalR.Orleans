@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Orleans;
 using Orleans.Streams;
 using SignalR.Orleans.Clients;
+using SignalR.Orleans.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace SignalR.Orleans
 {
-    public class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>, IDisposable
+	public class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>, IDisposable
     {
         private readonly HubConnectionList _connections = new HubConnectionList();
         private ILogger _logger;
@@ -39,7 +40,7 @@ namespace SignalR.Orleans
         {
             this._streamProvider = this._clusterClient.GetStreamProvider(Constants.STREAM_PROVIDER);
             this._serverStream = this._streamProvider.GetStream<ClientMessage>(_serverId, Constants.SERVERS_STREAM);
-            this._allStream = this._streamProvider.GetStream<AllMessage>(Constants.ALL_STREAM_ID, Constants.STREAM_PER_HUBNAME(this._hubName));
+            this._allStream = this._streamProvider.GetStream<AllMessage>(Constants.ALL_STREAM_ID, Utils.BuildStreamHubName(this._hubName));
 
             var subscribeTasks = new List<Task>();
             var allStreamHandlers = await _allStream.GetAllSubscriptionHandles();
@@ -157,6 +158,14 @@ namespace SignalR.Orleans
         {
             var client = this._clusterClient.GetClientGrain(_hubName, connection.ConnectionId);
             await client.OnDisconnect();
+
+            if (connection.User.Identity.IsAuthenticated)
+            {
+                //TODO: replace `connection.User.Identity.Name` with `connection.UserIdentifier` when next signalr will be published.
+                var user = this._clusterClient.GetUserGrain(_hubName, connection.User.Identity.Name);
+                await user.Remove(connection.ConnectionId);
+            }
+
             this._connections.Remove(connection);
         }
 
