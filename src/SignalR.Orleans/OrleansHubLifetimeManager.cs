@@ -83,7 +83,7 @@ namespace SignalR.Orleans
         public override Task AddGroupAsync(string connectionId, string groupName)
         {
             var group = this._clusterClient.GetGroupGrain(_hubName, groupName);
-            return group.AddMember(_hubName, connectionId);
+            return group.Add(_hubName, connectionId);
         }
 
         public override Task InvokeAllAsync(string methodName, object[] args)
@@ -139,7 +139,7 @@ namespace SignalR.Orleans
                 {
                     //TODO: replace `connection.User.Identity.Name` with `connection.UserIdentifier` when next signalr will be published.
                     var user = this._clusterClient.GetUserGrain(_hubName, connection.User.Identity.Name);
-                    await user.AddMember(_hubName, connection.ConnectionId);
+                    await user.Add(_hubName, connection.ConnectionId);
                 }
 
                 var client = this._clusterClient.GetClientGrain(_hubName, connection.ConnectionId);
@@ -163,7 +163,7 @@ namespace SignalR.Orleans
         public override Task RemoveGroupAsync(string connectionId, string groupName)
         {
             var group = this._clusterClient.GetGroupGrain(_hubName, groupName);
-            return group.RemoveMember(connectionId);
+            return group.Remove(connectionId);
         }
 
         private async Task InvokeLocal(HubConnectionContext connection, HubMessage hubMessage)

@@ -11,7 +11,7 @@ namespace Orleans
 {
     public static class GrainSignalRExtensions
     {
-        public static async Task SendSignalRMessage(this IConnectionGroupGrain grain, string methodName, params object[] message)
+        public static async Task SendSignalRMessage(this IConnectionGrain grain, string methodName, params object[] message)
         {
             var invocationMessage = new InvocationMessage(Guid.NewGuid().ToString(), nonBlocking: true, target: methodName, arguments: message);
             await grain.SendMessage(invocationMessage);

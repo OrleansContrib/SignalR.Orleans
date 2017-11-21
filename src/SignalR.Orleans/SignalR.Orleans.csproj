@@ -8,7 +8,7 @@
     <PackageId>SignalR.Orleans</PackageId>
     <Title>SignalR.Orleans - Orleans backplane for SignalR Core</Title>
     <Description>Orleans backplane for SignalR Core.</Description>
-    <Authors>Gutemberg Ribeiro</Authors>
+    <Authors>Gutemberg Ribeiro, Clayton Lautier</Authors>
     <Product>Orleans SignalR Backplane</Product>
     <PackageLicenseUrl>https://github.com/dotnet/Orleans#license</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/OrleansContrib/SignalR.Orleans</PackageProjectUrl>
@@ -24,10 +24,10 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Core" Version="1.0.0-alpha2-final" />
-    <PackageReference Include="Microsoft.Orleans.Core" Version="2.0.0-*" />
-    <PackageReference Include="Microsoft.Orleans.OrleansProviders" Version="2.0.0-*" />
-    <PackageReference Include="Microsoft.Orleans.OrleansRuntime" Version="2.0.0-*" />
-    <PackageReference Include="Microsoft.Orleans.OrleansCodeGenerator.Build" Version="2.0.0-*" />
+    <PackageReference Include="Microsoft.Orleans.Core" Version="2.0.0-beta*" />
+    <PackageReference Include="Microsoft.Orleans.OrleansProviders" Version="2.0.0-beta*" />
+    <PackageReference Include="Microsoft.Orleans.OrleansRuntime" Version="2.0.0-beta*" />
+    <PackageReference Include="Microsoft.Orleans.OrleansCodeGenerator.Build" Version="2.0.0-beta*" />
   </ItemGroup>
   
 </Project>
