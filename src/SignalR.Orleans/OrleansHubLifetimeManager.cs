@@ -211,7 +211,6 @@ namespace SignalR.Orleans
         }
     }
 
-    [Serializable]
     public class AllMessage
     {
         public IReadOnlyList<string> ExcludedIds { get; set; }

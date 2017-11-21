@@ -1,8 +1,5 @@
-using System;
-
 namespace SignalR.Orleans.Clients
 {
-    [Serializable]
     public class ClientMessage
     {
         public string HubName { get; set; }
