@@ -2,7 +2,7 @@ using SignalR.Orleans.Core;
 
 namespace SignalR.Orleans.Groups
 {
-    public interface IGroupGrain : IConnectionGroupGrain
+    public interface IGroupGrain : IConnectionGrain
     {
     }
 }

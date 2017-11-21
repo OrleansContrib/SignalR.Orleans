@@ -2,7 +2,7 @@
 
 namespace SignalR.Orleans.Users
 {
-    public interface IUserGrain : IConnectionGroupGrain
+    public interface IUserGrain : IConnectionGrain
     {
     }
 }
