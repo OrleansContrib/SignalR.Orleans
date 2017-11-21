@@ -1,17 +1,16 @@
+using Microsoft.Extensions.DependencyInjection;
+using Orleans.Runtime;
+using Orleans.Serialization;
+using SignalR.Orleans.Clients;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Extensions.DependencyInjection;
-using SignalR.Orleans.Clients;
-using SignalR.Orleans.Groups;
-using Orleans.Runtime;
-using Orleans.Serialization;
 
 namespace SignalR.Orleans
 {
     public class HubMessageSerializer : IExternalSerializer
     {
-        private readonly IReadOnlyList<Type> _supportedType = new List<Type> { typeof(GroupMessage), typeof(AllMessage), typeof(ClientMessage) };
+        private readonly IReadOnlyList<Type> _supportedType = new List<Type> { typeof(AllMessage), typeof(ClientMessage) };
         private readonly ILBasedSerializer _serializer;
 
         public HubMessageSerializer(IServiceProvider serviceProvider)

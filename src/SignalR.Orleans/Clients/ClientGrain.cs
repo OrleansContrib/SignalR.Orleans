@@ -1,8 +1,8 @@
-using System;
-using System.Threading.Tasks;
 using Orleans;
 using Orleans.Providers;
 using Orleans.Streams;
+using System;
+using System.Threading.Tasks;
 
 namespace SignalR.Orleans.Clients
 {
@@ -43,7 +43,7 @@ namespace SignalR.Orleans.Clients
         }
     }
 
-    public class ClientState
+    internal class ClientState
     {
         public Guid ServerId { get; set; }
     }
