@@ -19,7 +19,7 @@
     <RepositoryType>git</RepositoryType>
     <IncludeSymbols>true</IncludeSymbols>
     <IncludeSource>true</IncludeSource>
-    <VersionPrefix>1.0.0-preview-2</VersionPrefix>
+    <VersionPrefix>1.0.0-preview-3</VersionPrefix>
   </PropertyGroup>
 
   <ItemGroup>
