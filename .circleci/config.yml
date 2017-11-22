@@ -14,3 +14,21 @@ jobs:
       - run:
           name: test
           command: dotnet test test/SignalR.Orleans.Tests/SignalR.Orleans.Tests.csproj -c Release
+      - deploy:
+          name: Publish NuGet
+          command: |
+            if [ "$CIRCLE_BRANCH" != "release" ]; then
+              echo -e "\e[33m Branch does not publish -- exit!"
+              exit
+            fi
+            . ./.circleci/utils.sh
+            if [ "$NUGET_API_KEY" == "" ]; then
+              echo NUGET_API_KEY environment variable not defined.
+              exit 1
+            fi
+            PACKAGE_VERSION=1.0.0-preview-$CIRCLE_BUILD_NUM
+            dotnet pack /p:PackageVersion=$PACKAGE_VERSION -o ../../ -c release --include-symbols
+            dotnet nuget push *.nupkg -k $NUGET_API_KEY -s https://www.nuget.org/api/v2/package
+            print_title "git tag"
+            git tag $PACKAGE_VERSION
+            git push --tags
