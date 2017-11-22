@@ -17,10 +17,10 @@ jobs:
       - deploy:
           name: Publish NuGet
           command: |
-            # if [ "$CIRCLE_BRANCH" != "releases" ]; then
-            #   echo -e "\e[33m Branch does not publish -- exit!"
-            #   exit
-            # fi
+            if [ "$CIRCLE_BRANCH" != "release" ]; then
+              echo -e "\e[33m Branch does not publish -- exit!"
+              exit
+            fi
             . ./.circleci/utils.sh
             if [ "$NUGET_API_KEY" == "" ]; then
               echo NUGET_API_KEY environment variable not defined.
