@@ -20,21 +20,24 @@ Installation is performed via [NuGet](https://www.nuget.org/packages/SignalR.Orl
 
 From Package Manager:
 
-> PS> Install-Package SignalR.Orleans -Version 1.0.0-preview-1
+> PS> Install-Package SignalR.Orleans -prerelease
 
 .Net CLI:
 
-> \# dotnet add package SignalR.Orleans --version 1.0.0-preview-1
+> \# dotnet add package SignalR.Orleans -prerelease
 
 Paket: 
 
-> \# paket add SignalR.Orleans --version 1.0.0-preview-1
+> \# paket add SignalR.Orleans -prerelease
 
 # Configuration
 
 ## Silo
-First we need to have an Orleans cluster up and running.
+We need to configure the Orleans Silo with the below:
+* Use `.AddSignalR()` on `ClusterConfiguration`.
+* Use `.UseSignalR()` on `ISiloHostBuilder`.
 
+***Example***
 ```cs
 var siloConfig = ClusterConfiguration.LocalhostPrimarySilo()
     .AddSignalR();
@@ -47,8 +50,11 @@ await silo.StartAsync();
 ```
 
 ## Client
-Now your SignalR aplication needs to connect to the Orleans Cluster by using an Orleans Client.
+Now your SignalR application needs to connect to the Orleans Cluster by using an Orleans Client:
+* Use `.AddSignalR()` on `ClientConfiguration`.
+* Use `.UseSignalR()` on `IClientBuilder`.
 
+***Example***
 ```cs
 var clientConfig = ClientConfiguration.LocalhostSilo()
     .AddSignalR();
@@ -57,22 +63,24 @@ var client = new ClientBuilder()
     .UseConfiguration(clientConfig)
     .UseSignalR()
     .Build();
-await client.Connect();
+    await client.Connect();
 ```
 
 Somewhere in your `Startup.cs`:
+* Use `.AddSignalR()` on `IServiceCollection` (this is part of `Microsoft.AspNetCore.SignalR` nuget package).
+* Use `.AddOrleans()` on `ISignalRBuilder`.
 
+***Example***
 ```cs
 public void ConfigureServices(IServiceCollection services)
 {
     ...
-
     services.AddSignalR()
-            .AddOrleans(client);
+            .AddOrleans();
     ...
 }
 ```
-Great! Now you have an Orleans backplane built in Orleans!
+Great! Now you have SignalR configured and Orleans SignalR backplane built in Orleans!
 
 # Features
 ## Hub Context
