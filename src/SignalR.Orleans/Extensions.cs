@@ -26,8 +26,8 @@ namespace Microsoft.Extensions.DependencyInjection
 
         public static ISiloHostBuilder UseSignalR(this ISiloHostBuilder builder)
         {
-            return builder
-                .AddApplicationPartsFromReferences(typeof(ClientGrain).Assembly);
+            return builder.ConfigureApplicationParts(mgr =>
+                mgr.AddApplicationPart(typeof(ClientGrain).Assembly));
         }
     }
 
@@ -41,8 +41,8 @@ namespace Microsoft.Extensions.DependencyInjection
 
         public static IClientBuilder UseSignalR(this IClientBuilder builder)
         {
-            return builder
-                .AddApplicationPartsFromReferences(typeof(IClientGrain).Assembly);
+            return builder.ConfigureApplicationParts(mgr =>
+                mgr.AddApplicationPart(typeof(IClientGrain).Assembly));
         }
 
         public static ISignalRBuilder AddOrleans(this ISignalRBuilder builder)
