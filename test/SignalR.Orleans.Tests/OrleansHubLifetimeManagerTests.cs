@@ -128,7 +128,7 @@ namespace SignalR.Orleans.Tests
         public async Task InvokeConnectionAsync_OnNonExistentConnection_WithoutCalling_OnConnect_ThrowsException()
         {
             var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.Client);
-            await Assert.ThrowsAsync<InvalidOperationException>(() => manager.InvokeConnectionAsync("NotARealConnectionIdV2", "Hello", new object[] { "World" }));
+            await Assert.ThrowsAsync<TimeoutException>(() => manager.InvokeConnectionAsync("NotARealConnectionIdV2", "Hello", new object[] { "World" }));
         }
 
         [Fact]
