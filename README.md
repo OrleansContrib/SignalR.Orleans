@@ -4,7 +4,7 @@
 </p>
 
 [![CircleCI](https://circleci.com/gh/OrleansContrib/SignalR.Orleans/tree/master.svg?style=svg)](https://circleci.com/gh/OrleansContrib/SignalR.Orleans/tree/master)
-[![NuGet](https://img.shields.io/nuget/v/SignalR.Orleans.svg?style=flat)](http://www.nuget.org/profiles/SignalR.Orleans)
+[![NuGet](https://img.shields.io/nuget/v/SignalR.Orleans.svg?style=flat)](http://www.nuget.org/packages/SignalR.Orleans)
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dotnet/orleans?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 [Orleans](https://github.com/dotnet/orleans) is a framework that provides a straight-forward approach to building distributed high-scale computing applications, without the need to learn and apply complex concurrency or other scaling patterns. 
