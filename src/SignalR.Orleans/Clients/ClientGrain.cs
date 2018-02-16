@@ -19,6 +19,7 @@ namespace SignalR.Orleans.Clients
             if (this.State.ServerId == Guid.Empty)
                 return Task.CompletedTask;
 
+            // todo: check if rehydration is needed? maybe change storage provider to stateful
             this._clientDisconnectStream = this._streamProvider.GetStream<string>(Constants.CLIENT_DISCONNECT_STREAM_ID, this.State.ConnectionId);
             this._serverStream = this._streamProvider.GetStream<ClientMessage>(this.State.ServerId, Constants.SERVERS_STREAM);
             return Task.CompletedTask;
@@ -44,8 +45,11 @@ namespace SignalR.Orleans.Clients
 
         public async Task OnDisconnect()
         {
-            await this._clientDisconnectStream.OnNextAsync(this.State.ConnectionId);
-            await this.ClearStateAsync();
+            if (this.State.ConnectionId != null)
+            {
+                await this._clientDisconnectStream.OnNextAsync(this.State.ConnectionId);
+                await this.ClearStateAsync();
+            }
             this.DeactivateOnIdle();
         }
     }
