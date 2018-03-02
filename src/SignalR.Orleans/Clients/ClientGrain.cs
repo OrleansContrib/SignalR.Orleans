@@ -44,7 +44,10 @@ namespace SignalR.Orleans.Clients
 
         public async Task OnDisconnect()
         {
-            await this._clientDisconnectStream.OnNextAsync(this.State.ConnectionId);
+            if (this.State.ConnectionId != null)
+            {
+                await this._clientDisconnectStream.OnNextAsync(this.State.ConnectionId);
+            }
             await this.ClearStateAsync();
             this.DeactivateOnIdle();
         }

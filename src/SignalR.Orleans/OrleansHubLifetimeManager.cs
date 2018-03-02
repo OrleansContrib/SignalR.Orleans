@@ -1,21 +1,21 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Internal.Protocol;
 using Microsoft.Extensions.Logging;
 using Orleans;
 using Orleans.Streams;
 using SignalR.Orleans.Clients;
 using SignalR.Orleans.Core;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace SignalR.Orleans
 {
     public class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>, IDisposable
     {
         private readonly HubConnectionList _connections = new HubConnectionList();
-        private ILogger _logger;
+        private readonly ILogger _logger;
         private readonly IClusterClient _clusterClient;
         private readonly Guid _serverId;
         private IStreamProvider _streamProvider;
@@ -42,18 +42,13 @@ namespace SignalR.Orleans
             this._serverStream = this._streamProvider.GetStream<ClientMessage>(_serverId, Constants.SERVERS_STREAM);
             this._allStream = this._streamProvider.GetStream<AllMessage>(Constants.ALL_STREAM_ID, Utils.BuildStreamHubName(this._hubName));
 
-            var subscribeTasks = new List<Task>();
-            var allStreamHandlers = await _allStream.GetAllSubscriptionHandles();
-            if (allStreamHandlers != null)
+            var subscribeTasks = new List<Task>
             {
-                subscribeTasks.Add(this._allStream.SubscribeAsync((msg, token) => this.ProcessAllMessage(msg)));
-            }
+                this._allStream.SubscribeAsync((msg, token) => this.ProcessAllMessage(msg)),
+                this._serverStream.SubscribeAsync((msg, token) => this.ProcessServerMessage(msg))
+            };
 
-            var serverStreamHandlers = await _serverStream.GetAllSubscriptionHandles();
-            if (serverStreamHandlers != null)
-            {
-                subscribeTasks.Add(this._serverStream.SubscribeAsync((msg, token) => this.ProcessServerMessage(msg)));
-            }
+            await Task.WhenAll(subscribeTasks);
         }
 
         private Task ProcessAllMessage(AllMessage message)
@@ -63,8 +58,7 @@ namespace SignalR.Orleans
 
             foreach (var connection in this._connections)
             {
-                if (connection.ConnectionAbortedToken != null &&
-                    connection.ConnectionAbortedToken.IsCancellationRequested)
+                if (connection.ConnectionAbortedToken.IsCancellationRequested)
                     continue;
 
                 if (message.ExcludedIds == null || !message.ExcludedIds.Contains(connection.ConnectionId))
@@ -150,7 +144,7 @@ namespace SignalR.Orleans
             {
                 _logger.LogError(ex, "An error has occurred 'OnConnectedAsync' while adding connection {connectionId} [hub: {hubName} (serverId: {serverId})]", connection?.ConnectionId, _hubName, _serverId);
                 this._connections.Remove(connection);
-                throw ex;
+                throw;
             }
         }
 
