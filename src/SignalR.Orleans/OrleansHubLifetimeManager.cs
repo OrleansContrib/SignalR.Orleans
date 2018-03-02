@@ -1,14 +1,14 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Internal.Protocol;
 using Microsoft.Extensions.Logging;
 using Orleans;
 using Orleans.Streams;
 using SignalR.Orleans.Clients;
 using SignalR.Orleans.Core;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace SignalR.Orleans
 {
@@ -42,24 +42,12 @@ namespace SignalR.Orleans
             this._serverStream = this._streamProvider.GetStream<ClientMessage>(_serverId, Constants.SERVERS_STREAM);
             this._allStream = this._streamProvider.GetStream<AllMessage>(Constants.ALL_STREAM_ID, Utils.BuildStreamHubName(this._hubName));
 
-            var subscribeTasks = new List<Task>();
-            var unsubscribeTasks = new List<Task>();
-            var allStreamHandlers = await _allStream.GetAllSubscriptionHandles();
-            if (allStreamHandlers.Any())
+            var subscribeTasks = new List<Task>
             {
-                unsubscribeTasks.AddRange(allStreamHandlers.Select(x => x.UnsubscribeAsync()));
-            }
+                this._allStream.SubscribeAsync((msg, token) => this.ProcessAllMessage(msg)),
+                this._serverStream.SubscribeAsync((msg, token) => this.ProcessServerMessage(msg))
+            };
 
-            var serverStreamHandlers = await _serverStream.GetAllSubscriptionHandles();
-            if (serverStreamHandlers.Any())
-            {
-                unsubscribeTasks.AddRange(serverStreamHandlers.Select(x => x.UnsubscribeAsync()));
-            }
-
-            subscribeTasks.Add(this._allStream.SubscribeAsync((msg, token) => this.ProcessAllMessage(msg)));
-            subscribeTasks.Add(this._serverStream.SubscribeAsync((msg, token) => this.ProcessServerMessage(msg)));
-
-            await Task.WhenAll(unsubscribeTasks);
             await Task.WhenAll(subscribeTasks);
         }
 
