@@ -1,10 +1,10 @@
+using System;
+using System.Net;
 using Microsoft.Extensions.DependencyInjection;
 using Orleans;
+using Orleans.Configuration;
 using Orleans.Hosting;
-using Orleans.Runtime.Configuration;
-using Orleans.Serialization;
-using System;
-using System.Reflection;
+using Orleans.Runtime;
 
 namespace SignalR.Orleans.Tests
 {
@@ -15,28 +15,29 @@ namespace SignalR.Orleans.Tests
 
         public OrleansFixture()
         {
-            var siloConfig = ClusterConfiguration.LocalhostPrimarySilo()
-                .AddSignalR();
-            siloConfig.Globals.FallbackSerializationProvider = typeof(ILBasedSerializer).GetTypeInfo();
+            var siloPort = 11111;
+            int gatewayPort = 30000;
+            var siloAddress = IPAddress.Loopback;
+
             var silo = new SiloHostBuilder()
-                .UseConfiguration(siloConfig)
+                .Configure(options => options.ClusterId = "test-cluster")
+                .UseDevelopmentClustering(options => options.PrimarySiloEndpoint = new IPEndPoint(siloAddress, siloPort))
+                .ConfigureEndpoints(siloAddress, siloPort, gatewayPort)
                 .UseSignalR()
                 .Build();
             silo.StartAsync().Wait();
             this.Silo = silo;
 
-            var clientConfig = ClientConfiguration.LocalhostSilo()
-                .AddSignalR();
-
-            clientConfig.FallbackSerializationProvider = typeof(ILBasedSerializer).GetTypeInfo();
-
-            var client = new ClientBuilder().UseConfiguration(clientConfig)
+            var client = new ClientBuilder()
+                .ConfigureCluster(options => options.ClusterId = "test-cluster")
+                .UseStaticClustering(options => options.Gateways.Add(new IPEndPoint(siloAddress, gatewayPort).ToGatewayUri()))
                 .UseSignalR()
                 .Build();
 
             client.Connect().Wait();
             this.Client = client;
         }
+
         public void Dispose()
         {
             Client.Close().Wait();

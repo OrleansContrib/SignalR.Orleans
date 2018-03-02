@@ -34,16 +34,18 @@ Paket:
 
 ## Silo
 We need to configure the Orleans Silo with the below:
-* Use `.AddSignalR()` on `ClusterConfiguration`.
 * Use `.UseSignalR()` on `ISiloHostBuilder`.
 
 ***Example***
 ```cs
-var siloConfig = ClusterConfiguration.LocalhostPrimarySilo()
-    .AddSignalR();
+var siloPort = 11111;
+int gatewayPort = 30000;
+var siloAddress = IPAddress.Loopback;
 
 var silo = new SiloHostBuilder()
-    .UseConfiguration(siloConfig)
+    .Configure(options => options.ClusterId = "test-cluster")
+    .UseDevelopmentClustering(options => options.PrimarySiloEndpoint = new IPEndPoint(siloAddress, siloPort))
+    .ConfigureEndpoints(siloAddress, siloPort, gatewayPort)
     .UseSignalR()
     .Build();
 await silo.StartAsync();
@@ -51,16 +53,13 @@ await silo.StartAsync();
 
 ## Client
 Now your SignalR application needs to connect to the Orleans Cluster by using an Orleans Client:
-* Use `.AddSignalR()` on `ClientConfiguration`.
 * Use `.UseSignalR()` on `IClientBuilder`.
 
 ***Example***
 ```cs
-var clientConfig = ClientConfiguration.LocalhostSilo()
-    .AddSignalR();
-
 var client = new ClientBuilder()
-    .UseConfiguration(clientConfig)
+    .ConfigureCluster(options => options.ClusterId = "test-cluster")
+    .UseStaticClustering(options => options.Gateways.Add(new IPEndPoint(siloAddress, gatewayPort).ToGatewayUri()))
     .UseSignalR()
     .Build();
     await client.Connect();
@@ -68,7 +67,6 @@ var client = new ClientBuilder()
 
 Somewhere in your `Startup.cs`:
 * Use `.AddSignalR()` on `IServiceCollection` (this is part of `Microsoft.AspNetCore.SignalR` nuget package).
-* Use `.AddOrleans()` on `ISignalRBuilder`.
 
 ***Example***
 ```cs

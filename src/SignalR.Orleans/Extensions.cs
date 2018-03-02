@@ -1,54 +1,30 @@
 using Microsoft.AspNetCore.SignalR;
 using Orleans;
 using Orleans.Hosting;
-using Orleans.Runtime.Configuration;
 using SignalR.Orleans;
-using SignalR.Orleans.Clients;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
     public static class OrleansServerExtensions
     {
-        public static ClusterConfiguration AddSignalR(this ClusterConfiguration config)
-        {
-            config.AddSimpleMessageStreamProvider(Constants.STREAM_PROVIDER);
-            try
-            {
-                config.AddMemoryStorageProvider("PubSubStore");
-            }
-            catch
-            {
-                // PubSubStore was already added. Do nothing.
-            }
-            config.AddMemoryStorageProvider(Constants.STORAGE_PROVIDER);
-            return config;
-        }
-
         public static ISiloHostBuilder UseSignalR(this ISiloHostBuilder builder)
         {
-            return builder.ConfigureApplicationParts(mgr =>
-                mgr.AddApplicationPart(typeof(ClientGrain).Assembly));
+            try { builder = builder.AddMemoryGrainStorage("PubSubStore"); }
+            catch { /** PubSubStore was already added. Do nothing. **/ }
+
+            return builder.AddMemoryGrainStorage(Constants.STORAGE_PROVIDER)
+                .AddSimpleMessageStreamProvider(Constants.STREAM_PROVIDER)
+                .ConfigureApplicationParts(parts => parts.AddFromAppDomain().AddFromApplicationBaseDirectory());
         }
     }
 
     public static class OrleansClientExtensions
     {
-        public static ClientConfiguration AddSignalR(this ClientConfiguration config)
-        {
-            config.AddSimpleMessageStreamProvider(Constants.STREAM_PROVIDER);
-            return config;
-        }
-
         public static IClientBuilder UseSignalR(this IClientBuilder builder)
         {
-            return builder.ConfigureApplicationParts(mgr =>
-                mgr.AddApplicationPart(typeof(IClientGrain).Assembly));
-        }
-
-        public static ISignalRBuilder AddOrleans(this ISignalRBuilder builder)
-        {
-            builder.Services.AddSingleton(typeof(HubLifetimeManager<>), typeof(OrleansHubLifetimeManager<>));
-            return builder;
+            return builder.AddSimpleMessageStreamProvider(Constants.STREAM_PROVIDER)
+                .ConfigureApplicationParts(parts => parts.AddFromAppDomain().AddFromApplicationBaseDirectory())
+                .ConfigureServices(services => services.AddSingleton(typeof(HubLifetimeManager<>), typeof(OrleansHubLifetimeManager<>)));
         }
     }
 }
