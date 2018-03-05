@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.SignalR;
 using Orleans;
 using Orleans.Hosting;
 using SignalR.Orleans;
+using SignalR.Orleans.Clients;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -14,7 +15,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
             return builder.AddMemoryGrainStorage(Constants.STORAGE_PROVIDER)
                 .AddSimpleMessageStreamProvider(Constants.STREAM_PROVIDER)
-                .ConfigureApplicationParts(parts => parts.AddFromAppDomain().AddFromApplicationBaseDirectory());
+                .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(ClientGrain).Assembly));
         }
     }
 
@@ -23,7 +24,7 @@ namespace Microsoft.Extensions.DependencyInjection
         public static IClientBuilder UseSignalR(this IClientBuilder builder)
         {
             return builder.AddSimpleMessageStreamProvider(Constants.STREAM_PROVIDER)
-                .ConfigureApplicationParts(parts => parts.AddFromAppDomain().AddFromApplicationBaseDirectory())
+                .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(IClientGrain).Assembly))
                 .ConfigureServices(services => services.AddSingleton(typeof(HubLifetimeManager<>), typeof(OrleansHubLifetimeManager<>)));
         }
     }
