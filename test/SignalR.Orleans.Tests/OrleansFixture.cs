@@ -20,7 +20,7 @@ namespace SignalR.Orleans.Tests
             var siloAddress = IPAddress.Loopback;
 
             var silo = new SiloHostBuilder()
-                .Configure(options => options.ClusterId = "test-cluster")
+                .Configure<ClusterOptions>(options => options.ClusterId = "test-cluster")
                 .UseDevelopmentClustering(options => options.PrimarySiloEndpoint = new IPEndPoint(siloAddress, siloPort))
                 .ConfigureEndpoints(siloAddress, siloPort, gatewayPort)
                 .UseSignalR()
@@ -29,7 +29,7 @@ namespace SignalR.Orleans.Tests
             this.Silo = silo;
 
             var client = new ClientBuilder()
-                .ConfigureCluster(options => options.ClusterId = "test-cluster")
+                .Configure<ClusterOptions>(options => options.ClusterId = "test-cluster")
                 .UseStaticClustering(options => options.Gateways.Add(new IPEndPoint(siloAddress, gatewayPort).ToGatewayUri()))
                 .UseSignalR()
                 .Build();
