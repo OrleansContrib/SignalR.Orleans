@@ -43,9 +43,6 @@ int gatewayPort = 30000;
 var siloAddress = IPAddress.Loopback;
 
 var silo = new SiloHostBuilder()
-    .Configure(options => options.ClusterId = "test-cluster")
-    .UseDevelopmentClustering(options => options.PrimarySiloEndpoint = new IPEndPoint(siloAddress, siloPort))
-    .ConfigureEndpoints(siloAddress, siloPort, gatewayPort)
     .UseSignalR()
     .Build();
 await silo.StartAsync();
@@ -58,8 +55,6 @@ Now your SignalR application needs to connect to the Orleans Cluster by using an
 ***Example***
 ```cs
 var client = new ClientBuilder()
-    .ConfigureCluster(options => options.ClusterId = "test-cluster")
-    .UseStaticClustering(options => options.Gateways.Add(new IPEndPoint(siloAddress, gatewayPort).ToGatewayUri()))
     .UseSignalR()
     .Build();
     await client.Connect();
@@ -73,8 +68,7 @@ Somewhere in your `Startup.cs`:
 public void ConfigureServices(IServiceCollection services)
 {
     ...
-    services.AddSignalR()
-            .AddOrleans();
+    services.AddSignalR();
     ...
 }
 ```
