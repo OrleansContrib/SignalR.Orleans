@@ -27,13 +27,16 @@ var client = new ClientBuilder()
 
 Somewhere in your `Startup.cs`:
 * Use `.AddSignalR()` on `IServiceCollection` (this is part of `Microsoft.AspNetCore.SignalR` nuget package).
+* Use `AddOrleans()` on `.AddSignalR()`.
 
 ***Example***
 ```cs
 public void ConfigureServices(IServiceCollection services)
 {
     ...
-    services.AddSignalR();
+    services
+        .AddSignalR()
+        .AddOrleans();
     ...
 }
 ```
