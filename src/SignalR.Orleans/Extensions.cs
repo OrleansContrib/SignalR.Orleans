@@ -24,8 +24,16 @@ namespace Microsoft.Extensions.DependencyInjection
         public static IClientBuilder UseSignalR(this IClientBuilder builder, bool useFireAndForgetDelivery = false)
         {
             return builder.AddSimpleMessageStreamProvider(Constants.STREAM_PROVIDER, opt => opt.FireAndForgetDelivery = useFireAndForgetDelivery)
-                .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(IClientGrain).Assembly).WithReferences())
-                .ConfigureServices(services => services.AddSingleton(typeof(HubLifetimeManager<>), typeof(OrleansHubLifetimeManager<>)));
+                .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(IClientGrain).Assembly).WithReferences());
+        }
+    }
+
+    public static class ServiceCollectionExtensions
+    {
+        public static ISignalRBuilder AddOrleans(this ISignalRBuilder builder)
+        {
+            builder.Services.AddSingleton(typeof(HubLifetimeManager<>), typeof(OrleansHubLifetimeManager<>));
+            return builder;
         }
     }
 }
