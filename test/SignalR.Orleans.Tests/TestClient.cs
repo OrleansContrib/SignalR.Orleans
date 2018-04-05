@@ -22,8 +22,8 @@ namespace SignalR.Orleans.Tests
         private static int _id;
         private readonly HubProtocolReaderWriter _protocolReaderWriter;
         private readonly IInvocationBinder _invocationBinder;
-        private CancellationTokenSource _cts;
-        private ChannelConnection<byte[]> _transport;
+        private readonly CancellationTokenSource _cts;
+        private readonly ChannelConnection<byte[]> _transport;
 
         public DefaultConnectionContext Connection { get; }
         public Channel<byte[]> Application { get; }
