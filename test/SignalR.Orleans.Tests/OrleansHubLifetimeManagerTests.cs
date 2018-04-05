@@ -38,7 +38,7 @@ namespace SignalR.Orleans.Tests
                 await manager.OnConnectedAsync(connection1);
                 await manager.OnConnectedAsync(connection2);
 
-                await manager.InvokeAllAsync("Hello", new object[] { "World" });
+                await manager.SendAllAsync("Hello", new object[] { "World" });
 
                 AssertMessage(output1);
                 AssertMessage(output2);
@@ -63,7 +63,7 @@ namespace SignalR.Orleans.Tests
 
                 await manager.OnDisconnectedAsync(connection2);
 
-                await manager.InvokeAllAsync("Hello", new object[] { "World" });
+                await manager.SendAllAsync("Hello", new object[] { "World" });
 
                 AssertMessage(output1);
 
@@ -89,7 +89,7 @@ namespace SignalR.Orleans.Tests
 
                 await manager.AddGroupAsync(connection1.ConnectionId, "gunit");
 
-                await manager.InvokeGroupAsync("gunit", "Hello", new object[] { "World" });
+                await manager.SendGroupAsync("gunit", "Hello", new object[] { "World" });
 
                 AssertMessage(output1);
 
@@ -108,7 +108,7 @@ namespace SignalR.Orleans.Tests
 
                 await manager.OnConnectedAsync(connection);
 
-                await manager.InvokeConnectionAsync(connection.ConnectionId, "Hello", new object[] { "World" });
+                await manager.SendConnectionAsync(connection.ConnectionId, "Hello", new object[] { "World" });
 
                 AssertMessage(output);
             }
@@ -121,14 +121,14 @@ namespace SignalR.Orleans.Tests
             var grain = this._fixture.Client.GetClientGrain("MyHub", invalidConnection);
             await grain.OnConnect(Guid.NewGuid(), "MyHub", invalidConnection);
             var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.Client);
-            await manager.InvokeConnectionAsync(invalidConnection, "Hello", new object[] { "World" });
+            await manager.SendConnectionAsync(invalidConnection, "Hello", new object[] { "World" });
         }
 
         [Fact]
         public async Task InvokeConnectionAsync_OnNonExistentConnection_WithoutCalling_OnConnect_ThrowsException()
         {
             var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.Client);
-            await Assert.ThrowsAsync<InvalidOperationException>(() => manager.InvokeConnectionAsync("NotARealConnectionIdV2", "Hello", new object[] { "World" }));
+            await Assert.ThrowsAsync<InvalidOperationException>(() => manager.SendConnectionAsync("NotARealConnectionIdV2", "Hello", new object[] { "World" }));
         }
 
         [Fact]
@@ -149,7 +149,7 @@ namespace SignalR.Orleans.Tests
                 await manager1.OnConnectedAsync(connection1);
                 await manager2.OnConnectedAsync(connection2);
 
-                await manager1.InvokeAllAsync("Hello", new object[] { "World" });
+                await manager1.SendAllAsync("Hello", new object[] { "World" });
 
                 AssertMessage(output1);
                 AssertMessage(output2);
@@ -176,7 +176,7 @@ namespace SignalR.Orleans.Tests
 
                 await manager2.OnDisconnectedAsync(connection2);
 
-                await manager2.InvokeAllAsync("Hello", new object[] { "World" });
+                await manager2.SendAllAsync("Hello", new object[] { "World" });
 
                 AssertMessage(output1);
 
@@ -198,7 +198,7 @@ namespace SignalR.Orleans.Tests
 
                 await manager1.OnConnectedAsync(connection);
 
-                await manager2.InvokeConnectionAsync(connection.ConnectionId, "Hello", new object[] { "World" });
+                await manager2.SendConnectionAsync(connection.ConnectionId, "Hello", new object[] { "World" });
 
                 AssertMessage(output);
             }
@@ -220,7 +220,7 @@ namespace SignalR.Orleans.Tests
 
                 await manager1.AddGroupAsync(connection.ConnectionId, "tupac");
 
-                await manager2.InvokeGroupAsync("tupac", "Hello", new object[] { "World" });
+                await manager2.SendGroupAsync("tupac", "Hello", new object[] { "World" });
 
                 AssertMessage(output);
             }
@@ -300,7 +300,7 @@ namespace SignalR.Orleans.Tests
 
                 await manager2.AddGroupAsync(connection.ConnectionId, "ice-cube");
 
-                await manager2.InvokeGroupAsync("ice-cube", "Hello", new object[] { "World" });
+                await manager2.SendGroupAsync("ice-cube", "Hello", new object[] { "World" });
 
                 AssertMessage(output);
             }
@@ -345,7 +345,7 @@ namespace SignalR.Orleans.Tests
                 await manager1.AddGroupAsync(connection.ConnectionId, "easye");
                 await manager2.AddGroupAsync(connection.ConnectionId, "easye");
 
-                await manager2.InvokeGroupAsync("easye", "Hello", new object[] { "World" });
+                await manager2.SendGroupAsync("easye", "Hello", new object[] { "World" });
 
                 AssertMessage(output);
                 Assert.False(output.In.TryRead(out var item));
@@ -368,13 +368,13 @@ namespace SignalR.Orleans.Tests
 
                 await manager1.AddGroupAsync(connection.ConnectionId, "snoop");
 
-                await manager2.InvokeGroupAsync("snoop", "Hello", new object[] { "World" });
+                await manager2.SendGroupAsync("snoop", "Hello", new object[] { "World" });
 
                 AssertMessage(output);
 
                 await manager2.RemoveGroupAsync(connection.ConnectionId, "snoop");
 
-                await manager2.InvokeGroupAsync("snoop", "Hello", new object[] { "World" });
+                await manager2.SendGroupAsync("snoop", "Hello", new object[] { "World" });
 
                 Assert.False(output.In.TryRead(out var item));
             }
@@ -396,7 +396,7 @@ namespace SignalR.Orleans.Tests
                 await manager1.OnConnectedAsync(connection);
                 await manager2.OnConnectedAsync(connection);
 
-                await manager1.InvokeConnectionAsync(connection.ConnectionId, "Hello", new object[] { "World" });
+                await manager1.SendConnectionAsync(connection.ConnectionId, "Hello", new object[] { "World" });
 
                 AssertMessage(output);
                 Assert.False(output.In.TryRead(out var item));
@@ -426,7 +426,7 @@ namespace SignalR.Orleans.Tests
                 await manager2.OnConnectedAsync(connection2);
                 await manager3.OnConnectedAsync(connection3);
 
-                await manager1.InvokeAllAsync("Hello", new object[] { "World" });
+                await manager1.SendAllAsync("Hello", new object[] { "World" });
 
                 AssertMessage(output1);
                 AssertMessage(output2);
