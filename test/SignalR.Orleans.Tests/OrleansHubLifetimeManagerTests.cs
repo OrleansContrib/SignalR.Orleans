@@ -34,8 +34,8 @@ namespace SignalR.Orleans.Tests
             using (var client2 = new TestClient())
             {
                 var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.Client);
-                var connection1 = Create(client1.Connection);
-                var connection2 = Create(client2.Connection);
+                var connection1 = CreateHubConnectionContext(client1.Connection);
+                var connection2 = CreateHubConnectionContext(client2.Connection);
 
                 await manager.OnConnectedAsync(connection1);
                 await manager.OnConnectedAsync(connection2);
@@ -57,8 +57,8 @@ namespace SignalR.Orleans.Tests
             using (var client2 = new TestClient())
             {
                 var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.Client);
-                var connection1 = Create(client1.Connection);
-                var connection2 = Create(client2.Connection);
+                var connection1 = CreateHubConnectionContext(client1.Connection);
+                var connection2 = CreateHubConnectionContext(client2.Connection);
 
                 await manager.OnConnectedAsync(connection1);
                 await manager.OnConnectedAsync(connection2);
@@ -83,8 +83,8 @@ namespace SignalR.Orleans.Tests
             using (var client2 = new TestClient())
             {
                 var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.Client);
-                var connection1 = Create(client1.Connection);
-                var connection2 = Create(client2.Connection);
+                var connection1 = CreateHubConnectionContext(client1.Connection);
+                var connection2 = CreateHubConnectionContext(client2.Connection);
 
                 await manager.OnConnectedAsync(connection1);
                 await manager.OnConnectedAsync(connection2);
@@ -108,7 +108,7 @@ namespace SignalR.Orleans.Tests
             using (var client = new TestClient())
             {
                 var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.Client);
-                var connection = Create(client.Connection);
+                var connection = CreateHubConnectionContext(client.Connection);
 
                 await manager.OnConnectedAsync(connection);
 
@@ -146,8 +146,8 @@ namespace SignalR.Orleans.Tests
             using (var client1 = new TestClient())
             using (var client2 = new TestClient())
             {
-                var connection1 = Create(client1.Connection);
-                var connection2 = Create(client2.Connection);
+                var connection1 = CreateHubConnectionContext(client1.Connection);
+                var connection2 = CreateHubConnectionContext(client2.Connection);
 
                 await manager1.OnConnectedAsync(connection1);
                 await manager2.OnConnectedAsync(connection2);
@@ -171,8 +171,8 @@ namespace SignalR.Orleans.Tests
             using (var client1 = new TestClient())
             using (var client2 = new TestClient())
             {
-                var connection1 = Create(client1.Connection);
-                var connection2 = Create(client2.Connection);
+                var connection1 = CreateHubConnectionContext(client1.Connection);
+                var connection2 = CreateHubConnectionContext(client2.Connection);
 
                 await manager1.OnConnectedAsync(connection1);
                 await manager2.OnConnectedAsync(connection2);
@@ -198,7 +198,7 @@ namespace SignalR.Orleans.Tests
 
             using (var client = new TestClient())
             {
-                var connection = Create(client.Connection);
+                var connection = CreateHubConnectionContext(client.Connection);
 
                 await manager1.OnConnectedAsync(connection);
 
@@ -218,7 +218,7 @@ namespace SignalR.Orleans.Tests
 
             using (var client = new TestClient())
             {
-                var connection = Create(client.Connection);
+                var connection = CreateHubConnectionContext(client.Connection);
 
                 await manager1.OnConnectedAsync(connection);
 
@@ -239,7 +239,7 @@ namespace SignalR.Orleans.Tests
 
             using (var client = new TestClient())
             {
-                var connection = Create(client.Connection);
+                var connection = CreateHubConnectionContext(client.Connection);
 
                 await manager.OnConnectedAsync(connection);
 
@@ -262,7 +262,7 @@ namespace SignalR.Orleans.Tests
 
             using (var client = new TestClient())
             {
-                var connection = Create(client.Connection);
+                var connection = CreateHubConnectionContext(client.Connection);
 
                 await manager.OnConnectedAsync(connection);
 
@@ -280,7 +280,7 @@ namespace SignalR.Orleans.Tests
 
             using (var client = new TestClient())
             {
-                var connection = Create(client.Connection);
+                var connection = CreateHubConnectionContext(client.Connection);
 
                 await manager1.OnConnectedAsync(connection);
 
@@ -298,7 +298,7 @@ namespace SignalR.Orleans.Tests
 
             using (var client = new TestClient())
             {
-                var connection = Create(client.Connection);
+                var connection = CreateHubConnectionContext(client.Connection);
 
                 await manager1.OnConnectedAsync(connection);
 
@@ -319,7 +319,7 @@ namespace SignalR.Orleans.Tests
 
             using (var client = new TestClient())
             {
-                var connection = Create(client.Connection);
+                var connection = CreateHubConnectionContext(client.Connection);
 
                 await manager.OnConnectedAsync(connection);
 
@@ -342,7 +342,7 @@ namespace SignalR.Orleans.Tests
 
             using (var client = new TestClient())
             {
-                var connection = Create(client.Connection);
+                var connection = CreateHubConnectionContext(client.Connection);
 
                 await manager1.OnConnectedAsync(connection);
 
@@ -366,7 +366,7 @@ namespace SignalR.Orleans.Tests
 
             using (var client = new TestClient())
             {
-                var connection = Create(client.Connection);
+                var connection = CreateHubConnectionContext(client.Connection);
 
                 await manager1.OnConnectedAsync(connection);
 
@@ -394,7 +394,7 @@ namespace SignalR.Orleans.Tests
 
             using (var client = new TestClient())
             {
-                var connection = Create(client.Connection);
+                var connection = CreateHubConnectionContext(client.Connection);
 
                 // Add connection to both "servers" to see if connection receives message twice
                 await manager1.OnConnectedAsync(connection);
@@ -420,9 +420,9 @@ namespace SignalR.Orleans.Tests
             using (var client2 = new TestClient())
             using (var client3 = new TestClient())
             {
-                var connection1 = Create(client1.Connection);
-                var connection2 = Create(client2.Connection);
-                var connection3 = Create(client3.Connection);
+                var connection1 = CreateHubConnectionContext(client1.Connection);
+                var connection2 = CreateHubConnectionContext(client2.Connection);
+                var connection3 = CreateHubConnectionContext(client3.Connection);
 
                 await manager1.OnConnectedAsync(connection1);
                 await manager2.OnConnectedAsync(connection2);
@@ -450,7 +450,7 @@ namespace SignalR.Orleans.Tests
             Assert.Equal("World", (string)message.Arguments[0]);
         }
 
-        public static HubConnectionContext Create(DefaultConnectionContext connection)
+        public static HubConnectionContext CreateHubConnectionContext(DefaultConnectionContext connection)
         {
             var context = new HubConnectionContext(connection, TimeSpan.FromSeconds(15), NullLoggerFactory.Instance);
             context.ProtocolReaderWriter = new HubProtocolReaderWriter(new JsonHubProtocol(), new PassThroughEncoder());
