@@ -121,6 +121,16 @@ namespace SignalR.Orleans
             return group.SendSignalRMessage(methodName, args);
         }
 
+        public override Task SendGroupExceptAsync(string groupName, string methodName, object[ ] args, IReadOnlyList<string> excludedIds)
+        {
+            if (string.IsNullOrWhiteSpace(groupName)) throw new ArgumentNullException(nameof(groupName));
+            if (string.IsNullOrWhiteSpace(methodName)) throw new ArgumentNullException(nameof(methodName));
+
+            var group = this._clusterClient.GetGroupGrain(_hubName, groupName);
+            var invocationMessage = new InvocationMessage(target: methodName, argumentBindingException: null, arguments: args);
+            return group.SendMessageExcept(invocationMessage, excludedIds);
+        }
+
         public override Task SendGroupsAsync(IReadOnlyList<string> groupNames, string methodName, object[ ] args)
         {
             var tasks = groupNames.Select(g => SendGroupAsync(g, methodName, args));
