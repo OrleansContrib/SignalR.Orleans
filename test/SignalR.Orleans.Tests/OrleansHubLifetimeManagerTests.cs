@@ -93,6 +93,9 @@ namespace SignalR.Orleans.Tests
 
                 await manager.SendGroupAsync("gunit", "Hello", new object[] { "World" });
 
+                await connection1.DisposeAsync();
+                await connection2.DisposeAsync();
+
                 AssertMessage(client1.TryRead());
 
                 Assert.Null(client2.TryRead());
@@ -110,6 +113,8 @@ namespace SignalR.Orleans.Tests
                 await manager.OnConnectedAsync(connection);
 
                 await manager.SendConnectionAsync(connection.ConnectionId, "Hello", new object[] { "World" });
+
+                await connection.DisposeAsync();
 
                 AssertMessage(client.TryRead());
             }
@@ -149,6 +154,9 @@ namespace SignalR.Orleans.Tests
 
                 await manager1.SendAllAsync("Hello", new object[] { "World" });
 
+                await connection1.DisposeAsync();
+                await connection2.DisposeAsync();
+
                 AssertMessage(client1.TryRead());
                 AssertMessage(client2.TryRead());
             }
@@ -173,6 +181,9 @@ namespace SignalR.Orleans.Tests
 
                 await manager2.SendAllAsync("Hello", new object[] { "World" });
 
+                await connection1.DisposeAsync();
+                await connection2.DisposeAsync();
+
                 AssertMessage(client1.TryRead());
 
                 Assert.Null(client2.TryRead());
@@ -192,6 +203,8 @@ namespace SignalR.Orleans.Tests
                 await manager1.OnConnectedAsync(connection);
 
                 await manager2.SendConnectionAsync(connection.ConnectionId, "Hello", new object[] { "World" });
+
+                await connection.DisposeAsync();
 
                 AssertMessage(client.TryRead());
             }
@@ -213,6 +226,8 @@ namespace SignalR.Orleans.Tests
 
                 await manager2.SendGroupAsync("tupac", "Hello", new object[] { "World" });
 
+                await connection.DisposeAsync();
+
                 AssertMessage(client.TryRead());
             }
         }
@@ -232,6 +247,8 @@ namespace SignalR.Orleans.Tests
 
                 await manager.OnDisconnectedAsync(connection);
 
+                await connection.DisposeAsync();
+
                 var grain = this._fixture.Client.GetGroupGrain("MyHub", "dre");
                 var result = await grain.Count();
                 Assert.Equal(0, result);
@@ -250,6 +267,8 @@ namespace SignalR.Orleans.Tests
                 await manager.OnConnectedAsync(connection);
 
                 await manager.RemoveGroupAsync(connection.ConnectionId, "does-not-exists");
+
+                await connection.DisposeAsync();
             }
         }
 
@@ -266,6 +285,8 @@ namespace SignalR.Orleans.Tests
                 await manager1.OnConnectedAsync(connection);
 
                 await manager2.RemoveGroupAsync(connection.ConnectionId, "does-not-exist-server");
+
+                await connection.DisposeAsync();
             }
         }
 
@@ -285,6 +306,8 @@ namespace SignalR.Orleans.Tests
 
                 await manager2.SendGroupAsync("ice-cube", "Hello", new object[] { "World" });
 
+                await connection.DisposeAsync();
+
                 AssertMessage(client.TryRead());
             }
         }
@@ -302,6 +325,8 @@ namespace SignalR.Orleans.Tests
 
                 await manager.AddGroupAsync(connection.ConnectionId, "dmx");
                 await manager.AddGroupAsync(connection.ConnectionId, "dmx");
+
+                await connection.DisposeAsync();
 
                 var grain = this._fixture.Client.GetGroupGrain("MyHub", "dmx");
                 var result = await grain.Count();
@@ -326,6 +351,8 @@ namespace SignalR.Orleans.Tests
 
                 await manager2.SendGroupAsync("easye", "Hello", new object[] { "World" });
 
+                await connection.DisposeAsync();
+
                 AssertMessage(client.TryRead());
                 Assert.Null(client.TryRead());
             }
@@ -347,11 +374,13 @@ namespace SignalR.Orleans.Tests
 
                 await manager2.SendGroupAsync("snoop", "Hello", new object[] { "World" });
 
-                AssertMessage(client.TryRead());
+                AssertMessage(await client.ReadAsync());
 
                 await manager2.RemoveGroupAsync(connection.ConnectionId, "snoop");
 
                 await manager2.SendGroupAsync("snoop", "Hello", new object[] { "World" });
+
+                await connection.DisposeAsync();
 
                 Assert.Null(client.TryRead());
             }
@@ -372,6 +401,8 @@ namespace SignalR.Orleans.Tests
                 await manager2.OnConnectedAsync(connection);
 
                 await manager1.SendConnectionAsync(connection.ConnectionId, "Hello", new object[] { "World" });
+
+                await connection.DisposeAsync();
 
                 AssertMessage(client.TryRead());
                 Assert.Null(client.TryRead());
@@ -398,6 +429,10 @@ namespace SignalR.Orleans.Tests
                 await manager3.OnConnectedAsync(connection3);
 
                 await manager1.SendAllAsync("Hello", new object[] { "World" });
+
+                await connection1.DisposeAsync();
+                await connection2.DisposeAsync();
+                await connection3.DisposeAsync();
 
                 AssertMessage(client1.TryRead());
                 AssertMessage(client2.TryRead());
