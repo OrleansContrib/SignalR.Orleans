@@ -83,13 +83,13 @@ namespace SignalR.Orleans
 
         public override Task InvokeAllAsync(string methodName, object[] args)
         {
-            var message = new InvocationMessage(Guid.NewGuid().ToString(), nonBlocking: true, target: methodName, arguments: args);
+            var message = new InvocationMessage(target: methodName, argumentBindingException: null, arguments: args);
             return this._allStream.OnNextAsync(new AllMessage { Payload = message });
         }
 
         public override Task InvokeAllExceptAsync(string methodName, object[] args, IReadOnlyList<string> excludedIds)
         {
-            var message = new InvocationMessage(Guid.NewGuid().ToString(), nonBlocking: true, target: methodName, arguments: args);
+            var message = new InvocationMessage(target: methodName, argumentBindingException: null, arguments: args);
             return this._allStream.OnNextAsync(new AllMessage { Payload = message, ExcludedIds = excludedIds });
         }
 
@@ -98,7 +98,7 @@ namespace SignalR.Orleans
             if (string.IsNullOrWhiteSpace(connectionId)) throw new ArgumentNullException(nameof(connectionId));
             if (string.IsNullOrWhiteSpace(methodName)) throw new ArgumentNullException(nameof(methodName));
 
-            var message = new InvocationMessage(Guid.NewGuid().ToString(), nonBlocking: true, target: methodName, arguments: args);
+            var message = new InvocationMessage(target: methodName, argumentBindingException: null, arguments: args);
 
             var connection = this._connections[connectionId];
             if (connection != null) return InvokeLocal(connection, message);
