@@ -106,6 +106,12 @@ namespace SignalR.Orleans
             return SendExternal(connectionId, message);
         }
 
+        public override Task SendConnectionsAsync(IReadOnlyList<string> connectionIds, string methodName, object[ ] args)
+        {
+            var tasks = connectionIds.Select(c => SendConnectionAsync(c, methodName, args));
+            return Task.WhenAll(tasks);
+        }
+
         public override Task SendGroupAsync(string groupName, string methodName, object[] args)
         {
             if (string.IsNullOrWhiteSpace(groupName)) throw new ArgumentNullException(nameof(groupName));
@@ -115,6 +121,12 @@ namespace SignalR.Orleans
             return group.SendSignalRMessage(methodName, args);
         }
 
+        public override Task SendGroupsAsync(IReadOnlyList<string> groupNames, string methodName, object[ ] args)
+        {
+            var tasks = groupNames.Select(g => SendGroupAsync(g, methodName, args));
+            return Task.WhenAll(tasks);
+        }
+
         public override Task SendUserAsync(string userId, string methodName, object[] args)
         {
             if (string.IsNullOrWhiteSpace(userId)) throw new ArgumentNullException(nameof(userId));
@@ -122,6 +134,12 @@ namespace SignalR.Orleans
 
             var user = this._clusterClient.GetUserGrain(_hubName, userId);
             return user.SendSignalRMessage(methodName, args);
+        }
+
+        public override Task SendUsersAsync(IReadOnlyList<string> userIds, string methodName, object[ ] args)
+        {
+            var tasks = userIds.Select(u => SendGroupAsync(u, methodName, args));
+            return Task.WhenAll(tasks);
         }
 
         public override async Task OnConnectedAsync(HubConnectionContext connection)
