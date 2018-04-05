@@ -2,11 +2,16 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR.Internal;
+using Microsoft.AspNetCore.SignalR.Internal.Encoders;
 using Microsoft.AspNetCore.SignalR.Internal.Protocol;
+using Microsoft.AspNetCore.Sockets;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Orleans;
 using SignalR.Orleans.Tests.Models;
 using System;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Channels;
 using Xunit;
@@ -28,20 +33,20 @@ namespace SignalR.Orleans.Tests
             using (var client1 = new TestClient())
             using (var client2 = new TestClient())
             {
-                var output1 = Channel.CreateUnbounded<HubMessage>();
-                var output2 = Channel.CreateUnbounded<HubMessage>();
-
                 var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.Client);
-                var connection1 = new HubConnectionContext(output1, client1.Connection);
-                var connection2 = new HubConnectionContext(output2, client2.Connection);
+                var connection1 = Create(client1.Connection);
+                var connection2 = Create(client2.Connection);
 
                 await manager.OnConnectedAsync(connection1);
                 await manager.OnConnectedAsync(connection2);
 
                 await manager.SendAllAsync("Hello", new object[] { "World" });
 
-                AssertMessage(output1);
-                AssertMessage(output2);
+                await connection1.DisposeAsync();
+                await connection2.DisposeAsync();
+
+                AssertMessage(client1.TryRead());
+                AssertMessage(client2.TryRead());
             }
         }
 
@@ -51,12 +56,9 @@ namespace SignalR.Orleans.Tests
             using (var client1 = new TestClient())
             using (var client2 = new TestClient())
             {
-                var output1 = Channel.CreateUnbounded<HubMessage>();
-                var output2 = Channel.CreateUnbounded<HubMessage>();
-
                 var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.Client);
-                var connection1 = new HubConnectionContext(output1, client1.Connection);
-                var connection2 = new HubConnectionContext(output2, client2.Connection);
+                var connection1 = Create(client1.Connection);
+                var connection2 = Create(client2.Connection);
 
                 await manager.OnConnectedAsync(connection1);
                 await manager.OnConnectedAsync(connection2);
@@ -65,9 +67,12 @@ namespace SignalR.Orleans.Tests
 
                 await manager.SendAllAsync("Hello", new object[] { "World" });
 
-                AssertMessage(output1);
+                await connection1.DisposeAsync();
+                await connection2.DisposeAsync();
 
-                Assert.False(output2.In.TryRead(out var item));
+                AssertMessage(client1.TryRead());
+
+                Assert.Null(client2.TryRead());
             }
         }
 
@@ -434,14 +439,28 @@ namespace SignalR.Orleans.Tests
             }
         }
 
-        private void AssertMessage(Channel<HubMessage> channel)
+        private void AssertMessage(HubMessage item)
         {
-            Assert.True(channel.In.TryRead(out var item));
+            Assert.IsType<InvocationMessage>(item);
             var message = item as InvocationMessage;
             Assert.NotNull(message);
             Assert.Equal("Hello", message.Target);
             Assert.Single(message.Arguments);
             Assert.Equal("World", (string)message.Arguments[0]);
         }
+
+        public static HubConnectionContext Create(DefaultConnectionContext connection)
+        {
+            var context = new HubConnectionContext(connection, TimeSpan.FromSeconds(15), NullLoggerFactory.Instance);
+            context.ProtocolReaderWriter = new HubProtocolReaderWriter(new JsonHubProtocol(), new PassThroughEncoder());
+
+            // Microsoft.AspNetCore.SignalR.Redis.Tests uses Microsoft.AspNetCore.SignalR.Tests.HubConnectionContextUtils 
+            // which calls an internal method StartAsync. Reflection in a unittest! Huzzah!
+            _ = _StartAsyncMethod.Invoke(context, Array.Empty<object>()); 
+
+            return context;
+        }
+
+        private static readonly MethodInfo _StartAsyncMethod = typeof(HubConnectionContext).GetMethod("StartAsync", BindingFlags.NonPublic | BindingFlags.Instance);
     }
 }
