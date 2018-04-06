@@ -106,7 +106,7 @@ namespace SignalR.Orleans
             return SendExternal(connectionId, message);
         }
 
-        public override Task SendConnectionsAsync(IReadOnlyList<string> connectionIds, string methodName, object[ ] args)
+        public override Task SendConnectionsAsync(IReadOnlyList<string> connectionIds, string methodName, object[] args)
         {
             var tasks = connectionIds.Select(c => SendConnectionAsync(c, methodName, args));
             return Task.WhenAll(tasks);
@@ -121,7 +121,7 @@ namespace SignalR.Orleans
             return group.SendSignalRMessage(methodName, args);
         }
 
-        public override Task SendGroupExceptAsync(string groupName, string methodName, object[ ] args, IReadOnlyList<string> excludedIds)
+        public override Task SendGroupExceptAsync(string groupName, string methodName, object[] args, IReadOnlyList<string> excludedIds)
         {
             if (string.IsNullOrWhiteSpace(groupName)) throw new ArgumentNullException(nameof(groupName));
             if (string.IsNullOrWhiteSpace(methodName)) throw new ArgumentNullException(nameof(methodName));
@@ -131,7 +131,7 @@ namespace SignalR.Orleans
             return group.SendMessageExcept(invocationMessage, excludedIds);
         }
 
-        public override Task SendGroupsAsync(IReadOnlyList<string> groupNames, string methodName, object[ ] args)
+        public override Task SendGroupsAsync(IReadOnlyList<string> groupNames, string methodName, object[] args)
         {
             var tasks = groupNames.Select(g => SendGroupAsync(g, methodName, args));
             return Task.WhenAll(tasks);
@@ -146,7 +146,7 @@ namespace SignalR.Orleans
             return user.SendSignalRMessage(methodName, args);
         }
 
-        public override Task SendUsersAsync(IReadOnlyList<string> userIds, string methodName, object[ ] args)
+        public override Task SendUsersAsync(IReadOnlyList<string> userIds, string methodName, object[] args)
         {
             var tasks = userIds.Select(u => SendGroupAsync(u, methodName, args));
             return Task.WhenAll(tasks);
