@@ -103,6 +103,59 @@ namespace SignalR.Orleans.Tests
         }
 
         [Fact]
+        public async Task InvokeGroupAsync_WritesTo_AllConnections_InGroup_Except_Output()
+        {
+            using (var client1 = new TestClient())
+            using (var client2 = new TestClient())
+            {
+                var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.Client);
+                var connection1 = CreateHubConnectionContext(client1.Connection);
+                var connection2 = CreateHubConnectionContext(client2.Connection);
+
+                await manager.OnConnectedAsync(connection1);
+                await manager.OnConnectedAsync(connection2);
+
+                await manager.AddGroupAsync(connection1.ConnectionId, "gunit");
+                await manager.AddGroupAsync(connection2.ConnectionId, "gunit");
+
+                await manager.SendGroupExceptAsync("gunit", "Hello", new object[] { "World" }, new string[] { connection2.ConnectionId });
+
+                await connection1.DisposeAsync();
+                await connection2.DisposeAsync();
+
+                AssertMessage(client1.TryRead());
+
+                Assert.Null(client2.TryRead());
+            }
+        }
+
+        [Fact]
+        public async Task InvokeGroupAsync_WritesTo_AllConnections_InGroups_Output()
+        {
+            using (var client1 = new TestClient())
+            using (var client2 = new TestClient())
+            {
+                var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.Client);
+                var connection1 = CreateHubConnectionContext(client1.Connection);
+                var connection2 = CreateHubConnectionContext(client2.Connection);
+
+                await manager.OnConnectedAsync(connection1);
+                await manager.OnConnectedAsync(connection2);
+
+                await manager.AddGroupAsync(connection1.ConnectionId, "gunit");
+                await manager.AddGroupAsync(connection2.ConnectionId, "tupac");
+
+                await manager.SendGroupsAsync(new string[] { "gunit", "tupac" }, "Hello", new object[] { "World" });
+
+                await connection1.DisposeAsync();
+                await connection2.DisposeAsync();
+
+                AssertMessage(client1.TryRead());
+                AssertMessage(client2.TryRead());
+            }
+        }
+
+        [Fact]
         public async Task InvokeConnectionAsync_WritesToConnection_Output()
         {
             using (var client = new TestClient())
@@ -117,6 +170,29 @@ namespace SignalR.Orleans.Tests
                 await connection.DisposeAsync();
 
                 AssertMessage(client.TryRead());
+            }
+        }
+
+        [Fact]
+        public async Task InvokeConnectionAsync_WritesToConnections_Output()
+        {
+            using (var client1 = new TestClient())
+            using (var client2 = new TestClient())
+            {
+                var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.Client);
+                var connection1 = CreateHubConnectionContext(client1.Connection);
+                var connection2 = CreateHubConnectionContext(client2.Connection);
+
+                await manager.OnConnectedAsync(connection1);
+                await manager.OnConnectedAsync(connection2);
+
+                await manager.SendConnectionsAsync(new string[] { connection1.ConnectionId, connection2.ConnectionId }, "Hello", new object[] { "World" });
+
+                await connection1.DisposeAsync();
+                await connection2.DisposeAsync();
+
+                AssertMessage(client1.TryRead());
+                AssertMessage(client2.TryRead());
             }
         }
 
