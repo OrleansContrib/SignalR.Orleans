@@ -1,18 +1,19 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using Microsoft.AspNetCore.SignalR.Internal;
-using Microsoft.AspNetCore.SignalR.Internal.Encoders;
-using Microsoft.AspNetCore.SignalR.Internal.Protocol;
-using Microsoft.AspNetCore.Sockets;
-using Microsoft.AspNetCore.Sockets.Internal;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Threading.Tasks.Channels;
+using System.Threading.Channels;
+using Microsoft.AspNetCore.SignalR.Internal;
+using Microsoft.AspNetCore.SignalR.Internal.Encoders;
+using Microsoft.AspNetCore.SignalR.Internal.Protocol;
+using Microsoft.AspNetCore.Sockets;
+using Microsoft.AspNetCore.Sockets.Internal;
+using Newtonsoft.Json;
 
 namespace SignalR.Orleans.Tests
 {
@@ -24,14 +25,13 @@ namespace SignalR.Orleans.Tests
         private readonly CancellationTokenSource _cts;
         private readonly ChannelConnection<byte[]> _transport;
 
-
         public DefaultConnectionContext Connection { get; }
         public Channel<byte[]> Application { get; }
         public Task Connected => ((TaskCompletionSource<bool>)Connection.Metadata["ConnectedTask"]).Task;
 
         public TestClient(bool synchronousCallbacks = false, IHubProtocol protocol = null, IInvocationBinder invocationBinder = null, bool addClaimId = false)
         {
-            var options = new ChannelOptimizations { AllowSynchronousContinuations = synchronousCallbacks };
+            var options = new UnboundedChannelOptions { AllowSynchronousContinuations = synchronousCallbacks };
             var transportToApplication = Channel.CreateUnbounded<byte[]>(options);
             var applicationToTransport = Channel.CreateUnbounded<byte[]>(options);
 
@@ -41,7 +41,7 @@ namespace SignalR.Orleans.Tests
             Connection = new DefaultConnectionContext(Guid.NewGuid().ToString(), _transport, Application);
 
             var claimValue = Interlocked.Increment(ref _id).ToString();
-            var claims = new List<Claim> { new Claim(ClaimTypes.Name, claimValue) };
+            var claims = new List<Claim>{ new Claim(ClaimTypes.Name, claimValue) };
             if (addClaimId)
             {
                 claims.Add(new Claim(ClaimTypes.NameIdentifier, claimValue));
@@ -59,13 +59,13 @@ namespace SignalR.Orleans.Tests
             using (var memoryStream = new MemoryStream())
             {
                 NegotiationProtocol.WriteMessage(new NegotiationMessage(protocol.Name), memoryStream);
-                Application.Out.TryWrite(memoryStream.ToArray());
+                Application.Writer.TryWrite(memoryStream.ToArray());
             }
         }
 
         public async Task<IList<HubMessage>> StreamAsync(string methodName, params object[] args)
         {
-            var invocationId = await SendInvocationAsync(methodName, nonBlocking: false, args: args);
+            var invocationId = await SendStreamInvocationAsync(methodName, args);
 
             var messages = new List<HubMessage>();
             while (true)
@@ -77,7 +77,7 @@ namespace SignalR.Orleans.Tests
                     throw new InvalidOperationException("Connection aborted!");
                 }
 
-                if (!string.Equals(message.InvocationId, invocationId))
+                if (message is HubInvocationMessage hubInvocationMessage && !string.Equals(hubInvocationMessage.InvocationId, invocationId))
                 {
                     throw new NotSupportedException("TestClient does not support multiple outgoing invocations!");
                 }
@@ -88,9 +88,8 @@ namespace SignalR.Orleans.Tests
                         messages.Add(message);
                         break;
                     case CompletionMessage _:
-                    // case StreamCompletionMessage _:
-                    //     messages.Add(message);
-                    //     return messages;
+                        messages.Add(message);
+                        return messages;
                     default:
                         throw new NotSupportedException("TestClient does not support receiving invocations!");
                 }
@@ -110,7 +109,7 @@ namespace SignalR.Orleans.Tests
                     throw new InvalidOperationException("Connection aborted!");
                 }
 
-                if (!string.Equals(message.InvocationId, invocationId))
+                if (message is HubInvocationMessage hubInvocationMessage && !string.Equals(hubInvocationMessage.InvocationId, invocationId))
                 {
                     throw new NotSupportedException("TestClient does not support multiple outgoing invocations!");
                 }
@@ -121,6 +120,9 @@ namespace SignalR.Orleans.Tests
                         throw new NotSupportedException("Use 'StreamAsync' to call a streaming method");
                     case CompletionMessage completion:
                         return completion;
+                    case PingMessage _:
+                        // Pings are ignored
+                        break;
                     default:
                         throw new NotSupportedException("TestClient does not support receiving invocations!");
                 }
@@ -135,14 +137,21 @@ namespace SignalR.Orleans.Tests
         public Task<string> SendInvocationAsync(string methodName, bool nonBlocking, params object[] args)
         {
             var invocationId = GetInvocationId();
-            return SendHubMessageAsync(new InvocationMessage(invocationId, nonBlocking, methodName, args));
+            return SendHubMessageAsync(new InvocationMessage(invocationId, methodName, null, args));
+        }
+
+        public Task<string> SendStreamInvocationAsync(string methodName, params object[] args)
+        {
+            var invocationId = GetInvocationId();
+            return SendHubMessageAsync(new StreamInvocationMessage(invocationId, methodName,
+                argumentBindingException: null, arguments: args));
         }
 
         public async Task<string> SendHubMessageAsync(HubMessage message)
         {
             var payload = _protocolReaderWriter.WriteMessage(message);
-            await Application.Out.WriteAsync(payload);
-            return message.InvocationId;
+            await Application.Writer.WriteAsync(payload);
+            return message is HubInvocationMessage hubMessage ? hubMessage.InvocationId : null;
         }
 
         public async Task<HubMessage> ReadAsync()
@@ -153,7 +162,7 @@ namespace SignalR.Orleans.Tests
 
                 if (message == null)
                 {
-                    if (!await Application.In.WaitToReadAsync())
+                    if (!await Application.Reader.WaitToReadAsync())
                     {
                         return null;
                     }
@@ -167,7 +176,7 @@ namespace SignalR.Orleans.Tests
 
         public HubMessage TryRead()
         {
-            if (Application.In.TryRead(out var buffer) &&
+            if (Application.Reader.TryRead(out var buffer) &&
                 _protocolReaderWriter.ReadMessages(buffer, _invocationBinder, out var messages))
             {
                 return messages[0];
