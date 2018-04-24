@@ -13,7 +13,7 @@ namespace Orleans
     {
         public static async Task SendSignalRMessage(this IConnectionGrain grain, string methodName, params object[] message)
         {
-            var invocationMessage = new InvocationMessage(Guid.NewGuid().ToString(), nonBlocking: true, target: methodName, arguments: message);
+            var invocationMessage = new InvocationMessage(target: methodName, argumentBindingException: null, arguments: message);
             await grain.SendMessage(invocationMessage);
         }
     }

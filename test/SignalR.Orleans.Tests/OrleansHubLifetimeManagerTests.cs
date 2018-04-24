@@ -2,11 +2,16 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR.Internal;
+using Microsoft.AspNetCore.SignalR.Internal.Encoders;
 using Microsoft.AspNetCore.SignalR.Internal.Protocol;
+using Microsoft.AspNetCore.Sockets;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Orleans;
 using SignalR.Orleans.Tests.Models;
 using System;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Channels;
 using Xunit;
@@ -28,20 +33,20 @@ namespace SignalR.Orleans.Tests
             using (var client1 = new TestClient())
             using (var client2 = new TestClient())
             {
-                var output1 = Channel.CreateUnbounded<HubMessage>();
-                var output2 = Channel.CreateUnbounded<HubMessage>();
-
                 var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.Client);
-                var connection1 = new HubConnectionContext(output1, client1.Connection);
-                var connection2 = new HubConnectionContext(output2, client2.Connection);
+                var connection1 = CreateHubConnectionContext(client1.Connection);
+                var connection2 = CreateHubConnectionContext(client2.Connection);
 
                 await manager.OnConnectedAsync(connection1);
                 await manager.OnConnectedAsync(connection2);
 
-                await manager.InvokeAllAsync("Hello", new object[] { "World" });
+                await manager.SendAllAsync("Hello", new object[] { "World" });
 
-                AssertMessage(output1);
-                AssertMessage(output2);
+                await connection1.DisposeAsync();
+                await connection2.DisposeAsync();
+
+                AssertMessage(client1.TryRead());
+                AssertMessage(client2.TryRead());
             }
         }
 
@@ -51,23 +56,23 @@ namespace SignalR.Orleans.Tests
             using (var client1 = new TestClient())
             using (var client2 = new TestClient())
             {
-                var output1 = Channel.CreateUnbounded<HubMessage>();
-                var output2 = Channel.CreateUnbounded<HubMessage>();
-
                 var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.Client);
-                var connection1 = new HubConnectionContext(output1, client1.Connection);
-                var connection2 = new HubConnectionContext(output2, client2.Connection);
+                var connection1 = CreateHubConnectionContext(client1.Connection);
+                var connection2 = CreateHubConnectionContext(client2.Connection);
 
                 await manager.OnConnectedAsync(connection1);
                 await manager.OnConnectedAsync(connection2);
 
                 await manager.OnDisconnectedAsync(connection2);
 
-                await manager.InvokeAllAsync("Hello", new object[] { "World" });
+                await manager.SendAllAsync("Hello", new object[] { "World" });
 
-                AssertMessage(output1);
+                await connection1.DisposeAsync();
+                await connection2.DisposeAsync();
 
-                Assert.False(output2.In.TryRead(out var item));
+                AssertMessage(client1.TryRead());
+
+                Assert.Null(client2.TryRead());
             }
         }
 
@@ -77,23 +82,76 @@ namespace SignalR.Orleans.Tests
             using (var client1 = new TestClient())
             using (var client2 = new TestClient())
             {
-                var output1 = Channel.CreateUnbounded<HubMessage>();
-                var output2 = Channel.CreateUnbounded<HubMessage>();
-
                 var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.Client);
-                var connection1 = new HubConnectionContext(output1, client1.Connection);
-                var connection2 = new HubConnectionContext(output2, client2.Connection);
+                var connection1 = CreateHubConnectionContext(client1.Connection);
+                var connection2 = CreateHubConnectionContext(client2.Connection);
 
                 await manager.OnConnectedAsync(connection1);
                 await manager.OnConnectedAsync(connection2);
 
                 await manager.AddGroupAsync(connection1.ConnectionId, "gunit");
 
-                await manager.InvokeGroupAsync("gunit", "Hello", new object[] { "World" });
+                await manager.SendGroupAsync("gunit", "Hello", new object[] { "World" });
 
-                AssertMessage(output1);
+                await connection1.DisposeAsync();
+                await connection2.DisposeAsync();
 
-                Assert.False(output2.In.TryRead(out var item));
+                AssertMessage(client1.TryRead());
+
+                Assert.Null(client2.TryRead());
+            }
+        }
+
+        [Fact]
+        public async Task InvokeGroupAsync_WritesTo_AllConnections_InGroup_Except_Output()
+        {
+            using (var client1 = new TestClient())
+            using (var client2 = new TestClient())
+            {
+                var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.Client);
+                var connection1 = CreateHubConnectionContext(client1.Connection);
+                var connection2 = CreateHubConnectionContext(client2.Connection);
+
+                await manager.OnConnectedAsync(connection1);
+                await manager.OnConnectedAsync(connection2);
+
+                await manager.AddGroupAsync(connection1.ConnectionId, "gunit");
+                await manager.AddGroupAsync(connection2.ConnectionId, "gunit");
+
+                await manager.SendGroupExceptAsync("gunit", "Hello", new object[] { "World" }, new string[] { connection2.ConnectionId });
+
+                await connection1.DisposeAsync();
+                await connection2.DisposeAsync();
+
+                AssertMessage(client1.TryRead());
+
+                Assert.Null(client2.TryRead());
+            }
+        }
+
+        [Fact]
+        public async Task InvokeGroupAsync_WritesTo_AllConnections_InGroups_Output()
+        {
+            using (var client1 = new TestClient())
+            using (var client2 = new TestClient())
+            {
+                var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.Client);
+                var connection1 = CreateHubConnectionContext(client1.Connection);
+                var connection2 = CreateHubConnectionContext(client2.Connection);
+
+                await manager.OnConnectedAsync(connection1);
+                await manager.OnConnectedAsync(connection2);
+
+                await manager.AddGroupAsync(connection1.ConnectionId, "gunit");
+                await manager.AddGroupAsync(connection2.ConnectionId, "tupac");
+
+                await manager.SendGroupsAsync(new string[] { "gunit", "tupac" }, "Hello", new object[] { "World" });
+
+                await connection1.DisposeAsync();
+                await connection2.DisposeAsync();
+
+                AssertMessage(client1.TryRead());
+                AssertMessage(client2.TryRead());
             }
         }
 
@@ -102,15 +160,39 @@ namespace SignalR.Orleans.Tests
         {
             using (var client = new TestClient())
             {
-                var output = Channel.CreateUnbounded<HubMessage>();
                 var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.Client);
-                var connection = new HubConnectionContext(output, client.Connection);
+                var connection = CreateHubConnectionContext(client.Connection);
 
                 await manager.OnConnectedAsync(connection);
 
-                await manager.InvokeConnectionAsync(connection.ConnectionId, "Hello", new object[] { "World" });
+                await manager.SendConnectionAsync(connection.ConnectionId, "Hello", new object[] { "World" });
 
-                AssertMessage(output);
+                await connection.DisposeAsync();
+
+                AssertMessage(client.TryRead());
+            }
+        }
+
+        [Fact]
+        public async Task InvokeConnectionAsync_WritesToConnections_Output()
+        {
+            using (var client1 = new TestClient())
+            using (var client2 = new TestClient())
+            {
+                var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.Client);
+                var connection1 = CreateHubConnectionContext(client1.Connection);
+                var connection2 = CreateHubConnectionContext(client2.Connection);
+
+                await manager.OnConnectedAsync(connection1);
+                await manager.OnConnectedAsync(connection2);
+
+                await manager.SendConnectionsAsync(new string[] { connection1.ConnectionId, connection2.ConnectionId }, "Hello", new object[] { "World" });
+
+                await connection1.DisposeAsync();
+                await connection2.DisposeAsync();
+
+                AssertMessage(client1.TryRead());
+                AssertMessage(client2.TryRead());
             }
         }
 
@@ -121,14 +203,14 @@ namespace SignalR.Orleans.Tests
             var grain = this._fixture.Client.GetClientGrain("MyHub", invalidConnection);
             await grain.OnConnect(Guid.NewGuid(), "MyHub", invalidConnection);
             var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.Client);
-            await manager.InvokeConnectionAsync(invalidConnection, "Hello", new object[] { "World" });
+            await manager.SendConnectionAsync(invalidConnection, "Hello", new object[] { "World" });
         }
 
         [Fact]
         public async Task InvokeConnectionAsync_OnNonExistentConnection_WithoutCalling_OnConnect_ThrowsException()
         {
             var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.Client);
-            await Assert.ThrowsAsync<InvalidOperationException>(() => manager.InvokeConnectionAsync("NotARealConnectionIdV2", "Hello", new object[] { "World" }));
+            await Assert.ThrowsAsync<InvalidOperationException>(() => manager.SendConnectionAsync("NotARealConnectionIdV2", "Hello", new object[] { "World" }));
         }
 
         [Fact]
@@ -140,19 +222,19 @@ namespace SignalR.Orleans.Tests
             using (var client1 = new TestClient())
             using (var client2 = new TestClient())
             {
-                var output1 = Channel.CreateUnbounded<HubMessage>();
-                var output2 = Channel.CreateUnbounded<HubMessage>();
-
-                var connection1 = new HubConnectionContext(output1, client1.Connection);
-                var connection2 = new HubConnectionContext(output2, client2.Connection);
+                var connection1 = CreateHubConnectionContext(client1.Connection);
+                var connection2 = CreateHubConnectionContext(client2.Connection);
 
                 await manager1.OnConnectedAsync(connection1);
                 await manager2.OnConnectedAsync(connection2);
 
-                await manager1.InvokeAllAsync("Hello", new object[] { "World" });
+                await manager1.SendAllAsync("Hello", new object[] { "World" });
 
-                AssertMessage(output1);
-                AssertMessage(output2);
+                await connection1.DisposeAsync();
+                await connection2.DisposeAsync();
+
+                AssertMessage(client1.TryRead());
+                AssertMessage(client2.TryRead());
             }
         }
 
@@ -165,22 +247,22 @@ namespace SignalR.Orleans.Tests
             using (var client1 = new TestClient())
             using (var client2 = new TestClient())
             {
-                var output1 = Channel.CreateUnbounded<HubMessage>();
-                var output2 = Channel.CreateUnbounded<HubMessage>();
-
-                var connection1 = new HubConnectionContext(output1, client1.Connection);
-                var connection2 = new HubConnectionContext(output2, client2.Connection);
+                var connection1 = CreateHubConnectionContext(client1.Connection);
+                var connection2 = CreateHubConnectionContext(client2.Connection);
 
                 await manager1.OnConnectedAsync(connection1);
                 await manager2.OnConnectedAsync(connection2);
 
                 await manager2.OnDisconnectedAsync(connection2);
 
-                await manager2.InvokeAllAsync("Hello", new object[] { "World" });
+                await manager2.SendAllAsync("Hello", new object[] { "World" });
 
-                AssertMessage(output1);
+                await connection1.DisposeAsync();
+                await connection2.DisposeAsync();
 
-                Assert.False(output2.In.TryRead(out var item));
+                AssertMessage(client1.TryRead());
+
+                Assert.Null(client2.TryRead());
             }
         }
 
@@ -192,15 +274,15 @@ namespace SignalR.Orleans.Tests
 
             using (var client = new TestClient())
             {
-                var output = Channel.CreateUnbounded<HubMessage>();
-
-                var connection = new HubConnectionContext(output, client.Connection);
+                var connection = CreateHubConnectionContext(client.Connection);
 
                 await manager1.OnConnectedAsync(connection);
 
-                await manager2.InvokeConnectionAsync(connection.ConnectionId, "Hello", new object[] { "World" });
+                await manager2.SendConnectionAsync(connection.ConnectionId, "Hello", new object[] { "World" });
 
-                AssertMessage(output);
+                await connection.DisposeAsync();
+
+                AssertMessage(client.TryRead());
             }
         }
 
@@ -212,17 +294,17 @@ namespace SignalR.Orleans.Tests
 
             using (var client = new TestClient())
             {
-                var output = Channel.CreateUnbounded<HubMessage>();
-
-                var connection = new HubConnectionContext(output, client.Connection);
+                var connection = CreateHubConnectionContext(client.Connection);
 
                 await manager1.OnConnectedAsync(connection);
 
                 await manager1.AddGroupAsync(connection.ConnectionId, "tupac");
 
-                await manager2.InvokeGroupAsync("tupac", "Hello", new object[] { "World" });
+                await manager2.SendGroupAsync("tupac", "Hello", new object[] { "World" });
 
-                AssertMessage(output);
+                await connection.DisposeAsync();
+
+                AssertMessage(client.TryRead());
             }
         }
 
@@ -233,15 +315,15 @@ namespace SignalR.Orleans.Tests
 
             using (var client = new TestClient())
             {
-                var output = Channel.CreateUnbounded<HubMessage>();
-
-                var connection = new HubConnectionContext(output, client.Connection);
+                var connection = CreateHubConnectionContext(client.Connection);
 
                 await manager.OnConnectedAsync(connection);
 
                 await manager.AddGroupAsync(connection.ConnectionId, "dre");
 
                 await manager.OnDisconnectedAsync(connection);
+
+                await connection.DisposeAsync();
 
                 var grain = this._fixture.Client.GetGroupGrain("MyHub", "dre");
                 var result = await grain.Count();
@@ -256,13 +338,13 @@ namespace SignalR.Orleans.Tests
 
             using (var client = new TestClient())
             {
-                var output = Channel.CreateUnbounded<HubMessage>();
-
-                var connection = new HubConnectionContext(output, client.Connection);
+                var connection = CreateHubConnectionContext(client.Connection);
 
                 await manager.OnConnectedAsync(connection);
 
                 await manager.RemoveGroupAsync(connection.ConnectionId, "does-not-exists");
+
+                await connection.DisposeAsync();
             }
         }
 
@@ -274,13 +356,13 @@ namespace SignalR.Orleans.Tests
 
             using (var client = new TestClient())
             {
-                var output = Channel.CreateUnbounded<HubMessage>();
-
-                var connection = new HubConnectionContext(output, client.Connection);
+                var connection = CreateHubConnectionContext(client.Connection);
 
                 await manager1.OnConnectedAsync(connection);
 
                 await manager2.RemoveGroupAsync(connection.ConnectionId, "does-not-exist-server");
+
+                await connection.DisposeAsync();
             }
         }
 
@@ -292,17 +374,17 @@ namespace SignalR.Orleans.Tests
 
             using (var client = new TestClient())
             {
-                var output = Channel.CreateUnbounded<HubMessage>();
-
-                var connection = new HubConnectionContext(output, client.Connection);
+                var connection = CreateHubConnectionContext(client.Connection);
 
                 await manager1.OnConnectedAsync(connection);
 
                 await manager2.AddGroupAsync(connection.ConnectionId, "ice-cube");
 
-                await manager2.InvokeGroupAsync("ice-cube", "Hello", new object[] { "World" });
+                await manager2.SendGroupAsync("ice-cube", "Hello", new object[] { "World" });
 
-                AssertMessage(output);
+                await connection.DisposeAsync();
+
+                AssertMessage(client.TryRead());
             }
         }
 
@@ -313,14 +395,14 @@ namespace SignalR.Orleans.Tests
 
             using (var client = new TestClient())
             {
-                var output = Channel.CreateUnbounded<HubMessage>();
-
-                var connection = new HubConnectionContext(output, client.Connection);
+                var connection = CreateHubConnectionContext(client.Connection);
 
                 await manager.OnConnectedAsync(connection);
 
                 await manager.AddGroupAsync(connection.ConnectionId, "dmx");
                 await manager.AddGroupAsync(connection.ConnectionId, "dmx");
+
+                await connection.DisposeAsync();
 
                 var grain = this._fixture.Client.GetGroupGrain("MyHub", "dmx");
                 var result = await grain.Count();
@@ -336,19 +418,19 @@ namespace SignalR.Orleans.Tests
 
             using (var client = new TestClient())
             {
-                var output = Channel.CreateUnbounded<HubMessage>();
-
-                var connection = new HubConnectionContext(output, client.Connection);
+                var connection = CreateHubConnectionContext(client.Connection);
 
                 await manager1.OnConnectedAsync(connection);
 
                 await manager1.AddGroupAsync(connection.ConnectionId, "easye");
                 await manager2.AddGroupAsync(connection.ConnectionId, "easye");
 
-                await manager2.InvokeGroupAsync("easye", "Hello", new object[] { "World" });
+                await manager2.SendGroupAsync("easye", "Hello", new object[] { "World" });
 
-                AssertMessage(output);
-                Assert.False(output.In.TryRead(out var item));
+                await connection.DisposeAsync();
+
+                AssertMessage(client.TryRead());
+                Assert.Null(client.TryRead());
             }
         }
 
@@ -360,23 +442,23 @@ namespace SignalR.Orleans.Tests
 
             using (var client = new TestClient())
             {
-                var output = Channel.CreateUnbounded<HubMessage>();
-
-                var connection = new HubConnectionContext(output, client.Connection);
+                var connection = CreateHubConnectionContext(client.Connection);
 
                 await manager1.OnConnectedAsync(connection);
 
                 await manager1.AddGroupAsync(connection.ConnectionId, "snoop");
 
-                await manager2.InvokeGroupAsync("snoop", "Hello", new object[] { "World" });
+                await manager2.SendGroupAsync("snoop", "Hello", new object[] { "World" });
 
-                AssertMessage(output);
+                AssertMessage(await client.ReadAsync());
 
                 await manager2.RemoveGroupAsync(connection.ConnectionId, "snoop");
 
-                await manager2.InvokeGroupAsync("snoop", "Hello", new object[] { "World" });
+                await manager2.SendGroupAsync("snoop", "Hello", new object[] { "World" });
 
-                Assert.False(output.In.TryRead(out var item));
+                await connection.DisposeAsync();
+
+                Assert.Null(client.TryRead());
             }
         }
 
@@ -388,18 +470,18 @@ namespace SignalR.Orleans.Tests
 
             using (var client = new TestClient())
             {
-                var output = Channel.CreateUnbounded<HubMessage>();
-
-                var connection = new HubConnectionContext(output, client.Connection);
+                var connection = CreateHubConnectionContext(client.Connection);
 
                 // Add connection to both "servers" to see if connection receives message twice
                 await manager1.OnConnectedAsync(connection);
                 await manager2.OnConnectedAsync(connection);
 
-                await manager1.InvokeConnectionAsync(connection.ConnectionId, "Hello", new object[] { "World" });
+                await manager1.SendConnectionAsync(connection.ConnectionId, "Hello", new object[] { "World" });
 
-                AssertMessage(output);
-                Assert.False(output.In.TryRead(out var item));
+                await connection.DisposeAsync();
+
+                AssertMessage(client.TryRead());
+                Assert.Null(client.TryRead());
             }
         }
 
@@ -414,34 +496,48 @@ namespace SignalR.Orleans.Tests
             using (var client2 = new TestClient())
             using (var client3 = new TestClient())
             {
-                var output1 = Channel.CreateUnbounded<HubMessage>();
-                var output2 = Channel.CreateUnbounded<HubMessage>();
-                var output3 = Channel.CreateUnbounded<HubMessage>();
-
-                var connection1 = new HubConnectionContext(output1, client1.Connection);
-                var connection2 = new HubConnectionContext(output2, client2.Connection);
-                var connection3 = new HubConnectionContext(output3, client3.Connection);
+                var connection1 = CreateHubConnectionContext(client1.Connection);
+                var connection2 = CreateHubConnectionContext(client2.Connection);
+                var connection3 = CreateHubConnectionContext(client3.Connection);
 
                 await manager1.OnConnectedAsync(connection1);
                 await manager2.OnConnectedAsync(connection2);
                 await manager3.OnConnectedAsync(connection3);
 
-                await manager1.InvokeAllAsync("Hello", new object[] { "World" });
+                await manager1.SendAllAsync("Hello", new object[] { "World" });
 
-                AssertMessage(output1);
-                AssertMessage(output2);
-                Assert.False(output3.In.TryRead(out var item));
+                await connection1.DisposeAsync();
+                await connection2.DisposeAsync();
+                await connection3.DisposeAsync();
+
+                AssertMessage(client1.TryRead());
+                AssertMessage(client2.TryRead());
+                Assert.Null(client3.TryRead());
             }
         }
 
-        private void AssertMessage(Channel<HubMessage> channel)
+        private void AssertMessage(HubMessage item)
         {
-            Assert.True(channel.In.TryRead(out var item));
+            Assert.IsType<InvocationMessage>(item);
             var message = item as InvocationMessage;
             Assert.NotNull(message);
             Assert.Equal("Hello", message.Target);
             Assert.Single(message.Arguments);
             Assert.Equal("World", (string)message.Arguments[0]);
         }
+
+        public static HubConnectionContext CreateHubConnectionContext(DefaultConnectionContext connection)
+        {
+            var context = new HubConnectionContext(connection, TimeSpan.FromSeconds(15), NullLoggerFactory.Instance);
+            context.ProtocolReaderWriter = new HubProtocolReaderWriter(new JsonHubProtocol(), new PassThroughEncoder());
+
+            // Microsoft.AspNetCore.SignalR.Redis.Tests uses Microsoft.AspNetCore.SignalR.Tests.HubConnectionContextUtils 
+            // which calls an internal method StartAsync. Reflection in a unittest! Huzzah!
+            _ = _StartAsyncMethod.Invoke(context, Array.Empty<object>()); 
+
+            return context;
+        }
+
+        private static readonly MethodInfo _StartAsyncMethod = typeof(HubConnectionContext).GetMethod("StartAsync", BindingFlags.NonPublic | BindingFlags.Instance);
     }
 }
