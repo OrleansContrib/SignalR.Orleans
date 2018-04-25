@@ -1,66 +1,51 @@
-// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+// COPIED AND REFACTORED :: Microsoft.AspNetCore.SignalR.Tests
 
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.IO.Pipelines;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Threading.Channels;
+using Microsoft.AspNetCore.Connections;
+using Microsoft.AspNetCore.Connections.Features;
 using Microsoft.AspNetCore.SignalR.Internal;
-using Microsoft.AspNetCore.SignalR.Internal.Encoders;
 using Microsoft.AspNetCore.SignalR.Internal.Protocol;
-using Microsoft.AspNetCore.Sockets;
-using Microsoft.AspNetCore.Sockets.Internal;
-using Newtonsoft.Json;
 
-namespace SignalR.Orleans.Tests
+namespace SignalR.Orleans.Tests.AspnetSignalR
 {
-    public class TestClient : IDisposable
+    public class TestClient : ITransferFormatFeature, IConnectionHeartbeatFeature, IDisposable
     {
         private static int _id;
-        private readonly HubProtocolReaderWriter _protocolReaderWriter;
+        private readonly IHubProtocol _protocol;
         private readonly IInvocationBinder _invocationBinder;
         private readonly CancellationTokenSource _cts;
-        private readonly ChannelConnection<byte[]> _transport;
 
         public DefaultConnectionContext Connection { get; }
-        public Channel<byte[]> Application { get; }
-        public Task Connected => ((TaskCompletionSource<bool>)Connection.Metadata["ConnectedTask"]).Task;
+        public Task Connected => ((TaskCompletionSource<bool>)Connection.Items["ConnectedTask"]).Task;
 
         public TestClient(bool synchronousCallbacks = false, IHubProtocol protocol = null, IInvocationBinder invocationBinder = null, bool addClaimId = false)
         {
-            var options = new UnboundedChannelOptions { AllowSynchronousContinuations = synchronousCallbacks };
-            var transportToApplication = Channel.CreateUnbounded<byte[]>(options);
-            var applicationToTransport = Channel.CreateUnbounded<byte[]>(options);
+            var pair = DuplexPipePair.GetConnectionTransport(synchronousCallbacks);
+            Connection = new DefaultConnectionContext(Guid.NewGuid().ToString(), pair.Transport, pair.Application);
 
-            Application = ChannelConnection.Create<byte[]>(input: applicationToTransport, output: transportToApplication);
-            _transport = ChannelConnection.Create<byte[]>(input: transportToApplication, output: applicationToTransport);
-
-            Connection = new DefaultConnectionContext(Guid.NewGuid().ToString(), _transport, Application);
+            // Add features SignalR needs for testing
+            Connection.Features.Set<ITransferFormatFeature>(this);
+            Connection.Features.Set<IConnectionHeartbeatFeature>(this);
 
             var claimValue = Interlocked.Increment(ref _id).ToString();
-            var claims = new List<Claim>{ new Claim(ClaimTypes.Name, claimValue) };
+            var claims = new List<Claim> { new Claim(ClaimTypes.Name, claimValue) };
             if (addClaimId)
             {
                 claims.Add(new Claim(ClaimTypes.NameIdentifier, claimValue));
             }
 
             Connection.User = new ClaimsPrincipal(new ClaimsIdentity(claims));
-            Connection.Metadata["ConnectedTask"] = new TaskCompletionSource<bool>();
+            Connection.Items["ConnectedTask"] = new TaskCompletionSource<bool>();
 
-            protocol = protocol ?? new JsonHubProtocol();
-            _protocolReaderWriter = new HubProtocolReaderWriter(protocol, new PassThroughEncoder());
+            _protocol = protocol ?? new JsonHubProtocol();
             _invocationBinder = invocationBinder ?? new DefaultInvocationBinder();
 
             _cts = new CancellationTokenSource();
-
-            using (var memoryStream = new MemoryStream())
-            {
-                NegotiationProtocol.WriteMessage(new NegotiationMessage(protocol.Name), memoryStream);
-                Application.Writer.TryWrite(memoryStream.ToArray());
-            }
         }
 
         public async Task<IList<HubMessage>> StreamAsync(string methodName, params object[] args)
@@ -136,8 +121,9 @@ namespace SignalR.Orleans.Tests
 
         public Task<string> SendInvocationAsync(string methodName, bool nonBlocking, params object[] args)
         {
-            var invocationId = GetInvocationId();
-            return SendHubMessageAsync(new InvocationMessage(invocationId, methodName, null, args));
+            var invocationId = nonBlocking ? null : GetInvocationId();
+            return SendHubMessageAsync(new InvocationMessage(invocationId, methodName,
+                argumentBindingException: null, arguments: args));
         }
 
         public Task<string> SendStreamInvocationAsync(string methodName, params object[] args)
@@ -147,24 +133,41 @@ namespace SignalR.Orleans.Tests
                 argumentBindingException: null, arguments: args));
         }
 
+
         public async Task<string> SendHubMessageAsync(HubMessage message)
         {
-            var payload = _protocolReaderWriter.WriteMessage(message);
-            await Application.Writer.WriteAsync(payload);
+            var payload = _protocol.WriteToArray(message);
+
+            await Connection.Application.Output.WriteAsync(payload);
             return message is HubInvocationMessage hubMessage ? hubMessage.InvocationId : null;
         }
 
-        public async Task<HubMessage> ReadAsync()
+        public async Task<HubMessage> ReadAsync(bool isHandshake = false)
         {
             while (true)
             {
-                var message = TryRead();
+                var message = TryRead(isHandshake);
 
                 if (message == null)
                 {
-                    if (!await Application.Reader.WaitToReadAsync())
+                    var result = await Connection.Application.Input.ReadAsync().OrTimeout();
+                    var buffer = result.Buffer;
+
+                    try
                     {
-                        return null;
+                        if (!buffer.IsEmpty)
+                        {
+                            continue;
+                        }
+
+                        if (result.IsCompleted)
+                        {
+                            return null;
+                        }
+                    }
+                    finally
+                    {
+                        Connection.Application.Input.AdvanceTo(buffer.Start);
                     }
                 }
                 else
@@ -174,20 +177,46 @@ namespace SignalR.Orleans.Tests
             }
         }
 
-        public HubMessage TryRead()
+        public HubMessage TryRead(bool isHandshake = false)
         {
-            if (Application.Reader.TryRead(out var buffer) &&
-                _protocolReaderWriter.ReadMessages(buffer, _invocationBinder, out var messages))
+            if (!Connection.Application.Input.TryRead(out var result))
             {
-                return messages[0];
+                return null;
             }
+
+            var buffer = result.Buffer;
+
+            try
+            {
+                if (!isHandshake)
+                {
+                    if (_protocol.TryParseMessage(ref buffer, _invocationBinder, out var message))
+                    {
+                        return message;
+                    }
+                }
+                else
+                {
+                    // read first message out of the incoming data 
+                    if (HandshakeProtocol.TryParseResponseMessage(ref buffer, out var responseMessage))
+                    {
+                        return responseMessage;
+                    }
+                }
+            }
+            finally
+            {
+                Connection.Application.Input.AdvanceTo(buffer.Start);
+            }
+
             return null;
         }
 
         public void Dispose()
         {
             _cts.Cancel();
-            _transport.Dispose();
+
+            Connection.Application.Output.Complete();
         }
 
         private static string GetInvocationId()
@@ -197,7 +226,7 @@ namespace SignalR.Orleans.Tests
 
         private class DefaultInvocationBinder : IInvocationBinder
         {
-            public Type[] GetParameterTypes(string methodName)
+            public IReadOnlyList<Type> GetParameterTypes(string methodName)
             {
                 // TODO: Possibly support actual client methods
                 return new[] { typeof(object) };
@@ -206,6 +235,24 @@ namespace SignalR.Orleans.Tests
             public Type GetReturnType(string invocationId)
             {
                 return typeof(object);
+            }
+        }
+
+        public TransferFormat SupportedFormats { get; set; } = TransferFormat.Text | TransferFormat.Binary;
+        public TransferFormat ActiveFormat { get; set; }
+        private readonly object _heartbeatLock = new object();
+        private List<(Action<object> handler, object state)> _heartbeatHandlers;
+
+
+        public void OnHeartbeat(Action<object> action, object state)
+        {
+            lock (_heartbeatLock)
+            {
+                if (_heartbeatHandlers == null)
+                {
+                    _heartbeatHandlers = new List<(Action<object> handler, object state)>();
+                }
+                _heartbeatHandlers.Add((action, state));
             }
         }
     }

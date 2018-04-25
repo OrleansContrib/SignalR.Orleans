@@ -1,7 +1,7 @@
-﻿using Orleans;
-using Orleans.Streams;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Orleans;
+using Orleans.Streams;
 
 namespace SignalR.Orleans.Core
 {
