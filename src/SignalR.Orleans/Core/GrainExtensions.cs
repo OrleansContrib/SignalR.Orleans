@@ -1,10 +1,9 @@
-﻿using Microsoft.AspNetCore.SignalR.Internal.Protocol;
+﻿using System.Threading.Tasks;
+using Microsoft.AspNetCore.SignalR.Internal.Protocol;
 using SignalR.Orleans.Clients;
 using SignalR.Orleans.Core;
 using SignalR.Orleans.Groups;
 using SignalR.Orleans.Users;
-using System;
-using System.Threading.Tasks;
 
 // ReSharper disable once CheckNamespace
 namespace Orleans
