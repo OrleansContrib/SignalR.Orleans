@@ -12,9 +12,9 @@ using SignalR.Orleans.Core;
 
 namespace SignalR.Orleans
 {
-    public class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>, IDisposable
+    public class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>, IDisposable where THub : Hub
     {
-        private readonly HubConnectionList _connections = new HubConnectionList();
+        private readonly HubConnectionStore _connections = new HubConnectionStore();
         private readonly ILogger _logger;
         private readonly IClusterClient _clusterClient;
         private readonly Guid _serverId;
@@ -58,7 +58,7 @@ namespace SignalR.Orleans
 
             foreach (var connection in this._connections)
             {
-                if (connection.ConnectionAbortedToken.IsCancellationRequested)
+                if (connection.ConnectionAborted.IsCancellationRequested)
                     continue;
 
                 if (message.ExcludedIds == null || !message.ExcludedIds.Contains(connection.ConnectionId))
@@ -198,7 +198,7 @@ namespace SignalR.Orleans
 
         private Task SendLocal(HubConnectionContext connection, HubInvocationMessage hubMessage)
         {
-            return connection.WriteAsync(hubMessage);
+            return connection.WriteAsync(hubMessage).AsTask();
         }
 
         private Task SendExternal(string connectionId, object hubMessage)
