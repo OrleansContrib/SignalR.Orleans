@@ -11,6 +11,10 @@
     <Product>Orleans SignalR Backplane</Product>
     <RepositoryUrl>https://github.com/OrleansContrib/SignalR.Orleans</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <PackageLicenseUrl>https://github.com/dotnet/Orleans#license</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/OrleansContrib/SignalR.Orleans</PackageProjectUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/dotnet/orleans/gh-pages/assets/logo_128.png</PackageIconUrl>
+    <PackageTags>Orleans Cloud-Computing Actor-Model Actors Distributed-Systems Real-Time SignalR C# .NET</PackageTags>
   </PropertyGroup>
 
   <!-- Common compile parameters -->

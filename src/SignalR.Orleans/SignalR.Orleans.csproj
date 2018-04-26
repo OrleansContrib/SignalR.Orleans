@@ -8,11 +8,7 @@
     <PackageId>SignalR.Orleans</PackageId>
     <Title>SignalR.Orleans - Orleans backplane for SignalR Core</Title>
     <Description>Orleans backplane for SignalR Core.</Description>
-    <Authors>Gutemberg Ribeiro, Clayton Lautier</Authors>
-    <PackageLicenseUrl>https://github.com/dotnet/Orleans#license</PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/OrleansContrib/SignalR.Orleans</PackageProjectUrl>
-    <PackageIconUrl>https://raw.githubusercontent.com/dotnet/orleans/gh-pages/assets/logo_128.png</PackageIconUrl>
-    <PackageTags>Orleans Cloud-Computing Actor-Model Actors Distributed-Systems Real-Time SignalR C# .NET</PackageTags>
+    <PackageTags>$(PackageTags) AspNetCore</PackageTags>
     <PackageReleaseNotes></PackageReleaseNotes>
     <IncludeSymbols>true</IncludeSymbols>
     <IncludeSource>true</IncludeSource>
