@@ -4,7 +4,7 @@ using System;
 using System.Reflection;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.AspNetCore.SignalR.Internal.Protocol;
+using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace SignalR.Orleans.Tests.AspnetSignalR

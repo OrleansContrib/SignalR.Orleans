@@ -1,5 +1,5 @@
 ﻿using System.Threading.Tasks;
-using Microsoft.AspNetCore.SignalR.Internal.Protocol;
+using Microsoft.AspNetCore.SignalR.Protocol;
 using SignalR.Orleans.Clients;
 using SignalR.Orleans.Core;
 using SignalR.Orleans.Groups;
@@ -12,7 +12,7 @@ namespace Orleans
     {
         public static async Task SendSignalRMessage(this IConnectionGrain grain, string methodName, params object[] message)
         {
-            var invocationMessage = new InvocationMessage(target: methodName, argumentBindingException: null, arguments: message);
+            var invocationMessage = new InvocationMessage(methodName, message);
             await grain.SendMessage(invocationMessage);
         }
     }
