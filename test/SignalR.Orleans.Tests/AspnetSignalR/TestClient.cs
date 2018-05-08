@@ -8,8 +8,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Connections.Features;
-using Microsoft.AspNetCore.SignalR.Internal;
-using Microsoft.AspNetCore.SignalR.Internal.Protocol;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR.Protocol;
 
 namespace SignalR.Orleans.Tests.AspnetSignalR
 {
@@ -122,21 +122,19 @@ namespace SignalR.Orleans.Tests.AspnetSignalR
         public Task<string> SendInvocationAsync(string methodName, bool nonBlocking, params object[] args)
         {
             var invocationId = nonBlocking ? null : GetInvocationId();
-            return SendHubMessageAsync(new InvocationMessage(invocationId, methodName,
-                argumentBindingException: null, arguments: args));
+            return SendHubMessageAsync(new InvocationMessage(invocationId, methodName, args));
         }
 
         public Task<string> SendStreamInvocationAsync(string methodName, params object[] args)
         {
             var invocationId = GetInvocationId();
-            return SendHubMessageAsync(new StreamInvocationMessage(invocationId, methodName,
-                argumentBindingException: null, arguments: args));
+            return SendHubMessageAsync(new StreamInvocationMessage(invocationId, methodName, args));
         }
 
 
         public async Task<string> SendHubMessageAsync(HubMessage message)
         {
-            var payload = _protocol.WriteToArray(message);
+            var payload = _protocol.GetMessageBytes(message);
 
             await Connection.Application.Output.WriteAsync(payload);
             return message is HubInvocationMessage hubMessage ? hubMessage.InvocationId : null;

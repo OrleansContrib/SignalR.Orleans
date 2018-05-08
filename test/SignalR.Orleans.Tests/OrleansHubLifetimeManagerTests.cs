@@ -3,7 +3,7 @@
 
 using System;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.SignalR.Internal.Protocol;
+using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.Extensions.Logging;
 using Orleans;
 using SignalR.Orleans.Tests.AspnetSignalR;
@@ -79,7 +79,7 @@ namespace SignalR.Orleans.Tests
                 await manager.OnConnectedAsync(connection1);
                 await manager.OnConnectedAsync(connection2);
 
-                await manager.AddGroupAsync(connection1.ConnectionId, "gunit");
+                await manager.AddToGroupAsync(connection1.ConnectionId, "gunit");
 
                 await manager.SendGroupAsync("gunit", "Hello", new object[] { "World" });
 
@@ -102,8 +102,8 @@ namespace SignalR.Orleans.Tests
                 await manager.OnConnectedAsync(connection1);
                 await manager.OnConnectedAsync(connection2);
 
-                await manager.AddGroupAsync(connection1.ConnectionId, "gunit");
-                await manager.AddGroupAsync(connection2.ConnectionId, "gunit");
+                await manager.AddToGroupAsync(connection1.ConnectionId, "gunit");
+                await manager.AddToGroupAsync(connection2.ConnectionId, "gunit");
 
                 await manager.SendGroupExceptAsync("gunit", "Hello", new object[] { "World" }, new string[] { connection2.ConnectionId });
 
@@ -126,8 +126,8 @@ namespace SignalR.Orleans.Tests
                 await manager.OnConnectedAsync(connection1);
                 await manager.OnConnectedAsync(connection2);
 
-                await manager.AddGroupAsync(connection1.ConnectionId, "gunit");
-                await manager.AddGroupAsync(connection2.ConnectionId, "tupac");
+                await manager.AddToGroupAsync(connection1.ConnectionId, "gunit");
+                await manager.AddToGroupAsync(connection2.ConnectionId, "tupac");
 
                 await manager.SendGroupsAsync(new string[] { "gunit", "tupac" }, "Hello", new object[] { "World" });
 
@@ -266,7 +266,7 @@ namespace SignalR.Orleans.Tests
 
                 await manager1.OnConnectedAsync(connection);
 
-                await manager1.AddGroupAsync(connection.ConnectionId, "tupac");
+                await manager1.AddToGroupAsync(connection.ConnectionId, "tupac");
 
                 await manager2.SendGroupAsync("tupac", "Hello", new object[] { "World" });
 
@@ -285,7 +285,7 @@ namespace SignalR.Orleans.Tests
 
                 await manager.OnConnectedAsync(connection);
 
-                await manager.AddGroupAsync(connection.ConnectionId, "dre");
+                await manager.AddToGroupAsync(connection.ConnectionId, "dre");
 
                 await manager.OnDisconnectedAsync(connection);
 
@@ -306,7 +306,7 @@ namespace SignalR.Orleans.Tests
 
                 await manager.OnConnectedAsync(connection);
 
-                await manager.RemoveGroupAsync(connection.ConnectionId, "does-not-exists");
+                await manager.RemoveFromGroupAsync(connection.ConnectionId, "does-not-exists");
             }
         }
 
@@ -322,7 +322,7 @@ namespace SignalR.Orleans.Tests
 
                 await manager1.OnConnectedAsync(connection);
 
-                await manager2.RemoveGroupAsync(connection.ConnectionId, "does-not-exist-server");
+                await manager2.RemoveFromGroupAsync(connection.ConnectionId, "does-not-exist-server");
             }
         }
 
@@ -338,7 +338,7 @@ namespace SignalR.Orleans.Tests
 
                 await manager1.OnConnectedAsync(connection);
 
-                await manager2.AddGroupAsync(connection.ConnectionId, "ice-cube");
+                await manager2.AddToGroupAsync(connection.ConnectionId, "ice-cube");
 
                 await manager2.SendGroupAsync("ice-cube", "Hello", new object[] { "World" });
 
@@ -357,8 +357,8 @@ namespace SignalR.Orleans.Tests
 
                 await manager.OnConnectedAsync(connection);
 
-                await manager.AddGroupAsync(connection.ConnectionId, "dmx");
-                await manager.AddGroupAsync(connection.ConnectionId, "dmx");
+                await manager.AddToGroupAsync(connection.ConnectionId, "dmx");
+                await manager.AddToGroupAsync(connection.ConnectionId, "dmx");
 
                 var grain = this._fixture.Client.GetGroupGrain("MyHub", "dmx");
                 var result = await grain.Count();
@@ -378,8 +378,8 @@ namespace SignalR.Orleans.Tests
 
                 await manager1.OnConnectedAsync(connection);
 
-                await manager1.AddGroupAsync(connection.ConnectionId, "easye");
-                await manager2.AddGroupAsync(connection.ConnectionId, "easye");
+                await manager1.AddToGroupAsync(connection.ConnectionId, "easye");
+                await manager2.AddToGroupAsync(connection.ConnectionId, "easye");
 
                 await manager2.SendGroupAsync("easye", "Hello", new object[] { "World" });
 
@@ -400,13 +400,13 @@ namespace SignalR.Orleans.Tests
 
                 await manager1.OnConnectedAsync(connection);
 
-                await manager1.AddGroupAsync(connection.ConnectionId, "snoop");
+                await manager1.AddToGroupAsync(connection.ConnectionId, "snoop");
 
                 await manager2.SendGroupAsync("snoop", "Hello", new object[] { "World" });
 
                 await AssertMessageAsync(client);
 
-                await manager2.RemoveGroupAsync(connection.ConnectionId, "snoop");
+                await manager2.RemoveFromGroupAsync(connection.ConnectionId, "snoop");
 
                 await manager2.SendGroupAsync("snoop", "Hello", new object[] { "World" });
 

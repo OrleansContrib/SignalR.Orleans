@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.AspNetCore.SignalR.Internal.Protocol;
+using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.Extensions.Logging;
 using Orleans;
 using Orleans.Streams;
@@ -75,83 +76,6 @@ namespace SignalR.Orleans
             return this.SendLocal(connection, (InvocationMessage)message.Payload);
         }
 
-        public override Task AddGroupAsync(string connectionId, string groupName)
-        {
-            var group = this._clusterClient.GetGroupGrain(_hubName, groupName);
-            return group.Add(_hubName, connectionId);
-        }
-
-        public override Task SendAllAsync(string methodName, object[] args)
-        {
-            var message = new InvocationMessage(target: methodName, argumentBindingException: null, arguments: args);
-            return this._allStream.OnNextAsync(new AllMessage { Payload = message });
-        }
-
-        public override Task SendAllExceptAsync(string methodName, object[] args, IReadOnlyList<string> excludedIds)
-        {
-            var message = new InvocationMessage(target: methodName, argumentBindingException: null, arguments: args);
-            return this._allStream.OnNextAsync(new AllMessage { Payload = message, ExcludedIds = excludedIds });
-        }
-
-        public override Task SendConnectionAsync(string connectionId, string methodName, object[] args)
-        {
-            if (string.IsNullOrWhiteSpace(connectionId)) throw new ArgumentNullException(nameof(connectionId));
-            if (string.IsNullOrWhiteSpace(methodName)) throw new ArgumentNullException(nameof(methodName));
-
-            var message = new InvocationMessage(target: methodName, argumentBindingException: null, arguments: args);
-
-            var connection = this._connections[connectionId];
-            if (connection != null) return SendLocal(connection, message);
-
-            return SendExternal(connectionId, message);
-        }
-
-        public override Task SendConnectionsAsync(IReadOnlyList<string> connectionIds, string methodName, object[] args)
-        {
-            var tasks = connectionIds.Select(c => SendConnectionAsync(c, methodName, args));
-            return Task.WhenAll(tasks);
-        }
-
-        public override Task SendGroupAsync(string groupName, string methodName, object[] args)
-        {
-            if (string.IsNullOrWhiteSpace(groupName)) throw new ArgumentNullException(nameof(groupName));
-            if (string.IsNullOrWhiteSpace(methodName)) throw new ArgumentNullException(nameof(methodName));
-
-            var group = this._clusterClient.GetGroupGrain(_hubName, groupName);
-            return group.SendSignalRMessage(methodName, args);
-        }
-
-        public override Task SendGroupExceptAsync(string groupName, string methodName, object[] args, IReadOnlyList<string> excludedIds)
-        {
-            if (string.IsNullOrWhiteSpace(groupName)) throw new ArgumentNullException(nameof(groupName));
-            if (string.IsNullOrWhiteSpace(methodName)) throw new ArgumentNullException(nameof(methodName));
-
-            var group = this._clusterClient.GetGroupGrain(_hubName, groupName);
-            var invocationMessage = new InvocationMessage(target: methodName, argumentBindingException: null, arguments: args);
-            return group.SendMessageExcept(invocationMessage, excludedIds);
-        }
-
-        public override Task SendGroupsAsync(IReadOnlyList<string> groupNames, string methodName, object[] args)
-        {
-            var tasks = groupNames.Select(g => SendGroupAsync(g, methodName, args));
-            return Task.WhenAll(tasks);
-        }
-
-        public override Task SendUserAsync(string userId, string methodName, object[] args)
-        {
-            if (string.IsNullOrWhiteSpace(userId)) throw new ArgumentNullException(nameof(userId));
-            if (string.IsNullOrWhiteSpace(methodName)) throw new ArgumentNullException(nameof(methodName));
-
-            var user = this._clusterClient.GetUserGrain(_hubName, userId);
-            return user.SendSignalRMessage(methodName, args);
-        }
-
-        public override Task SendUsersAsync(IReadOnlyList<string> userIds, string methodName, object[] args)
-        {
-            var tasks = userIds.Select(u => SendGroupAsync(u, methodName, args));
-            return Task.WhenAll(tasks);
-        }
-
         public override async Task OnConnectedAsync(HubConnectionContext connection)
         {
             try
@@ -190,7 +114,94 @@ namespace SignalR.Orleans
             this._connections.Remove(connection);
         }
 
-        public override Task RemoveGroupAsync(string connectionId, string groupName)
+        public override Task SendAllAsync(string methodName, object[] args, CancellationToken cancellationToken = new CancellationToken())
+        {
+            var message = new InvocationMessage(methodName, args);
+            return this._allStream.OnNextAsync(new AllMessage { Payload = message });
+        }
+
+        public override Task SendAllExceptAsync(string methodName, object[] args, IReadOnlyList<string> excludedConnectionIds,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            var message = new InvocationMessage(methodName, args);
+            return this._allStream.OnNextAsync(new AllMessage { Payload = message, ExcludedIds = excludedConnectionIds });
+        }
+
+        public override Task SendConnectionAsync(string connectionId, string methodName, object[] args,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            if (string.IsNullOrWhiteSpace(connectionId)) throw new ArgumentNullException(nameof(connectionId));
+            if (string.IsNullOrWhiteSpace(methodName)) throw new ArgumentNullException(nameof(methodName));
+
+            var message = new InvocationMessage(methodName, args);
+
+            var connection = this._connections[connectionId];
+            if (connection != null) return SendLocal(connection, message);
+
+            return SendExternal(connectionId, message);
+        }
+
+        public override Task SendConnectionsAsync(IReadOnlyList<string> connectionIds, string methodName, object[] args,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            var tasks = connectionIds.Select(c => SendConnectionAsync(c, methodName, args, cancellationToken));
+            return Task.WhenAll(tasks);
+        }
+
+        public override Task SendGroupAsync(string groupName, string methodName, object[] args,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            if (string.IsNullOrWhiteSpace(groupName)) throw new ArgumentNullException(nameof(groupName));
+            if (string.IsNullOrWhiteSpace(methodName)) throw new ArgumentNullException(nameof(methodName));
+
+            var group = this._clusterClient.GetGroupGrain(_hubName, groupName);
+            return group.SendSignalRMessage(methodName, args);
+        }
+
+        public override Task SendGroupsAsync(IReadOnlyList<string> groupNames, string methodName, object[] args,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            var tasks = groupNames.Select(g => SendGroupAsync(g, methodName, args, cancellationToken));
+            return Task.WhenAll(tasks);
+        }
+
+        public override Task SendGroupExceptAsync(string groupName, string methodName, object[] args, IReadOnlyList<string> excludedConnectionIds,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            if (string.IsNullOrWhiteSpace(groupName)) throw new ArgumentNullException(nameof(groupName));
+            if (string.IsNullOrWhiteSpace(methodName)) throw new ArgumentNullException(nameof(methodName));
+
+            var group = this._clusterClient.GetGroupGrain(_hubName, groupName);
+            var invocationMessage = new InvocationMessage(methodName, args);
+            return group.SendMessageExcept(invocationMessage, excludedConnectionIds);
+        }
+
+        public override Task SendUserAsync(string userId, string methodName, object[] args,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            if (string.IsNullOrWhiteSpace(userId)) throw new ArgumentNullException(nameof(userId));
+            if (string.IsNullOrWhiteSpace(methodName)) throw new ArgumentNullException(nameof(methodName));
+
+            var user = this._clusterClient.GetUserGrain(_hubName, userId);
+            return user.SendSignalRMessage(methodName, args);
+        }
+
+        public override Task SendUsersAsync(IReadOnlyList<string> userIds, string methodName, object[] args,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            var tasks = userIds.Select(u => SendGroupAsync(u, methodName, args, cancellationToken));
+            return Task.WhenAll(tasks);
+        }
+
+        public override Task AddToGroupAsync(string connectionId, string groupName,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            var group = this._clusterClient.GetGroupGrain(_hubName, groupName);
+            return group.Add(_hubName, connectionId);
+        }
+
+        public override Task RemoveFromGroupAsync(string connectionId, string groupName,
+            CancellationToken cancellationToken = new CancellationToken())
         {
             var group = this._clusterClient.GetGroupGrain(_hubName, groupName);
             return group.Remove(connectionId);

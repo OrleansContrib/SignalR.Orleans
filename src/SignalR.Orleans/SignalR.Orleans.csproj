@@ -8,26 +8,19 @@
     <PackageId>SignalR.Orleans</PackageId>
     <Title>SignalR.Orleans - Orleans backplane for SignalR Core</Title>
     <Description>Orleans backplane for SignalR Core.</Description>
-    <Authors>Gutemberg Ribeiro, Clayton Lautier</Authors>
-    <Product>Orleans SignalR Backplane</Product>
-    <PackageLicenseUrl>https://github.com/dotnet/Orleans#license</PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/OrleansContrib/SignalR.Orleans</PackageProjectUrl>
-    <PackageIconUrl>https://raw.githubusercontent.com/dotnet/orleans/gh-pages/assets/logo_128.png</PackageIconUrl>
-    <PackageTags>Orleans Cloud-Computing Actor-Model Actors Distributed-Systems Real-Time SignalR C# .NET</PackageTags>
+    <PackageTags>$(PackageTags) AspNetCore</PackageTags>
     <PackageReleaseNotes></PackageReleaseNotes>
-    <RepositoryUrl>https://github.com/dotnet/Orleans</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
     <IncludeSymbols>true</IncludeSymbols>
     <IncludeSource>true</IncludeSource>
     <VersionPrefix>1.0.0-preview-3</VersionPrefix>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Core" Version="1.0.0-preview2-final" />
-    <PackageReference Include="Microsoft.Orleans.Core" Version="2.0.0" />
-    <PackageReference Include="Microsoft.Orleans.OrleansProviders" Version="2.0.0" />
-    <PackageReference Include="Microsoft.Orleans.OrleansCodeGenerator.Build" Version="2.0.0" />
-    <PackageReference Include="Microsoft.Orleans.Runtime.Abstractions" Version="2.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Core" Version="$(SignalRVersion)" />
+    <PackageReference Include="Microsoft.Orleans.Core" Version="$(OrleansVersion)" />
+    <PackageReference Include="Microsoft.Orleans.OrleansProviders" Version="$(OrleansVersion)" />
+    <PackageReference Include="Microsoft.Orleans.OrleansCodeGenerator.Build" Version="$(OrleansVersion)" />
+    <PackageReference Include="Microsoft.Orleans.Runtime.Abstractions" Version="$(OrleansVersion)" />
   </ItemGroup>
-  
+
 </Project>
