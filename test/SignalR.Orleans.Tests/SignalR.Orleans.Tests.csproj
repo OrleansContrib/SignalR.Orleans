@@ -14,7 +14,7 @@
     <PackageReference Include="Microsoft.Orleans.Core" Version="$(OrleansCoreVersion)" />
     <PackageReference Include="Microsoft.Orleans.OrleansProviders" Version="$(OrleansProvidersVersion)" />
     <PackageReference Include="Microsoft.Orleans.OrleansCodeGenerator.Build" Version="$(OrleansCodeGeneratorVersion)" />
-    <PackageReference Include="Microsoft.Orleans.OrleansRuntime" Version="$(OrleansRuntimeAbstractionsVersion)" />
+    <PackageReference Include="Microsoft.Orleans.OrleansRuntime" Version="$(OrleansRuntimeVersion)" />
   </ItemGroup>
 
   <ItemGroup>
