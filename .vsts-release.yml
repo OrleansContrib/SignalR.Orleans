@@ -27,10 +27,8 @@ steps:
       command: pack
       packagesToPack: 'src/SignalR.Orleans/*.csproj'
       configuration: '$(buildConfiguration)'
-      versioningScheme: byPrereleaseNumber
-      majorVersion: '1'
-      minorVersion: '0'
-      patchVersion: '0'
+      versioningScheme: byEnvVar
+      versionEnvVar: Version
 
   - task: DotNetCoreCLI@2
     inputs:
@@ -38,9 +36,7 @@ steps:
       packagesToPush: '$(build.artifactStagingDirectory)/*.nupkg'
       publishFeedCredentials: 'OSS'
       nuGetFeedType: external
-      versioningScheme: byPrereleaseNumber
-      majorVersion: '1'
-      minorVersion: '0'
-      patchVersion: '0'
+      versioningScheme: byEnvVar
+      versionEnvVar: Version
       
   - task: PublishBuildArtifacts@1
