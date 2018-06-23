@@ -1,10 +1,5 @@
 queue: 'Hosted Linux Preview'
 
-variables:
-  - Major: '1'
-  - Minor: '0'
-  - Patch: '0'
-
 steps:
 
   - task: DotNetCoreCLI@2
@@ -30,8 +25,8 @@ steps:
       packagesToPack: '**/*.csproj'
       configuration: '$(BuildConfiguration)'
       versioningScheme: byPrereleaseNumber
-      majorVersion: '$(Major)'
-      minorVersion: '$(Minor)'
-      patchVersion: '$(Patch)-preview-$(rev:.r)'
+      majorVersion: '1'
+      minorVersion: '0'
+      patchVersion: '0-preview-$(rev:.r)'
       
   - task: PublishBuildArtifacts@1
