@@ -22,10 +22,10 @@ steps:
       projects: '**/*[Tt]ests/*.csproj'
       arguments: '--configuration $(buildConfiguration)'
 
-  - task: NuGetCommand@2
+  - task: DotNetCoreCLI@2
     inputs:
       command: pack
-      packagesToPack: '**/*.csproj'
+      packagesToPack: 'src/SignalR.Orleans/*.csproj'
       configuration: '$(buildConfiguration)'
       versioningScheme: byPrereleaseNumber
       majorVersion: '1'
