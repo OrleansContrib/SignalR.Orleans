@@ -26,6 +26,7 @@ steps:
     inputs:
       command: pack
       packagesToPack: 'src/SignalR.Orleans/*.csproj'
+      packDirectory: '$(build.artifactStagingDirectory)'
       configuration: '$(buildConfiguration)'
       versioningScheme: byEnvVar
       versionEnvVar: Version
@@ -38,5 +39,3 @@ steps:
       nuGetFeedType: external
       versioningScheme: byEnvVar
       versionEnvVar: Version
-      
-  - task: PublishBuildArtifacts@1
