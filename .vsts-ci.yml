@@ -1,0 +1,30 @@
+queue: 'Hosted Linux Preview'
+
+steps:
+
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: 'restore'
+      projects: '**/*.csproj'
+
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: 'build'
+      projects: '**/*.csproj'
+      arguments: '--configuration $(BuildConfiguration)'
+
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: 'test'
+      projects: '**/*[Tt]ests/*.csproj'
+      arguments: '--configuration $(BuildConfiguration)'
+
+  - task: NuGetCommand@2
+    inputs:
+      command: pack
+      packagesToPack: '**/*.csproj'
+      configuration: '$(BuildConfiguration)'
+      versioningScheme: byEnvVar
+      versionEnvVar: Version
+      
+  - task: PublishBuildArtifacts@1
