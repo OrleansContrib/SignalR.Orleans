@@ -1,4 +1,4 @@
-queue: 'Hosted Linux Preview'
+queue: 'Hosted VS2017'
 
 variables:
   buildConfiguration: 'Release'
