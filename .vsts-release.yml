@@ -30,9 +30,9 @@ steps:
       packagesToPack: '**/*.csproj'
       configuration: '$(BuildConfiguration)'
       versioningScheme: byPrereleaseNumber
-      majorVersion: '$(Major)'
-      minorVersion: '$(Minor)'
-      patchVersion: '$(Patch)'
+      majorVersion: '1'
+      minorVersion: '0'
+      patchVersion: '0'
 
   - task: NuGetCommand@2
     inputs:
@@ -40,8 +40,8 @@ steps:
       publishFeedCredentials: 'OSS'
       nuGetFeedType: external
       versioningScheme: byPrereleaseNumber
-      majorVersion: '$(Major)'
-      minorVersion: '$(Minor)'
-      patchVersion: '$(Patch)'
+      majorVersion: '1'
+      minorVersion: '0'
+      patchVersion: '0'
       
   - task: PublishBuildArtifacts@1
