@@ -1,5 +1,8 @@
 queue: 'Hosted Linux Preview'
 
+variables:
+  buildConfiguration: 'Release'
+
 steps:
 
   - task: DotNetCoreCLI@2
@@ -11,19 +14,19 @@ steps:
     inputs:
       command: 'build'
       projects: '**/*.csproj'
-      arguments: '--configuration $(BuildConfiguration)'
+      arguments: '--configuration $(buildConfiguration)'
 
   - task: DotNetCoreCLI@2
     inputs:
       command: 'test'
       projects: '**/*[Tt]ests/*.csproj'
-      arguments: '--configuration $(BuildConfiguration)'
+      arguments: '--configuration $(buildConfiguration)'
 
   - task: NuGetCommand@2
     inputs:
       command: pack
       packagesToPack: '**/*.csproj'
-      configuration: '$(BuildConfiguration)'
+      configuration: '$(buildConfiguration)'
       versioningScheme: byPrereleaseNumber
       majorVersion: '1'
       minorVersion: '0'
