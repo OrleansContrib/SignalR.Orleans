@@ -1,5 +1,10 @@
 queue: 'Hosted Linux Preview'
 
+variables:
+  - Major: '1'
+  - Minor: '0'
+  - Patch: '0'
+
 steps:
 
   - task: DotNetCoreCLI@2
@@ -24,15 +29,19 @@ steps:
       command: pack
       packagesToPack: '**/*.csproj'
       configuration: '$(BuildConfiguration)'
-      versioningScheme: byEnvVar
-      versionEnvVar: Version
+      versioningScheme: byPrereleaseNumber
+      majorVersion: '$(Major)'
+      minorVersion: '$(Minor)'
+      patchVersion: '$(Patch)'
 
   - task: NuGetCommand@2
     inputs:
       command: push
       publishFeedCredentials: 'OSS'
       nuGetFeedType: external
-      versioningScheme: byEnvVar
-      versionEnvVar: Version'
+      versioningScheme: byPrereleaseNumber
+      majorVersion: '$(Major)'
+      minorVersion: '$(Minor)'
+      patchVersion: '$(Patch)'
       
   - task: PublishBuildArtifacts@1
