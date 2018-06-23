@@ -31,14 +31,12 @@ namespace SignalR.Orleans
             _serverId = Guid.NewGuid();
             this._logger = logger;
             this._clusterClient = clusterClient;
-
-            _logger.LogInformation("Initializing: Orleans HubLifetimeManager {hubName} (serverId: {serverId})...", _hubName, _serverId);
-            this.SetupStreams().Wait();
-            _logger.LogInformation("Initialized complete: Orleans HubLifetimeManager {hubName} (serverId: {serverId})", _hubName, _serverId);
         }
 
         private async Task SetupStreams()
         {
+            _logger.LogInformation("Initializing: Orleans HubLifetimeManager {hubName} (serverId: {serverId})...", _hubName, _serverId);
+            
             this._streamProvider = this._clusterClient.GetStreamProvider(Constants.STREAM_PROVIDER);
             this._serverStream = this._streamProvider.GetStream<ClientMessage>(_serverId, Constants.SERVERS_STREAM);
             this._allStream = this._streamProvider.GetStream<AllMessage>(Constants.ALL_STREAM_ID, Utils.BuildStreamHubName(this._hubName));
@@ -50,6 +48,8 @@ namespace SignalR.Orleans
             };
 
             await Task.WhenAll(subscribeTasks);
+
+            _logger.LogInformation("Initialized complete: Orleans HubLifetimeManager {hubName} (serverId: {serverId})", _hubName, _serverId);
         }
 
         private Task ProcessAllMessage(AllMessage message)
@@ -80,6 +80,11 @@ namespace SignalR.Orleans
         {
             try
             {
+                if (this._streamProvider == null)
+                {
+                    await SetupStreams();
+                }
+
                 this._connections.Add(connection);
 
                 if (connection.User.Identity.IsAuthenticated)
