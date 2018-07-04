@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Orleans;
 using Orleans.Hosting;
 using SignalR.Orleans;
@@ -38,7 +39,7 @@ namespace Microsoft.Extensions.DependencyInjection
             }
             else
             {
-                builder.Services.AddSingleton(sp => new DefaultClusterClientProvider(sp.GetRequiredService<IClusterClient>()));
+                builder.Services.TryAddSingleton(sp => new DefaultClusterClientProvider(sp.GetRequiredService<IClusterClient>()));
             }
 
             builder.Services.AddSingleton(typeof(HubLifetimeManager<>), typeof(OrleansHubLifetimeManager<>));
