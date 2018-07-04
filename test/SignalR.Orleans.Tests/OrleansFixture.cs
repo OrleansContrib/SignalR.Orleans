@@ -10,7 +10,7 @@ namespace SignalR.Orleans.Tests
     public class OrleansFixture : IDisposable
     {
         public ISiloHost Silo { get; }
-        public IClusterClient Client { get; }
+        public IClusterClientProvider ClientProvider { get; }
 
         public OrleansFixture()
         {
@@ -29,12 +29,12 @@ namespace SignalR.Orleans.Tests
                 .Build();
 
             client.Connect().Wait();
-            this.Client = client;
+            this.ClientProvider = new DefaultClusterClientProvider(client);
         }
 
         public void Dispose()
         {
-            Client.Close().Wait();
+            ClientProvider.GetClient().Close().Wait();
             Silo.StopAsync().Wait();
         }
     }
