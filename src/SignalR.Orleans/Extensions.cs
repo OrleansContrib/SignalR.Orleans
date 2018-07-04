@@ -30,8 +30,17 @@ namespace Microsoft.Extensions.DependencyInjection
 
     public static class ServiceCollectionExtensions
     {
-        public static ISignalRBuilder AddOrleans(this ISignalRBuilder builder)
+        public static ISignalRBuilder AddOrleans(this ISignalRBuilder builder, IClusterClientProvider clientProvider = null)
         {
+            if (clientProvider != null)
+            {
+                builder.Services.AddSingleton(clientProvider);
+            }
+            else
+            {
+                builder.Services.AddSingleton(sp => new DefaultClusterClientProvider(sp.GetRequiredService<IClusterClient>()));
+            }
+
             builder.Services.AddSingleton(typeof(HubLifetimeManager<>), typeof(OrleansHubLifetimeManager<>));
             return builder;
         }
