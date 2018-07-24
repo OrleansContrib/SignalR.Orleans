@@ -9,7 +9,7 @@ namespace SignalR.Orleans
 
     internal class DefaultClusterClientProvider : IClusterClientProvider
     {
-        private IClusterClient _clusterClient;
+        private readonly IClusterClient _clusterClient;
 
         public DefaultClusterClientProvider(IClusterClient clusterClient)
         {
