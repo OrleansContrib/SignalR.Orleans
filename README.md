@@ -3,7 +3,7 @@
   <h1>SignalR.Orleans</h1>
 </p>
 
-[![CircleCI](https://circleci.com/gh/OrleansContrib/SignalR.Orleans/tree/master.svg?style=svg)](https://circleci.com/gh/OrleansContrib/SignalR.Orleans/tree/master)
+[![Build status](https://dotnet-ci.visualstudio.com/DotnetCI/_apis/build/status/SignalR-Orleans-CI?branch=master)](https://dotnet-ci.visualstudio.com/DotnetCI/_build/latest?definitionId=1&branch=master)
 [![NuGet](https://img.shields.io/nuget/v/SignalR.Orleans.svg?style=flat)](http://www.nuget.org/packages/SignalR.Orleans)
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dotnet/orleans?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
