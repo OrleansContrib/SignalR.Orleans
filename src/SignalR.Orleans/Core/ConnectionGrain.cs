@@ -11,11 +11,11 @@ namespace SignalR.Orleans.Core
 
         public override async Task OnActivateAsync()
         {
-            this._streamProvider = this.GetStreamProvider(Constants.STREAM_PROVIDER);
+            this._streamProvider = this.GetStreamProvider(Constants.StreamProvider);
             var subscriptionTasks = new List<Task>();
             foreach (var connection in this.State.Connections)
             {
-                var clientDisconnectStream = this._streamProvider.GetStream<string>(Constants.CLIENT_DISCONNECT_STREAM_ID, connection.Key);
+                var clientDisconnectStream = this._streamProvider.GetStream<string>(Constants.ClientDisconnectStreamId, connection.Key);
                 var subscriptions = await clientDisconnectStream.GetAllSubscriptionHandles();
                 foreach (var subscription in subscriptions)
                 {
@@ -32,7 +32,7 @@ namespace SignalR.Orleans.Core
                 if (string.IsNullOrWhiteSpace(State.HubName))
                     State.HubName = hubName;
 
-                var clientDisconnectStream = this._streamProvider.GetStream<string>(Constants.CLIENT_DISCONNECT_STREAM_ID, connectionId);
+                var clientDisconnectStream = this._streamProvider.GetStream<string>(Constants.ClientDisconnectStreamId, connectionId);
                 var subscription = await clientDisconnectStream.SubscribeAsync(async (connId, token) => await this.Remove(connId));
                 this.State.Connections.Add(connectionId, subscription);
                 await this.WriteStateAsync();

@@ -7,7 +7,7 @@ using SignalR.Orleans.Core;
 
 namespace SignalR.Orleans.Groups
 {
-    [StorageProvider(ProviderName = Constants.STORAGE_PROVIDER)]
+    [StorageProvider(ProviderName = Constants.GrainPersistence)]
     internal class GroupGrain : ConnectionGrain<GroupState>, IGroupGrain
     {
         public Task SendMessageExcept(object message, IReadOnlyList<string> excludedIds)

@@ -3,7 +3,7 @@ using SignalR.Orleans.Core;
 
 namespace SignalR.Orleans.Users
 {
-    [StorageProvider(ProviderName = Constants.STORAGE_PROVIDER)]
+    [StorageProvider(ProviderName = Constants.GrainPersistence)]
     internal class UserGrain : ConnectionGrain<UserState>, IUserGrain
     {
     }

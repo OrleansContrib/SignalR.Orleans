@@ -11,11 +11,13 @@ namespace Microsoft.Extensions.DependencyInjection
     {
         public static ISiloHostBuilder UseSignalR(this ISiloHostBuilder builder, bool useFireAndForgetDelivery = false)
         {
-            try { builder = builder.AddMemoryGrainStorage("PubSubStore"); }
+            try { builder = builder.AddMemoryGrainStorage(Constants.PubSub); }
             catch { /** PubSubStore was already added. Do nothing. **/ }
 
-            return builder.AddMemoryGrainStorage(Constants.STORAGE_PROVIDER)
-                .AddSimpleMessageStreamProvider(Constants.STREAM_PROVIDER, opt => opt.FireAndForgetDelivery = useFireAndForgetDelivery)
+            try { builder = builder.AddMemoryGrainStorage(Constants.GrainPersistence); }
+            catch { /** Signalr Orleans GrainPersistence was already added. Do nothing. **/ }
+
+            return builder.AddSimpleMessageStreamProvider(Constants.StreamProvider, opt => opt.FireAndForgetDelivery = useFireAndForgetDelivery)
                 .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(ClientGrain).Assembly).WithReferences());
         }
     }
@@ -24,7 +26,7 @@ namespace Microsoft.Extensions.DependencyInjection
     {
         public static IClientBuilder UseSignalR(this IClientBuilder builder, bool useFireAndForgetDelivery = false)
         {
-            return builder.AddSimpleMessageStreamProvider(Constants.STREAM_PROVIDER, opt => opt.FireAndForgetDelivery = useFireAndForgetDelivery)
+            return builder.AddSimpleMessageStreamProvider(Constants.StreamProvider, opt => opt.FireAndForgetDelivery = useFireAndForgetDelivery)
                 .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(IClientGrain).Assembly).WithReferences());
         }
     }

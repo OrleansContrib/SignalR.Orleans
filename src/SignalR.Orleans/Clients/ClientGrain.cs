@@ -6,7 +6,7 @@ using Orleans.Streams;
 
 namespace SignalR.Orleans.Clients
 {
-    [StorageProvider(ProviderName = Constants.STORAGE_PROVIDER)]
+    [StorageProvider(ProviderName = Constants.GrainPersistence)]
     internal class ClientGrain : Grain<ClientState>, IClientGrain
     {
         private IStreamProvider _streamProvider;
@@ -15,12 +15,12 @@ namespace SignalR.Orleans.Clients
 
         public override Task OnActivateAsync()
         {
-            this._streamProvider = this.GetStreamProvider(Constants.STREAM_PROVIDER);
+            this._streamProvider = this.GetStreamProvider(Constants.StreamProvider);
             if (this.State.ServerId == Guid.Empty)
                 return Task.CompletedTask;
 
-            this._clientDisconnectStream = this._streamProvider.GetStream<string>(Constants.CLIENT_DISCONNECT_STREAM_ID, this.State.ConnectionId);
-            this._serverStream = this._streamProvider.GetStream<ClientMessage>(this.State.ServerId, Constants.SERVERS_STREAM);
+            this._clientDisconnectStream = this._streamProvider.GetStream<string>(Constants.ClientDisconnectStreamId, this.State.ConnectionId);
+            this._serverStream = this._streamProvider.GetStream<ClientMessage>(this.State.ServerId, Constants.ServersStream);
             return Task.CompletedTask;
         }
 
@@ -37,8 +37,8 @@ namespace SignalR.Orleans.Clients
             this.State.ServerId = serverId;
             this.State.HubName = hubName;
             this.State.ConnectionId = connectionId;
-            this._serverStream = this._streamProvider.GetStream<ClientMessage>(this.State.ServerId, Constants.SERVERS_STREAM);
-            this._clientDisconnectStream = this._streamProvider.GetStream<string>(Constants.CLIENT_DISCONNECT_STREAM_ID, this.State.ConnectionId);
+            this._serverStream = this._streamProvider.GetStream<ClientMessage>(this.State.ServerId, Constants.ServersStream);
+            this._clientDisconnectStream = this._streamProvider.GetStream<string>(Constants.ClientDisconnectStreamId, this.State.ConnectionId);
             return this.WriteStateAsync();
         }
 

@@ -37,9 +37,9 @@ namespace SignalR.Orleans
         {
             _logger.LogInformation("Initializing: Orleans HubLifetimeManager {hubName} (serverId: {serverId})...", _hubName, _serverId);
             
-            this._streamProvider = this._clusterClientProvider.GetClient().GetStreamProvider(Constants.STREAM_PROVIDER);
-            this._serverStream = this._streamProvider.GetStream<ClientMessage>(_serverId, Constants.SERVERS_STREAM);
-            this._allStream = this._streamProvider.GetStream<AllMessage>(Constants.ALL_STREAM_ID, Utils.BuildStreamHubName(this._hubName));
+            this._streamProvider = this._clusterClientProvider.GetClient().GetStreamProvider(Constants.StreamProvider);
+            this._serverStream = this._streamProvider.GetStream<ClientMessage>(_serverId, Constants.ServersStream);
+            this._allStream = this._streamProvider.GetStream<AllMessage>(Constants.AllStreamId, Utils.BuildStreamHubName(this._hubName));
 
             var subscribeTasks = new List<Task>
             {
