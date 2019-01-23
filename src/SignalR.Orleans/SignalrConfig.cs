@@ -11,7 +11,7 @@ namespace SignalR.Orleans
 
     public class SignalrServerConfig
     {
-        public Action<ISiloHostBuilder, HostBuilderConfig> ConfigureProviders { get; set; }
+        public Action<ISiloHostBuilder, HostBuilderConfig> ConfigureBuilder { get; set; }
         public bool UseFireAndForgetDelivery { get; set; }
     }
 
