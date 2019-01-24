@@ -4,7 +4,9 @@ namespace SignalR.Orleans
 {
     public static class Constants
     {
+        public const string PUBSUB_PROVIDER = "PubSubStore";
         public const string STORAGE_PROVIDER = "ORLEANS_SIGNALR_STORAGE_PROVIDER";
+
         public const string SERVERS_STREAM = "SERVERS_STREAM";
         public const string STREAM_PROVIDER = "ORLEANS_SIGNALR_STREAM_PROVIDER";
         public static readonly Guid CLIENT_DISCONNECT_STREAM_ID = Guid.Parse("bdcff7e7-3734-48ab-8599-17d915011b85");
