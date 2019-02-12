@@ -1,3 +1,4 @@
+using System;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Orleans;
@@ -9,6 +10,14 @@ namespace Microsoft.Extensions.DependencyInjection
 {
     public static class OrleansServerExtensions
     {
+        public static ISiloHostBuilder UseSignalR(this ISiloHostBuilder builder, Action<SignalrServerConfig> config)
+        {
+            var cfg = new SignalrServerConfig();
+            config?.Invoke(cfg);
+
+            return builder.UseSignalR(cfg);
+        }
+
         public static ISiloHostBuilder UseSignalR(this ISiloHostBuilder builder, SignalrServerConfig config = null)
         {
             if (config == null)
@@ -30,6 +39,14 @@ namespace Microsoft.Extensions.DependencyInjection
 
     public static class OrleansClientExtensions
     {
+        public static IClientBuilder UseSignalR(this IClientBuilder builder, Action<SignalrClientConfig> config)
+        {
+            var cfg = new SignalrClientConfig();
+            config?.Invoke(cfg);
+
+            return builder.UseSignalR(cfg);
+        }
+
         public static IClientBuilder UseSignalR(this IClientBuilder builder, SignalrClientConfig config = null)
         {
             if (config == null)
