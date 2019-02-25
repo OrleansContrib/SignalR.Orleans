@@ -1,0 +1,42 @@
+<Project>
+  <!-- Set the repository root into a variable -->
+  <PropertyGroup>
+    <SourceRoot>$(MSBuildThisFileDirectory)</SourceRoot>
+  </PropertyGroup>
+
+  <!-- Set common properties regarding assembly information and nuget packages -->
+  <PropertyGroup>
+    <Authors>Gutemberg Ribeiro, Clayton Lautier</Authors>
+    <Owners>Gutemberg Ribeiro, Clayton Lautier</Owners>
+    <Product>Orleans SignalR Backplane</Product>
+    <RepositoryUrl>https://github.com/OrleansContrib/SignalR.Orleans</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseUrl>https://github.com/dotnet/Orleans#license</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/OrleansContrib/SignalR.Orleans</PackageProjectUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/dotnet/orleans/gh-pages/assets/logo_128.png</PackageIconUrl>
+    <PackageTags>Orleans Cloud-Computing Actor-Model Actors Distributed-Systems Real-Time SignalR C# .NET</PackageTags>
+  </PropertyGroup>
+
+  <!-- Common compile parameters -->
+  <PropertyGroup>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>$(NoWarn);1701;1702;1705;1591</NoWarn>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <!-- Shared Package Versions -->
+  <PropertyGroup>
+    <!-- vendors -->
+    <OrleansCoreVersion>2.2.0</OrleansCoreVersion>
+    <OrleansProvidersVersion>2.2.3</OrleansProvidersVersion>
+    <OrleansCodeGeneratorVersion>2.2.3</OrleansCodeGeneratorVersion>
+    <OrleansRuntimeAbstractionsVersion>2.2.0</OrleansRuntimeAbstractionsVersion>
+    <OrleansRuntimeVersion>2.2.3</OrleansRuntimeVersion>
+    <SignalRVersion>1.1.0</SignalRVersion>
+  </PropertyGroup>
+</Project>

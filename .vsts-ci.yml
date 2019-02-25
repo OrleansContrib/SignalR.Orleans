@@ -1,0 +1,33 @@
+queue: 'Hosted Linux Preview'
+
+variables:
+  buildConfiguration: 'Release'
+
+steps:
+
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: 'restore'
+      projects: '**/*.csproj'
+
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: 'build'
+      projects: '**/*.csproj'
+      arguments: '--configuration $(buildConfiguration)'
+
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: 'test'
+      projects: '**/*[Tt]ests/*.csproj'
+      arguments: '--configuration $(buildConfiguration)'
+
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: pack
+      packagesToPack: 'src/SignalR.Orleans/*.csproj'
+      configuration: '$(buildConfiguration)'
+      versioningScheme: byPrereleaseNumber
+      majorVersion: '1'
+      minorVersion: '1'
+      patchVersion: '0'

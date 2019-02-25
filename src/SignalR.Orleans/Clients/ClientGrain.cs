@@ -1,8 +1,8 @@
+using System;
+using System.Threading.Tasks;
 using Orleans;
 using Orleans.Providers;
 using Orleans.Streams;
-using System;
-using System.Threading.Tasks;
 
 namespace SignalR.Orleans.Clients
 {

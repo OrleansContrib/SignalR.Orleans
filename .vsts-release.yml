@@ -1,0 +1,41 @@
+queue: 'Hosted VS2017'
+
+variables:
+  buildConfiguration: 'Release'
+
+steps:
+
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: 'restore'
+      projects: '**/*.csproj'
+
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: 'build'
+      projects: '**/*.csproj'
+      arguments: '--configuration $(buildConfiguration)'
+
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: 'test'
+      projects: '**/*[Tt]ests/*.csproj'
+      arguments: '--configuration $(buildConfiguration)'
+
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: pack
+      packagesToPack: 'src/SignalR.Orleans/*.csproj'
+      packDirectory: '$(build.artifactStagingDirectory)'
+      configuration: '$(buildConfiguration)'
+      versioningScheme: byEnvVar
+      versionEnvVar: Version
+
+  - task: NuGetCommand@2
+    inputs:
+      command: push
+      packagesToPush: '$(build.ArtifactStagingDirectory)/**/*.nupkg;!$(build.ArtifactStagingDirectory)/**/*.symbols.nupkg'
+      publishFeedCredentials: 'OSS'
+      nuGetFeedType: external
+      versioningScheme: byEnvVar
+      versionEnvVar: Version
