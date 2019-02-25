@@ -20,15 +20,15 @@ Installation is performed via [NuGet](https://www.nuget.org/packages/SignalR.Orl
 
 From Package Manager:
 
-> PS> Install-Package SignalR.Orleans -prerelease
+> PS> Install-Package SignalR.Orleans
 
 .Net CLI:
 
-> \# dotnet add package SignalR.Orleans -prerelease
+> \# dotnet add package SignalR.Orleans
 
-Paket: 
+Paket:
 
-> \# paket add SignalR.Orleans -prerelease
+> \# paket add SignalR.Orleans
 
 # Configuration
 
@@ -38,14 +38,27 @@ We need to configure the Orleans Silo with the below:
 
 ***Example***
 ```cs
-var siloPort = 11111;
-int gatewayPort = 30000;
-var siloAddress = IPAddress.Loopback;
-
 var silo = new SiloHostBuilder()
     .UseSignalR()
     .Build();
+
 await silo.StartAsync();
+```
+
+### Configure Silo Storage Provider and Grain Persistance
+Optional configuration to override the default implementation for both providers which by default are set as `Memory`.
+
+***Example***
+```cs
+.UseSignalR(cfg =>
+{
+    cfg.ConfigureBuilder = (builder, config) =>
+    {
+        builder
+            .AddMemoryGrainStorage(config.PubSubProvider)
+            .AddMemoryGrainStorage(config.StorageProvider);
+    };
+})
 ```
 
 ## Client
@@ -57,7 +70,8 @@ Now your SignalR application needs to connect to the Orleans Cluster by using an
 var client = new ClientBuilder()
     .UseSignalR()
     .Build();
-    await client.Connect();
+
+await client.Connect();
 ```
 
 Somewhere in your `Startup.cs`:
