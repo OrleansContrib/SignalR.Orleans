@@ -1,4 +1,5 @@
-queue: 'Hosted Linux Preview'
+pool:
+  vmImage: 'ubuntu-16.04'
 
 variables:
   buildConfiguration: 'Release'
