@@ -75,6 +75,7 @@ await client.Connect();
 ```
 
 Somewhere in your `Startup.cs`:
+* Add `IClusterClient` (created in the above example) to `IServiceCollection`.
 * Use `.AddSignalR()` on `IServiceCollection` (this is part of `Microsoft.AspNetCore.SignalR` nuget package).
 * Use `AddOrleans()` on `.AddSignalR()`.
 
@@ -84,6 +85,7 @@ public void ConfigureServices(IServiceCollection services)
 {
     ...
     services
+        .AddSingleton<IClusterClient>(client);
         .AddSignalR()
         .AddOrleans();
     ...
