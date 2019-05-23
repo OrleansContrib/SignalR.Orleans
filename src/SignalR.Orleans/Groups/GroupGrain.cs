@@ -10,10 +10,11 @@ namespace SignalR.Orleans.Groups
     [StorageProvider(ProviderName = Constants.STORAGE_PROVIDER)]
     internal class GroupGrain : ConnectionGrain<GroupState>, IGroupGrain
     {
+        // todo: remove from object message and pass args
         public Task SendMessageExcept(object message, IReadOnlyList<string> excludedIds)
         {
             var tasks = new List<Task>();
-            foreach (var connection in this.State.Connections)
+            foreach (var connection in State.Connections)
             {
                 if (excludedIds.Contains(connection.Key)) continue;
 

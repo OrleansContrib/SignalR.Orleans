@@ -11,15 +11,15 @@ namespace SignalR.Orleans.Core
 
         public override async Task OnActivateAsync()
         {
-            this._streamProvider = this.GetStreamProvider(Constants.STREAM_PROVIDER);
+            _streamProvider = GetStreamProvider(Constants.STREAM_PROVIDER);
             var subscriptionTasks = new List<Task>();
-            foreach (var connection in this.State.Connections)
+            foreach (var connection in State.Connections)
             {
-                var clientDisconnectStream = this._streamProvider.GetStream<string>(Constants.CLIENT_DISCONNECT_STREAM_ID, connection.Key);
+                var clientDisconnectStream = _streamProvider.GetStream<string>(Constants.CLIENT_DISCONNECT_STREAM_ID, connection.Key);
                 var subscriptions = await clientDisconnectStream.GetAllSubscriptionHandles();
                 foreach (var subscription in subscriptions)
                 {
-                    subscriptionTasks.Add(subscription.ResumeAsync(async (connectionId, token) => await this.Remove(connectionId)));
+                    subscriptionTasks.Add(subscription.ResumeAsync(async (connectionId, token) => await Remove(connectionId)));
                 }
             }
             await Task.WhenAll(subscriptionTasks);
@@ -28,15 +28,15 @@ namespace SignalR.Orleans.Core
         // todo: remove hubname (since its already in pk)
         public virtual async Task Add(string hubName, string connectionId)
         {
-            if (!this.State.Connections.ContainsKey(connectionId))
+            if (!State.Connections.ContainsKey(connectionId))
             {
                 if (string.IsNullOrWhiteSpace(State.HubName))
                     State.HubName = hubName;
 
-                var clientDisconnectStream = this._streamProvider.GetStream<string>(Constants.CLIENT_DISCONNECT_STREAM_ID, connectionId);
-                var subscription = await clientDisconnectStream.SubscribeAsync(async (connId, token) => await this.Remove(connId));
-                this.State.Connections.Add(connectionId, subscription);
-                await this.WriteStateAsync();
+                var clientDisconnectStream = _streamProvider.GetStream<string>(Constants.CLIENT_DISCONNECT_STREAM_ID, connectionId);
+                var subscription = await clientDisconnectStream.SubscribeAsync(async (connId, token) => await Remove(connId));
+                State.Connections.Add(connectionId, subscription);
+                await WriteStateAsync();
             }
         }
 
@@ -46,23 +46,23 @@ namespace SignalR.Orleans.Core
             if (State.Connections.TryGetValue(connectionId, out var stream))
             {
                 await stream.UnsubscribeAsync();
-                this.State.Connections.Remove(connectionId);
+                State.Connections.Remove(connectionId);
             }
-            if (this.State.Connections.Count == 0)
+            if (State.Connections.Count == 0)
             {
-                await this.ClearStateAsync();
-                this.DeactivateOnIdle();
+                await ClearStateAsync();
+                DeactivateOnIdle();
             }
             else
             {
-                await this.WriteStateAsync();
+                await WriteStateAsync();
             }
         }
 
         public virtual Task SendMessage(object message)
         {
             var tasks = new List<Task>();
-            foreach (var connection in this.State.Connections)
+            foreach (var connection in State.Connections)
             {
                 var client = GrainFactory.GetClientGrain(State.HubName, connection.Key);
                 tasks.Add(client.SendMessage(message));

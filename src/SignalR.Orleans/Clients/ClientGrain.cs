@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Orleans;
 using Orleans.Providers;
@@ -6,60 +7,67 @@ using Orleans.Streams;
 
 namespace SignalR.Orleans.Clients
 {
+    [DebuggerDisplay("{DebuggerDisplay,nq}")]
+    internal class ClientState
+    {
+        private string DebuggerDisplay => $"ServerId: '{ServerId}'";
+
+        public Guid ServerId { get; set; }
+    }
+
     [StorageProvider(ProviderName = Constants.STORAGE_PROVIDER)]
     internal class ClientGrain : Grain<ClientState>, IClientGrain
     {
         private IStreamProvider _streamProvider;
         private IAsyncStream<ClientMessage> _serverStream;
         private IAsyncStream<string> _clientDisconnectStream;
+        private string _connectionId;
+        private string _hubName;
 
         public override Task OnActivateAsync()
         {
-            this._streamProvider = this.GetStreamProvider(Constants.STREAM_PROVIDER);
-            if (this.State.ServerId == Guid.Empty)
+            ParsePrimaryKey();
+
+            _streamProvider = GetStreamProvider(Constants.STREAM_PROVIDER);
+            _clientDisconnectStream = _streamProvider.GetStream<string>(Constants.CLIENT_DISCONNECT_STREAM_ID, _connectionId);
+
+            if (State.ServerId == Guid.Empty)
                 return Task.CompletedTask;
 
-            this._clientDisconnectStream = this._streamProvider.GetStream<string>(Constants.CLIENT_DISCONNECT_STREAM_ID, this.State.ConnectionId);
-            this._serverStream = this._streamProvider.GetStream<ClientMessage>(this.State.ServerId, Constants.SERVERS_STREAM);
+            _serverStream = _streamProvider.GetStream<ClientMessage>(State.ServerId, Constants.SERVERS_STREAM);
             return Task.CompletedTask;
         }
 
         public Task SendMessage(object message)
         {
-            if (this.State.ServerId == Guid.Empty) throw new InvalidOperationException("Client not connected.");
-            if (string.IsNullOrWhiteSpace(this.State.HubName)) throw new InvalidOperationException("Client hubname not set.");
-            if (string.IsNullOrWhiteSpace(this.State.ConnectionId)) throw new InvalidOperationException("Client ConnectionId not set.");
-            return this._serverStream.OnNextAsync(new ClientMessage { ConnectionId = State.ConnectionId, Payload = message, HubName = State.HubName });
+            if (State.ServerId == Guid.Empty) throw new InvalidOperationException("Client not connected.");
+            return _serverStream.OnNextAsync(new ClientMessage { ConnectionId = _connectionId, Payload = message, HubName = _hubName });
         }
 
-        // todo: remove hubname + connection id + get from PK
-        public Task OnConnect(Guid serverId, string hubName, string connectionId)
+        public Task OnConnect(Guid serverId)
         {
             // todo: can this connect if its already connected?
-            this.State.ServerId = serverId;
-            this.State.HubName = hubName;
-            this.State.ConnectionId = connectionId;
-            this._serverStream = this._streamProvider.GetStream<ClientMessage>(this.State.ServerId, Constants.SERVERS_STREAM);
-            this._clientDisconnectStream = this._streamProvider.GetStream<string>(Constants.CLIENT_DISCONNECT_STREAM_ID, this.State.ConnectionId);
-            return this.WriteStateAsync();
+            State.ServerId = serverId;
+            _serverStream = _streamProvider.GetStream<ClientMessage>(State.ServerId, Constants.SERVERS_STREAM);
+            return WriteStateAsync();
         }
 
         public async Task OnDisconnect()
         {
-            if (this.State.ConnectionId != null)
+            if (_connectionId != null)
             {
-                await this._clientDisconnectStream.OnNextAsync(this.State.ConnectionId);
+                await _clientDisconnectStream.OnNextAsync(_connectionId);
             }
-            await this.ClearStateAsync();
-            this.DeactivateOnIdle();
+            await ClearStateAsync();
+            DeactivateOnIdle();
         }
-    }
 
-    // todo: debugger display
-    internal class ClientState
-    {
-        public Guid ServerId { get; set; }
-        public string ConnectionId { get; set; }
-        public string HubName { get; set; }
+        private void ParsePrimaryKey()
+        {
+            var pk = this.GetPrimaryKeyString();
+            var pkArray = pk.Split(':');
+            _hubName = pkArray[0];
+            _connectionId = pkArray[1];
+        }
     }
 }

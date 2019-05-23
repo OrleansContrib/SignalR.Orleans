@@ -13,9 +13,9 @@ namespace SignalR.Orleans
 
         public DefaultClusterClientProvider(IClusterClient clusterClient)
         {
-            this._clusterClient = clusterClient;
+            _clusterClient = clusterClient;
         }
 
-        public IClusterClient GetClient() => this._clusterClient;
+        public IClusterClient GetClient() => _clusterClient;
     }
 }
