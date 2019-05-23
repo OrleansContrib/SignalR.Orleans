@@ -35,6 +35,7 @@ namespace SignalR.Orleans.Clients
         // todo: remove hubname + connection id + get from PK
         public Task OnConnect(Guid serverId, string hubName, string connectionId)
         {
+            // todo: can this connect if its already connected?
             this.State.ServerId = serverId;
             this.State.HubName = hubName;
             this.State.ConnectionId = connectionId;
