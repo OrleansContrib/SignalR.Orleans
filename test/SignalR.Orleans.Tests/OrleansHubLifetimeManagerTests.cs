@@ -295,6 +295,8 @@ namespace SignalR.Orleans.Tests
             }
         }
 
+        // todo: add test - multi conn, one "not connected" others connected - ensure 2 gets delivered and 1 doesnt (and not failing the rest)
+
         [Fact]
         public async Task RemoveGroup_FromLocalConnection_NotInGroup_DoesNothing()
         {
