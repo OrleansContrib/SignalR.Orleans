@@ -32,6 +32,7 @@ namespace SignalR.Orleans.Clients
             return this._serverStream.OnNextAsync(new ClientMessage { ConnectionId = State.ConnectionId, Payload = message, HubName = State.HubName });
         }
 
+        // todo: remove hubname + connection id + get from PK
         public Task OnConnect(Guid serverId, string hubName, string connectionId)
         {
             this.State.ServerId = serverId;
@@ -53,6 +54,7 @@ namespace SignalR.Orleans.Clients
         }
     }
 
+    // todo: debugger display
     internal class ClientState
     {
         public Guid ServerId { get; set; }

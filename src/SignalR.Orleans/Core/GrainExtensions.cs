@@ -10,6 +10,7 @@ namespace Orleans
 {
     public static class GrainSignalRExtensions
     {
+        // todo: rename to Send or SendSignalR? -- Add interface for ClientGrain and ConnectionGrain so this is shared
         public static async Task SendSignalRMessage(this IConnectionGrain grain, string methodName, params object[] message)
         {
             var invocationMessage = new InvocationMessage(methodName, message);

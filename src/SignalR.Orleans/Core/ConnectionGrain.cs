@@ -25,6 +25,7 @@ namespace SignalR.Orleans.Core
             await Task.WhenAll(subscriptionTasks);
         }
 
+        // todo: remove hubname (since its already in pk)
         public virtual async Task Add(string hubName, string connectionId)
         {
             if (!this.State.Connections.ContainsKey(connectionId))
@@ -41,9 +42,10 @@ namespace SignalR.Orleans.Core
 
         public virtual async Task Remove(string connectionId)
         {
-            if (State.Connections.ContainsKey(connectionId))
+            // todo: ensure deleted 
+            if (State.Connections.TryGetValue(connectionId, out var stream))
             {
-                await this.State.Connections[connectionId].UnsubscribeAsync();
+                await stream.UnsubscribeAsync();
                 this.State.Connections.Remove(connectionId);
             }
             if (this.State.Connections.Count == 0)
@@ -75,6 +77,7 @@ namespace SignalR.Orleans.Core
         }
     }
 
+    // todo: debugger display
     internal abstract class ConnectionState
     {
         public Dictionary<string, StreamSubscriptionHandle<string>> Connections { get; set; } = new Dictionary<string, StreamSubscriptionHandle<string>>();

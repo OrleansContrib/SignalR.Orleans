@@ -26,7 +26,8 @@ namespace SignalR.Orleans
 
         public OrleansHubLifetimeManager(
             ILogger<OrleansHubLifetimeManager<THub>> logger,
-            IClusterClientProvider clusterClientProvider)
+            IClusterClientProvider clusterClientProvider
+        )
         {
             _serverId = Guid.NewGuid();
             this._logger = logger;
@@ -36,7 +37,7 @@ namespace SignalR.Orleans
         private async Task SetupStreams()
         {
             _logger.LogInformation("Initializing: Orleans HubLifetimeManager {hubName} (serverId: {serverId})...", _hubName, _serverId);
-            
+
             this._streamProvider = this._clusterClientProvider.GetClient().GetStreamProvider(Constants.STREAM_PROVIDER);
             this._serverStream = this._streamProvider.GetStream<ClientMessage>(_serverId, Constants.SERVERS_STREAM);
             this._allStream = this._streamProvider.GetStream<AllMessage>(Constants.ALL_STREAM_ID, Utils.BuildStreamHubName(this._hubName));
