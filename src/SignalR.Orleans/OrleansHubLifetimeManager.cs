@@ -91,7 +91,7 @@ namespace SignalR.Orleans
                 if (connection.User.Identity.IsAuthenticated)
                 {
                     var user = _clusterClientProvider.GetClient().GetUserGrain(_hubName, connection.UserIdentifier);
-                    await user.Add(_hubName, connection.ConnectionId);
+                    await user.Add(connection.ConnectionId);
                 }
 
                 var client = _clusterClientProvider.GetClient().GetClientGrain(_hubName, connection.ConnectionId);
@@ -203,7 +203,7 @@ namespace SignalR.Orleans
             CancellationToken cancellationToken = new CancellationToken())
         {
             var group = _clusterClientProvider.GetClient().GetGroupGrain(_hubName, groupName);
-            return group.Add(_hubName, connectionId);
+            return group.Add(connectionId);
         }
 
         public override Task RemoveFromGroupAsync(string connectionId, string groupName,

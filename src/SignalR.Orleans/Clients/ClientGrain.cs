@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Orleans;
 using Orleans.Providers;
 using Orleans.Streams;
+using SignalR.Orleans.Core;
 
 namespace SignalR.Orleans.Clients
 {
@@ -21,15 +22,13 @@ namespace SignalR.Orleans.Clients
         private IStreamProvider _streamProvider;
         private IAsyncStream<ClientMessage> _serverStream;
         private IAsyncStream<string> _clientDisconnectStream;
-        private string _connectionId;
-        private string _hubName;
+        private ConnectionGrainKey _keyData;
 
         public override Task OnActivateAsync()
         {
-            ParsePrimaryKey();
-
+            _keyData = new ConnectionGrainKey(this.GetPrimaryKeyString());
             _streamProvider = GetStreamProvider(Constants.STREAM_PROVIDER);
-            _clientDisconnectStream = _streamProvider.GetStream<string>(Constants.CLIENT_DISCONNECT_STREAM_ID, _connectionId);
+            _clientDisconnectStream = _streamProvider.GetStream<string>(Constants.CLIENT_DISCONNECT_STREAM_ID, _keyData.Id);
 
             if (State.ServerId == Guid.Empty)
                 return Task.CompletedTask;
@@ -41,7 +40,7 @@ namespace SignalR.Orleans.Clients
         public Task SendMessage(object message)
         {
             if (State.ServerId == Guid.Empty) throw new InvalidOperationException("Client not connected.");
-            return _serverStream.OnNextAsync(new ClientMessage { ConnectionId = _connectionId, Payload = message, HubName = _hubName });
+            return _serverStream.OnNextAsync(new ClientMessage { ConnectionId = _keyData.Id, Payload = message, HubName = _keyData.HubName });
         }
 
         public Task OnConnect(Guid serverId)
@@ -54,20 +53,12 @@ namespace SignalR.Orleans.Clients
 
         public async Task OnDisconnect()
         {
-            if (_connectionId != null)
+            if (_keyData.Id != null)
             {
-                await _clientDisconnectStream.OnNextAsync(_connectionId);
+                await _clientDisconnectStream.OnNextAsync(_keyData.Id);
             }
             await ClearStateAsync();
             DeactivateOnIdle();
-        }
-
-        private void ParsePrimaryKey()
-        {
-            var pk = this.GetPrimaryKeyString();
-            var pkArray = pk.Split(':');
-            _hubName = pkArray[0];
-            _connectionId = pkArray[1];
         }
     }
 }

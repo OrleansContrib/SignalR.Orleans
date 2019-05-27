@@ -5,12 +5,15 @@ using Orleans.Streams;
 
 namespace SignalR.Orleans.Core
 {
-    internal abstract class ConnectionGrain<TGrainState> : Grain<TGrainState>, IConnectionGrain where TGrainState : ConnectionState, new()
+    internal abstract class ConnectionGrain<TGrainState> : Grain<TGrainState>, IConnectionGrain
+        where TGrainState : ConnectionState, new()
     {
+        protected ConnectionGrainKey KeyData;
         private IStreamProvider _streamProvider;
 
         public override async Task OnActivateAsync()
         {
+            KeyData = new ConnectionGrainKey(this.GetPrimaryKeyString());
             _streamProvider = GetStreamProvider(Constants.STREAM_PROVIDER);
             var subscriptionTasks = new List<Task>();
             foreach (var connection in State.Connections)
@@ -25,24 +28,19 @@ namespace SignalR.Orleans.Core
             await Task.WhenAll(subscriptionTasks);
         }
 
-        // todo: remove hubname (since its already in pk)
-        public virtual async Task Add(string hubName, string connectionId)
+        public virtual async Task Add(string connectionId)
         {
-            if (!State.Connections.ContainsKey(connectionId))
-            {
-                if (string.IsNullOrWhiteSpace(State.HubName))
-                    State.HubName = hubName;
+            if (State.Connections.ContainsKey(connectionId))
+                return;
 
-                var clientDisconnectStream = _streamProvider.GetStream<string>(Constants.CLIENT_DISCONNECT_STREAM_ID, connectionId);
-                var subscription = await clientDisconnectStream.SubscribeAsync(async (connId, token) => await Remove(connId));
-                State.Connections.Add(connectionId, subscription);
-                await WriteStateAsync();
-            }
+            var clientDisconnectStream = _streamProvider.GetStream<string>(Constants.CLIENT_DISCONNECT_STREAM_ID, connectionId);
+            var subscription = await clientDisconnectStream.SubscribeAsync(async (connId, token) => await Remove(connId));
+            State.Connections.Add(connectionId, subscription);
+            await WriteStateAsync();
         }
 
         public virtual async Task Remove(string connectionId)
         {
-            // todo: ensure deleted 
             if (State.Connections.TryGetValue(connectionId, out var stream))
             {
                 await stream.UnsubscribeAsync();
@@ -64,7 +62,7 @@ namespace SignalR.Orleans.Core
             var tasks = new List<Task>();
             foreach (var connection in State.Connections)
             {
-                var client = GrainFactory.GetClientGrain(State.HubName, connection.Key);
+                var client = GrainFactory.GetClientGrain(KeyData.HubName, connection.Key);
                 tasks.Add(client.SendMessage(message));
             }
 
@@ -77,10 +75,8 @@ namespace SignalR.Orleans.Core
         }
     }
 
-    // todo: debugger display
     internal abstract class ConnectionState
     {
         public Dictionary<string, StreamSubscriptionHandle<string>> Connections { get; set; } = new Dictionary<string, StreamSubscriptionHandle<string>>();
-        public string HubName { get; set; }
     }
 }

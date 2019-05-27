@@ -18,7 +18,7 @@ namespace SignalR.Orleans.Groups
             {
                 if (excludedIds.Contains(connection.Key)) continue;
 
-                var client = GrainFactory.GetClientGrain(State.HubName, connection.Key);
+                var client = GrainFactory.GetClientGrain(KeyData.HubName, connection.Key);
                 tasks.Add(client.SendMessage(message));
             }
 
