@@ -24,7 +24,7 @@ namespace SignalR.Orleans.Core
                 var subscriptions = await clientDisconnectStream.GetAllSubscriptionHandles();
                 foreach (var subscription in subscriptions)
                 {
-                    subscriptionTasks.Add(subscription.ResumeAsync(async (connectionId, token) => await Remove(connectionId)));
+                    subscriptionTasks.Add(subscription.ResumeAsync(async (connectionId, _) => await Remove(connectionId)));
                 }
             }
             await Task.WhenAll(subscriptionTasks);
@@ -36,7 +36,7 @@ namespace SignalR.Orleans.Core
                 return;
 
             var clientDisconnectStream = _streamProvider.GetStream<string>(Constants.CLIENT_DISCONNECT_STREAM_ID, connectionId);
-            var subscription = await clientDisconnectStream.SubscribeAsync(async (connId, token) => await Remove(connId));
+            var subscription = await clientDisconnectStream.SubscribeAsync(async (connId, _) => await Remove(connId));
             State.Connections.Add(connectionId, subscription);
             await WriteStateAsync();
         }
