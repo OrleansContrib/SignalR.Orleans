@@ -137,6 +137,33 @@ namespace SignalR.Orleans.Tests
         }
 
         [Fact]
+        public async Task InvokeGroupAsync_WhenOneDisconnected_ShouldDeliverOthers()
+        {
+            using (var client1 = new TestClient())
+            using (var client2 = new TestClient())
+            using (var client3 = new TestClient())
+            {
+                var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
+                var connection1 = HubConnectionContextUtils.Create(client1.Connection);
+                var connection2 = HubConnectionContextUtils.Create(client2.Connection);
+                var connection3 = HubConnectionContextUtils.Create(client3.Connection);
+
+                await manager.OnConnectedAsync(connection1);
+                await manager.OnConnectedAsync(connection2);
+
+                var groupName = "gunit";
+                await manager.AddToGroupAsync(connection1.ConnectionId, groupName);
+                await manager.AddToGroupAsync(connection2.ConnectionId, groupName);
+                await manager.AddToGroupAsync(connection3.ConnectionId, groupName);
+
+                await manager.SendGroupAsync(groupName, "Hello", new object[] { "World" });
+
+                await AssertMessageAsync(client1);
+                await AssertMessageAsync(client2);
+            }
+        }
+
+        [Fact]
         public async Task InvokeConnectionAsync_WritesToConnection_Output()
         {
             using (var client = new TestClient())
@@ -294,8 +321,6 @@ namespace SignalR.Orleans.Tests
                 Assert.Equal(0, result);
             }
         }
-
-        // todo: add test - multi conn, one "not connected" others connected - ensure 2 gets delivered and 1 doesnt (and not failing the rest)
 
         [Fact]
         public async Task RemoveGroup_FromLocalConnection_NotInGroup_DoesNothing()

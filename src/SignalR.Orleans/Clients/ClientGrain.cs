@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Protocol;
+using Microsoft.Extensions.Logging;
 using Orleans;
 using Orleans.Providers;
 using Orleans.Streams;
@@ -20,10 +21,16 @@ namespace SignalR.Orleans.Clients
     [StorageProvider(ProviderName = Constants.STORAGE_PROVIDER)]
     internal class ClientGrain : Grain<ClientState>, IClientGrain
     {
+        private readonly ILogger<ClientGrain> _logger;
         private IStreamProvider _streamProvider;
         private IAsyncStream<ClientMessage> _serverStream;
         private IAsyncStream<string> _clientDisconnectStream;
         private ConnectionGrainKey _keyData;
+
+        public ClientGrain(ILogger<ClientGrain> logger)
+        {
+            _logger = logger;
+        }
 
         public override Task OnActivateAsync()
         {
@@ -40,13 +47,15 @@ namespace SignalR.Orleans.Clients
 
         public Task Send(InvocationMessage message)
         {
-            if (State.ServerId == Guid.Empty) throw new InvalidOperationException("Client not connected.");
-            return _serverStream.OnNextAsync(new ClientMessage { ConnectionId = _keyData.Id, Payload = message, HubName = _keyData.HubName });
+            if (State.ServerId != Guid.Empty)
+                return _serverStream.OnNextAsync(new ClientMessage { ConnectionId = _keyData.Id, Payload = message, HubName = _keyData.HubName });
+
+            _logger.LogError("Client not connected for connectionId '{connectionId}' and hub '{hubName}' ", _keyData.Id, _keyData.HubName);
+            return Task.CompletedTask;
         }
 
         public Task OnConnect(Guid serverId)
         {
-            // todo: can this connect if its already connected?
             State.ServerId = serverId;
             _serverStream = _streamProvider.GetStream<ClientMessage>(State.ServerId, Constants.SERVERS_STREAM);
             return WriteStateAsync();
