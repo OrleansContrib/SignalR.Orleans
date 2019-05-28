@@ -44,8 +44,8 @@ namespace SignalR.Orleans
 
             var subscribeTasks = new List<Task>
             {
-                _allStream.SubscribeAsync((msg, token) => ProcessAllMessage(msg)),
-                _serverStream.SubscribeAsync((msg, token) => ProcessServerMessage(msg))
+                _allStream.SubscribeAsync((msg, _) => ProcessAllMessage(msg)),
+                _serverStream.SubscribeAsync((msg, _) => ProcessServerMessage(msg))
             };
 
             await Task.WhenAll(subscribeTasks);
@@ -56,7 +56,7 @@ namespace SignalR.Orleans
         private Task ProcessAllMessage(AllMessage message)
         {
             var allTasks = new List<Task>(_connections.Count);
-            var payload = (InvocationMessage)message.Payload;
+            var payload = message.Payload;
 
             foreach (var connection in _connections)
             {
@@ -244,6 +244,6 @@ namespace SignalR.Orleans
     public class AllMessage
     {
         public IReadOnlyList<string> ExcludedIds { get; set; }
-        public object Payload { get; set; }
+        public InvocationMessage Payload { get; set; }
     }
 }
