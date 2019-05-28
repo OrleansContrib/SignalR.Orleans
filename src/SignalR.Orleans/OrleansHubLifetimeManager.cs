@@ -161,7 +161,7 @@ namespace SignalR.Orleans
             if (string.IsNullOrWhiteSpace(methodName)) throw new ArgumentNullException(nameof(methodName));
 
             var group = _clusterClientProvider.GetClient().GetGroupGrain(_hubName, groupName);
-            return group.SendSignalRMessage(methodName, args);
+            return group.Send(methodName, args);
         }
 
         public override Task SendGroupsAsync(IReadOnlyList<string> groupNames, string methodName, object[] args,
@@ -178,8 +178,7 @@ namespace SignalR.Orleans
             if (string.IsNullOrWhiteSpace(methodName)) throw new ArgumentNullException(nameof(methodName));
 
             var group = _clusterClientProvider.GetClient().GetGroupGrain(_hubName, groupName);
-            var invocationMessage = new InvocationMessage(methodName, args);
-            return group.SendMessageExcept(invocationMessage, excludedConnectionIds);
+            return group.SendExcept(methodName, args, excludedConnectionIds);
         }
 
         public override Task SendUserAsync(string userId, string methodName, object[] args,
@@ -189,7 +188,7 @@ namespace SignalR.Orleans
             if (string.IsNullOrWhiteSpace(methodName)) throw new ArgumentNullException(nameof(methodName));
 
             var user = _clusterClientProvider.GetClient().GetUserGrain(_hubName, userId);
-            return user.SendSignalRMessage(methodName, args);
+            return user.Send(methodName, args);
         }
 
         public override Task SendUsersAsync(IReadOnlyList<string> userIds, string methodName, object[] args,
@@ -218,10 +217,10 @@ namespace SignalR.Orleans
             return connection.WriteAsync(hubMessage).AsTask();
         }
 
-        private Task SendExternal(string connectionId, object hubMessage)
+        private Task SendExternal(string connectionId, InvocationMessage hubMessage)
         {
             var client = _clusterClientProvider.GetClient().GetClientGrain(_hubName, connectionId);
-            return client.SendMessage(hubMessage);
+            return client.Send(hubMessage);
         }
 
         public void Dispose()

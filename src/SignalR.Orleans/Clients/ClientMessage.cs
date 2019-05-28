@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.SignalR.Protocol;
+
 namespace SignalR.Orleans.Clients
 {
     // todo: debugger display
@@ -5,6 +7,6 @@ namespace SignalR.Orleans.Clients
     {
         public string HubName { get; set; }
         public string ConnectionId { get; set; }
-        public object Payload { get; set; } // todo: can this be typed InvocationMessage?
+        public InvocationMessage Payload { get; set; }
     }
 }

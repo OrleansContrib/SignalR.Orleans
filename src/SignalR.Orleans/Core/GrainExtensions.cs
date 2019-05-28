@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Protocol;
 using SignalR.Orleans.Clients;
 using SignalR.Orleans.Core;
@@ -10,11 +11,23 @@ namespace Orleans
 {
     public static class GrainSignalRExtensions
     {
-        // todo: rename to Send or SendSignalR? -- Add interface for ClientGrain and ConnectionGrain so this is shared
+        [Obsolete("Use Send instead", false)]
         public static async Task SendSignalRMessage(this IConnectionGrain grain, string methodName, params object[] message)
         {
             var invocationMessage = new InvocationMessage(methodName, message);
-            await grain.SendMessage(invocationMessage);
+            await grain.Send(invocationMessage);
+        }
+
+        /// <summary>
+        /// Invokes a method on the hub.
+        /// </summary>
+        /// <param name="grain"></param>
+        /// <param name="methodName">Target method name to invoke.</param>
+        /// <param name="args">Arguments to pass to the target method.</param>
+        public static Task Send(this IHubMessageInvoker grain, string methodName, params object[] args)
+        {
+            var invocationMessage = new InvocationMessage(methodName, args);
+            return grain.Send(invocationMessage);
         }
     }
 

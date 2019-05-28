@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.SignalR.Protocol;
 using Orleans;
 using Orleans.Streams;
 
@@ -57,13 +59,28 @@ namespace SignalR.Orleans.Core
             }
         }
 
-        public virtual Task SendMessage(object message)
+        public virtual Task Send(InvocationMessage message)
         {
             var tasks = new List<Task>();
             foreach (var connection in State.Connections)
             {
                 var client = GrainFactory.GetClientGrain(KeyData.HubName, connection.Key);
-                tasks.Add(client.SendMessage(message));
+                tasks.Add(client.Send(message));
+            }
+
+            return Task.WhenAll(tasks);
+        }
+
+        public Task SendExcept(string methodName, object[] args, IReadOnlyList<string> excludedConnectionIds)
+        {
+            var message = new InvocationMessage(methodName, args);
+            var tasks = new List<Task>();
+            foreach (var connection in State.Connections)
+            {
+                if (excludedConnectionIds.Contains(connection.Key)) continue;
+
+                var client = GrainFactory.GetClientGrain(KeyData.HubName, connection.Key);
+                tasks.Add(client.Send(message));
             }
 
             return Task.WhenAll(tasks);

@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.SignalR.Protocol;
 using Orleans;
 using Orleans.Providers;
 using Orleans.Streams;
@@ -37,7 +38,7 @@ namespace SignalR.Orleans.Clients
             return Task.CompletedTask;
         }
 
-        public Task SendMessage(object message)
+        public Task Send(InvocationMessage message)
         {
             if (State.ServerId == Guid.Empty) throw new InvalidOperationException("Client not connected.");
             return _serverStream.OnNextAsync(new ClientMessage { ConnectionId = _keyData.Id, Payload = message, HubName = _keyData.HubName });
