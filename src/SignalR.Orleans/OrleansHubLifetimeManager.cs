@@ -74,7 +74,7 @@ namespace SignalR.Orleans
             var connection = _connections[message.ConnectionId];
             if (connection == null) return Task.CompletedTask; // TODO: Log
 
-            return SendLocal(connection, (InvocationMessage)message.Payload);
+            return SendLocal(connection, message.Payload);
         }
 
         public override async Task OnConnectedAsync(HubConnectionContext connection)
@@ -112,8 +112,7 @@ namespace SignalR.Orleans
 
             if (connection.User.Identity.IsAuthenticated)
             {
-                //TODO: replace `connection.User.Identity.Name` with `connection.UserIdentifier` when next signalr will be published.
-                var user = _clusterClientProvider.GetClient().GetUserGrain(_hubName, connection.User.Identity.Name);
+                var user = _clusterClientProvider.GetClient().GetUserGrain(_hubName, connection.UserIdentifier);
                 await user.Remove(connection.ConnectionId);
             }
 
