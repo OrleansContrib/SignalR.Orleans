@@ -20,7 +20,7 @@ namespace SignalR.Orleans.Tests
                 .UseSignalR()
                 .Build();
             silo.StartAsync().Wait();
-            this.Silo = silo;
+            Silo = silo;
 
             var client = new ClientBuilder()
                 .UseLocalhostClustering()
@@ -29,7 +29,7 @@ namespace SignalR.Orleans.Tests
                 .Build();
 
             client.Connect().Wait();
-            this.ClientProvider = new DefaultClusterClientProvider(client);
+            ClientProvider = new DefaultClusterClientProvider(client);
         }
 
         public void Dispose()

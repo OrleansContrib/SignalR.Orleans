@@ -1,62 +1,74 @@
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.SignalR.Protocol;
+using Microsoft.Extensions.Logging;
 using Orleans;
 using Orleans.Providers;
 using Orleans.Streams;
+using SignalR.Orleans.Core;
 
 namespace SignalR.Orleans.Clients
 {
+    [DebuggerDisplay("{DebuggerDisplay,nq}")]
+    internal class ClientState
+    {
+        private string DebuggerDisplay => $"ServerId: '{ServerId}'";
+
+        public Guid ServerId { get; set; }
+    }
+
     [StorageProvider(ProviderName = Constants.STORAGE_PROVIDER)]
     internal class ClientGrain : Grain<ClientState>, IClientGrain
     {
+        private readonly ILogger<ClientGrain> _logger;
         private IStreamProvider _streamProvider;
         private IAsyncStream<ClientMessage> _serverStream;
         private IAsyncStream<string> _clientDisconnectStream;
+        private ConnectionGrainKey _keyData;
+
+        public ClientGrain(ILogger<ClientGrain> logger)
+        {
+            _logger = logger;
+        }
 
         public override Task OnActivateAsync()
         {
-            this._streamProvider = this.GetStreamProvider(Constants.STREAM_PROVIDER);
-            if (this.State.ServerId == Guid.Empty)
+            _keyData = new ConnectionGrainKey(this.GetPrimaryKeyString());
+            _streamProvider = GetStreamProvider(Constants.STREAM_PROVIDER);
+            _clientDisconnectStream = _streamProvider.GetStream<string>(Constants.CLIENT_DISCONNECT_STREAM_ID, _keyData.Id);
+
+            if (State.ServerId == Guid.Empty)
                 return Task.CompletedTask;
 
-            this._clientDisconnectStream = this._streamProvider.GetStream<string>(Constants.CLIENT_DISCONNECT_STREAM_ID, this.State.ConnectionId);
-            this._serverStream = this._streamProvider.GetStream<ClientMessage>(this.State.ServerId, Constants.SERVERS_STREAM);
+            _serverStream = _streamProvider.GetStream<ClientMessage>(State.ServerId, Constants.SERVERS_STREAM);
             return Task.CompletedTask;
         }
 
-        public Task SendMessage(object message)
+        public Task Send(InvocationMessage message)
         {
-            if (this.State.ServerId == Guid.Empty) throw new InvalidOperationException("Client not connected.");
-            if (string.IsNullOrWhiteSpace(this.State.HubName)) throw new InvalidOperationException("Client hubname not set.");
-            if (string.IsNullOrWhiteSpace(this.State.ConnectionId)) throw new InvalidOperationException("Client ConnectionId not set.");
-            return this._serverStream.OnNextAsync(new ClientMessage { ConnectionId = State.ConnectionId, Payload = message, HubName = State.HubName });
+            if (State.ServerId != Guid.Empty)
+                return _serverStream.OnNextAsync(new ClientMessage { ConnectionId = _keyData.Id, Payload = message, HubName = _keyData.HubName });
+
+            _logger.LogError("Client not connected for connectionId '{connectionId}' and hub '{hubName}'", _keyData.Id, _keyData.HubName);
+            return Task.CompletedTask;
         }
 
-        public Task OnConnect(Guid serverId, string hubName, string connectionId)
+        public Task OnConnect(Guid serverId)
         {
-            this.State.ServerId = serverId;
-            this.State.HubName = hubName;
-            this.State.ConnectionId = connectionId;
-            this._serverStream = this._streamProvider.GetStream<ClientMessage>(this.State.ServerId, Constants.SERVERS_STREAM);
-            this._clientDisconnectStream = this._streamProvider.GetStream<string>(Constants.CLIENT_DISCONNECT_STREAM_ID, this.State.ConnectionId);
-            return this.WriteStateAsync();
+            State.ServerId = serverId;
+            _serverStream = _streamProvider.GetStream<ClientMessage>(State.ServerId, Constants.SERVERS_STREAM);
+            return WriteStateAsync();
         }
 
         public async Task OnDisconnect()
         {
-            if (this.State.ConnectionId != null)
+            if (_keyData.Id != null)
             {
-                await this._clientDisconnectStream.OnNextAsync(this.State.ConnectionId);
+                await _clientDisconnectStream.OnNextAsync(_keyData.Id);
             }
-            await this.ClearStateAsync();
-            this.DeactivateOnIdle();
+            await ClearStateAsync();
+            DeactivateOnIdle();
         }
-    }
-
-    internal class ClientState
-    {
-        public Guid ServerId { get; set; }
-        public string ConnectionId { get; set; }
-        public string HubName { get; set; }
     }
 }
