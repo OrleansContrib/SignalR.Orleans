@@ -22,13 +22,17 @@ namespace SignalR.Orleans
         private IStreamProvider _streamProvider;
         private IAsyncStream<ClientMessage> _serverStream;
         private IAsyncStream<AllMessage> _allStream;
-        private readonly string _hubName = typeof(THub).Name;
+        private readonly string _hubName;
 
         public OrleansHubLifetimeManager(
             ILogger<OrleansHubLifetimeManager<THub>> logger,
             IClusterClientProvider clusterClientProvider
         )
         {
+            var hubType = typeof(THub).BaseType.GenericTypeArguments[0];
+            _hubName = hubType.IsInterface && hubType.Name.StartsWith("I")
+                ? hubType.Name.Substring(1)
+                : hubType.Name;
             _serverId = Guid.NewGuid();
             _logger = logger;
             _clusterClientProvider = clusterClientProvider;
