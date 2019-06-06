@@ -22,29 +22,34 @@ namespace SignalR.Orleans
         private IStreamProvider _streamProvider;
         private IAsyncStream<ClientMessage> _serverStream;
         private IAsyncStream<AllMessage> _allStream;
-        private readonly string _hubName = typeof(THub).Name;
+        private readonly string _hubName;
 
         public OrleansHubLifetimeManager(
             ILogger<OrleansHubLifetimeManager<THub>> logger,
-            IClusterClientProvider clusterClientProvider)
+            IClusterClientProvider clusterClientProvider
+        )
         {
+            var hubType = typeof(THub).BaseType.GenericTypeArguments.FirstOrDefault() ?? typeof(THub);
+            _hubName = hubType.IsInterface && hubType.Name.StartsWith("I")
+                ? hubType.Name.Substring(1)
+                : hubType.Name;
             _serverId = Guid.NewGuid();
-            this._logger = logger;
-            this._clusterClientProvider = clusterClientProvider;
+            _logger = logger;
+            _clusterClientProvider = clusterClientProvider;
         }
 
         private async Task SetupStreams()
         {
             _logger.LogInformation("Initializing: Orleans HubLifetimeManager {hubName} (serverId: {serverId})...", _hubName, _serverId);
-            
-            this._streamProvider = this._clusterClientProvider.GetClient().GetStreamProvider(Constants.STREAM_PROVIDER);
-            this._serverStream = this._streamProvider.GetStream<ClientMessage>(_serverId, Constants.SERVERS_STREAM);
-            this._allStream = this._streamProvider.GetStream<AllMessage>(Constants.ALL_STREAM_ID, Utils.BuildStreamHubName(this._hubName));
+
+            _streamProvider = _clusterClientProvider.GetClient().GetStreamProvider(Constants.STREAM_PROVIDER);
+            _serverStream = _streamProvider.GetStream<ClientMessage>(_serverId, Constants.SERVERS_STREAM);
+            _allStream = _streamProvider.GetStream<AllMessage>(Constants.ALL_STREAM_ID, Utils.BuildStreamHubName(_hubName));
 
             var subscribeTasks = new List<Task>
             {
-                this._allStream.SubscribeAsync((msg, token) => this.ProcessAllMessage(msg)),
-                this._serverStream.SubscribeAsync((msg, token) => this.ProcessServerMessage(msg))
+                _allStream.SubscribeAsync((msg, _) => ProcessAllMessage(msg)),
+                _serverStream.SubscribeAsync((msg, _) => ProcessServerMessage(msg))
             };
 
             await Task.WhenAll(subscribeTasks);
@@ -54,82 +59,81 @@ namespace SignalR.Orleans
 
         private Task ProcessAllMessage(AllMessage message)
         {
-            var allTasks = new List<Task>(this._connections.Count);
-            var payload = (InvocationMessage)message.Payload;
+            var allTasks = new List<Task>(_connections.Count);
+            var payload = message.Payload;
 
-            foreach (var connection in this._connections)
+            foreach (var connection in _connections)
             {
                 if (connection.ConnectionAborted.IsCancellationRequested)
                     continue;
 
                 if (message.ExcludedIds == null || !message.ExcludedIds.Contains(connection.ConnectionId))
-                    allTasks.Add(this.SendLocal(connection, payload));
+                    allTasks.Add(SendLocal(connection, payload));
             }
             return Task.WhenAll(allTasks);
         }
 
         private Task ProcessServerMessage(ClientMessage message)
         {
-            var connection = this._connections[message.ConnectionId];
+            var connection = _connections[message.ConnectionId];
             if (connection == null) return Task.CompletedTask; // TODO: Log
 
-            return this.SendLocal(connection, (InvocationMessage)message.Payload);
+            return SendLocal(connection, message.Payload);
         }
 
         public override async Task OnConnectedAsync(HubConnectionContext connection)
         {
             try
             {
-                if (this._streamProvider == null)
+                if (_streamProvider == null)
                 {
                     await SetupStreams();
                 }
 
-                this._connections.Add(connection);
+                _connections.Add(connection);
 
                 if (connection.User.Identity.IsAuthenticated)
                 {
-                    var user = this._clusterClientProvider.GetClient().GetUserGrain(_hubName, connection.UserIdentifier);
-                    await user.Add(_hubName, connection.ConnectionId);
+                    var user = _clusterClientProvider.GetClient().GetUserGrain(_hubName, connection.UserIdentifier);
+                    await user.Add(connection.ConnectionId);
                 }
 
-                var client = this._clusterClientProvider.GetClient().GetClientGrain(_hubName, connection.ConnectionId);
-                await client.OnConnect(this._serverId, _hubName, connection.ConnectionId);
+                var client = _clusterClientProvider.GetClient().GetClientGrain(_hubName, connection.ConnectionId);
+                await client.OnConnect(_serverId);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error has occurred 'OnConnectedAsync' while adding connection {connectionId} [hub: {hubName} (serverId: {serverId})]", connection?.ConnectionId, _hubName, _serverId);
-                this._connections.Remove(connection);
+                _connections.Remove(connection);
                 throw;
             }
         }
 
         public override async Task OnDisconnectedAsync(HubConnectionContext connection)
         {
-            var client = this._clusterClientProvider.GetClient().GetClientGrain(_hubName, connection.ConnectionId);
+            var client = _clusterClientProvider.GetClient().GetClientGrain(_hubName, connection.ConnectionId);
             await client.OnDisconnect();
 
             if (connection.User.Identity.IsAuthenticated)
             {
-                //TODO: replace `connection.User.Identity.Name` with `connection.UserIdentifier` when next signalr will be published.
-                var user = this._clusterClientProvider.GetClient().GetUserGrain(_hubName, connection.User.Identity.Name);
+                var user = _clusterClientProvider.GetClient().GetUserGrain(_hubName, connection.UserIdentifier);
                 await user.Remove(connection.ConnectionId);
             }
 
-            this._connections.Remove(connection);
+            _connections.Remove(connection);
         }
 
         public override Task SendAllAsync(string methodName, object[] args, CancellationToken cancellationToken = new CancellationToken())
         {
             var message = new InvocationMessage(methodName, args);
-            return this._allStream.OnNextAsync(new AllMessage { Payload = message });
+            return _allStream.OnNextAsync(new AllMessage { Payload = message });
         }
 
         public override Task SendAllExceptAsync(string methodName, object[] args, IReadOnlyList<string> excludedConnectionIds,
             CancellationToken cancellationToken = new CancellationToken())
         {
             var message = new InvocationMessage(methodName, args);
-            return this._allStream.OnNextAsync(new AllMessage { Payload = message, ExcludedIds = excludedConnectionIds });
+            return _allStream.OnNextAsync(new AllMessage { Payload = message, ExcludedIds = excludedConnectionIds });
         }
 
         public override Task SendConnectionAsync(string connectionId, string methodName, object[] args,
@@ -140,7 +144,7 @@ namespace SignalR.Orleans
 
             var message = new InvocationMessage(methodName, args);
 
-            var connection = this._connections[connectionId];
+            var connection = _connections[connectionId];
             if (connection != null) return SendLocal(connection, message);
 
             return SendExternal(connectionId, message);
@@ -159,8 +163,8 @@ namespace SignalR.Orleans
             if (string.IsNullOrWhiteSpace(groupName)) throw new ArgumentNullException(nameof(groupName));
             if (string.IsNullOrWhiteSpace(methodName)) throw new ArgumentNullException(nameof(methodName));
 
-            var group = this._clusterClientProvider.GetClient().GetGroupGrain(_hubName, groupName);
-            return group.SendSignalRMessage(methodName, args);
+            var group = _clusterClientProvider.GetClient().GetGroupGrain(_hubName, groupName);
+            return group.Send(methodName, args);
         }
 
         public override Task SendGroupsAsync(IReadOnlyList<string> groupNames, string methodName, object[] args,
@@ -176,9 +180,8 @@ namespace SignalR.Orleans
             if (string.IsNullOrWhiteSpace(groupName)) throw new ArgumentNullException(nameof(groupName));
             if (string.IsNullOrWhiteSpace(methodName)) throw new ArgumentNullException(nameof(methodName));
 
-            var group = this._clusterClientProvider.GetClient().GetGroupGrain(_hubName, groupName);
-            var invocationMessage = new InvocationMessage(methodName, args);
-            return group.SendMessageExcept(invocationMessage, excludedConnectionIds);
+            var group = _clusterClientProvider.GetClient().GetGroupGrain(_hubName, groupName);
+            return group.SendExcept(methodName, args, excludedConnectionIds);
         }
 
         public override Task SendUserAsync(string userId, string methodName, object[] args,
@@ -187,8 +190,8 @@ namespace SignalR.Orleans
             if (string.IsNullOrWhiteSpace(userId)) throw new ArgumentNullException(nameof(userId));
             if (string.IsNullOrWhiteSpace(methodName)) throw new ArgumentNullException(nameof(methodName));
 
-            var user = this._clusterClientProvider.GetClient().GetUserGrain(_hubName, userId);
-            return user.SendSignalRMessage(methodName, args);
+            var user = _clusterClientProvider.GetClient().GetUserGrain(_hubName, userId);
+            return user.Send(methodName, args);
         }
 
         public override Task SendUsersAsync(IReadOnlyList<string> userIds, string methodName, object[] args,
@@ -201,40 +204,42 @@ namespace SignalR.Orleans
         public override Task AddToGroupAsync(string connectionId, string groupName,
             CancellationToken cancellationToken = new CancellationToken())
         {
-            var group = this._clusterClientProvider.GetClient().GetGroupGrain(_hubName, groupName);
-            return group.Add(_hubName, connectionId);
+            var group = _clusterClientProvider.GetClient().GetGroupGrain(_hubName, groupName);
+            return group.Add(connectionId);
         }
 
         public override Task RemoveFromGroupAsync(string connectionId, string groupName,
             CancellationToken cancellationToken = new CancellationToken())
         {
-            var group = this._clusterClientProvider.GetClient().GetGroupGrain(_hubName, groupName);
+            var group = _clusterClientProvider.GetClient().GetGroupGrain(_hubName, groupName);
             return group.Remove(connectionId);
         }
 
         private Task SendLocal(HubConnectionContext connection, HubInvocationMessage hubMessage)
         {
+            _logger.LogDebug("Sending local message to connection {connectionId} on hub {hubName} (serverId: {serverId})",
+                connection.ConnectionId, _hubName, _serverId);
             return connection.WriteAsync(hubMessage).AsTask();
         }
 
-        private Task SendExternal(string connectionId, object hubMessage)
+        private Task SendExternal(string connectionId, InvocationMessage hubMessage)
         {
-            var client = this._clusterClientProvider.GetClient().GetClientGrain(_hubName, connectionId);
-            return client.SendMessage(hubMessage);
+            var client = _clusterClientProvider.GetClient().GetClientGrain(_hubName, connectionId);
+            return client.Send(hubMessage);
         }
 
         public void Dispose()
         {
             var toUnsubscribe = new List<Task>();
-            if (this._serverStream != null)
+            if (_serverStream != null)
             {
-                var subscriptions = this._serverStream.GetAllSubscriptionHandles().Result;
+                var subscriptions = _serverStream.GetAllSubscriptionHandles().Result;
                 toUnsubscribe.AddRange(subscriptions.Select(s => s.UnsubscribeAsync()));
             }
 
-            if (this._allStream != null)
+            if (_allStream != null)
             {
-                var subscriptions = this._allStream.GetAllSubscriptionHandles().Result;
+                var subscriptions = _allStream.GetAllSubscriptionHandles().Result;
                 toUnsubscribe.AddRange(subscriptions.Select(s => s.UnsubscribeAsync()));
             }
 
@@ -245,6 +250,6 @@ namespace SignalR.Orleans
     public class AllMessage
     {
         public IReadOnlyList<string> ExcludedIds { get; set; }
-        public object Payload { get; set; }
+        public InvocationMessage Payload { get; set; }
     }
 }

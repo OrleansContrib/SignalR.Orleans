@@ -11,4 +11,25 @@ namespace SignalR.Orleans.Tests.Models
     {
 
     }
+
+    // matching interface naming
+    public class DaHub : Hub<IDaHub>
+    {
+    }
+
+    public interface IDaHub { }
+
+    // non matching interface and class
+    public class DaHubx : Hub<IDaHub>
+    {
+    }
+
+    // using base
+    public class DaHubUsingBase : DaGenericHubBase<IDaHub>
+    {
+    }
+
+    public class DaGenericHubBase<THub> : Hub<THub> where THub : class
+    {
+    }
 }

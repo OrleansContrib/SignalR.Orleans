@@ -22,6 +22,5 @@ namespace SignalR.Orleans.Core
         public IClientGrain Client(string connectionId) => _grainFactory.GetClientGrain(_hubName, connectionId);
         public IGroupGrain Group(string groupName) => _grainFactory.GetGroupGrain(_hubName, groupName);
         public IUserGrain User(string userId) => _grainFactory.GetUserGrain(_hubName, userId);
-
     }
 }
