@@ -213,6 +213,7 @@ namespace SignalR.Orleans
 
         private Task SendLocal(HubConnectionContext connection, HubInvocationMessage hubMessage)
         {
+            _logger.LogDebug("Sending local message to connection {connectionId} on hub {hubName}", connection.ConnectionId, _hubName);
             return connection.WriteAsync(hubMessage).AsTask();
         }
 

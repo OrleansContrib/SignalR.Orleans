@@ -1,11 +1,11 @@
 root = true
 
-[*.{json,yml,csproj,md}]
-indent_size = 2
-
 [*]
 indent_size = 4
 indent_style = space
+
+[*.{json,yml,csproj,md}]
+indent_size = 2
 
 # Dotnet code style settings:
 [*.{cs,vb}]

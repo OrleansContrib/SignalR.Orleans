@@ -48,7 +48,10 @@ namespace SignalR.Orleans.Clients
         public Task Send(InvocationMessage message)
         {
             if (State.ServerId != Guid.Empty)
+            {
+                _logger.LogDebug("Sending message to connection {connectionId} on hub {hubName} and method {targetMethod}", _keyData.Id, _keyData.HubName, message.Target);
                 return _serverStream.OnNextAsync(new ClientMessage { ConnectionId = _keyData.Id, Payload = message, HubName = _keyData.HubName });
+            }
 
             _logger.LogError("Client not connected for connectionId '{connectionId}' and hub '{hubName}'", _keyData.Id, _keyData.HubName);
             return Task.CompletedTask;
