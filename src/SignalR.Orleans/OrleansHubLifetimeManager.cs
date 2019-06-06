@@ -29,7 +29,7 @@ namespace SignalR.Orleans
             IClusterClientProvider clusterClientProvider
         )
         {
-            var hubType = typeof(THub).BaseType.GenericTypeArguments[0];
+            var hubType = typeof(THub).BaseType.GenericTypeArguments.FirstOrDefault() ?? typeof(THub);
             _hubName = hubType.IsInterface && hubType.Name.StartsWith("I")
                 ? hubType.Name.Substring(1)
                 : hubType.Name;
