@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Protocol;
+using Microsoft.Extensions.Logging;
 using Orleans;
 using Orleans.Streams;
 
@@ -10,8 +11,15 @@ namespace SignalR.Orleans.Core
     internal abstract class ConnectionGrain<TGrainState> : Grain<TGrainState>, IConnectionGrain
         where TGrainState : ConnectionState, new()
     {
-        protected ConnectionGrainKey KeyData;
+        private readonly ILogger _logger;
         private IStreamProvider _streamProvider;
+
+        protected ConnectionGrainKey KeyData;
+
+        internal ConnectionGrain(ILogger logger)
+        {
+            _logger = logger;
+        }
 
         public override async Task OnActivateAsync()
         {
@@ -61,6 +69,9 @@ namespace SignalR.Orleans.Core
 
         public virtual Task Send(InvocationMessage message)
         {
+            _logger.LogDebug("Sending message to {hubName}.{targetMethod} on group {groupId} to {connectionsCount} connection(s)",
+                KeyData.HubName, message.Target, KeyData.Id, State.Connections.Count);
+
             var tasks = new List<Task>();
             foreach (var connection in State.Connections)
             {
