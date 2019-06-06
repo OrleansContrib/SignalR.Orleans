@@ -43,6 +43,57 @@ namespace SignalR.Orleans.Tests
         }
 
         [Fact]
+        public async Task Hub_InterfaceMatchingNaming_Output()
+        {
+            using (var client1 = new TestClient())
+            {
+                var manager = new OrleansHubLifetimeManager<DaHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<DaHub>>(), _fixture.ClientProvider);
+
+                var connection1 = HubConnectionContextUtils.Create(client1.Connection);
+
+                await manager.OnConnectedAsync(connection1).OrTimeout();
+
+                await manager.SendAllAsync("Hello", new object[] { "World" }).OrTimeout();
+
+                await AssertMessageAsync(client1);
+            }
+        }
+
+        [Fact]
+        public async Task Hub_NonInterfaceMatchingNaming_Output()
+        {
+            using (var client1 = new TestClient())
+            {
+                var manager = new OrleansHubLifetimeManager<DaHubx>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<DaHubx>>(), _fixture.ClientProvider);
+
+                var connection1 = HubConnectionContextUtils.Create(client1.Connection);
+
+                await manager.OnConnectedAsync(connection1).OrTimeout();
+
+                await manager.SendAllAsync("Hello", new object[] { "World" }).OrTimeout();
+
+                await AssertMessageAsync(client1);
+            }
+        }
+
+        [Fact]
+        public async Task HubUsingGenericBase_NonInterfaceMatchingNaming_Output()
+        {
+            using (var client1 = new TestClient())
+            {
+                var manager = new OrleansHubLifetimeManager<DaHubUsingBase>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<DaHubUsingBase>>(), _fixture.ClientProvider);
+
+                var connection1 = HubConnectionContextUtils.Create(client1.Connection);
+
+                await manager.OnConnectedAsync(connection1).OrTimeout();
+
+                await manager.SendAllAsync("Hello", new object[] { "World" }).OrTimeout();
+
+                await AssertMessageAsync(client1);
+            }
+        }
+
+        [Fact]
         public async Task InvokeAllAsync_DoesNotWriteTo_DisconnectedConnections_Output()
         {
             using (var client1 = new TestClient())
