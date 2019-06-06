@@ -6,6 +6,7 @@ namespace SignalR.Orleans.Core
     internal struct ConnectionGrainKey
     {
         private string DebuggerDisplay => $"HubName: '{HubName}', Id: '{Id}'";
+
         public string HubName { get; set; }
         public string Id { get; set; }
 
