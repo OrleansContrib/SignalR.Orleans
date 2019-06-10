@@ -23,6 +23,7 @@ namespace SignalR.Orleans
         private IAsyncStream<ClientMessage> _serverStream;
         private IAsyncStream<AllMessage> _allStream;
         private readonly string _hubName;
+        private readonly SemaphoreSlim _streamSetupLock = new SemaphoreSlim(1);
 
         public OrleansHubLifetimeManager(
             ILogger<OrleansHubLifetimeManager<THub>> logger,
@@ -36,6 +37,26 @@ namespace SignalR.Orleans
             _serverId = Guid.NewGuid();
             _logger = logger;
             _clusterClientProvider = clusterClientProvider;
+            _ = EnsureStreamSetup();
+        }
+
+        private async Task EnsureStreamSetup()
+        {
+            if (_streamProvider != null)
+                return;
+
+            await _streamSetupLock.WaitAsync();
+
+            if (_streamProvider != null)
+                return;
+            try
+            {
+                await SetupStreams();
+            }
+            finally
+            {
+                _streamSetupLock.Release();
+            }
         }
 
         private async Task SetupStreams()
@@ -83,13 +104,10 @@ namespace SignalR.Orleans
 
         public override async Task OnConnectedAsync(HubConnectionContext connection)
         {
+            await EnsureStreamSetup();
+
             try
             {
-                if (_streamProvider == null)
-                {
-                    await SetupStreams();
-                }
-
                 _connections.Add(connection);
 
                 if (connection.User.Identity.IsAuthenticated)
