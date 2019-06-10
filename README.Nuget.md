@@ -65,17 +65,17 @@ Great! Now you have SignalR configured and Orleans SignalR backplane built in Or
 
 Sample usage: Receiving server push notifications from message brokers, web hooks, etc. Ideally first update your grain state and then push signalr message to the client.
 
-### Example: 
+### Example
 ```cs
 public class UserNotificationGrain : Grain<UserNotificationState>, IUserNotificationGrain
 {
-	private HubContext<IUserNotificationHub> _hubContext;
+    private HubContext<IUserNotificationHub> _hubContext;
 
-	public override async Task OnActivateAsync()
-	{
-		_hubContext = GrainFactory.GetHub<IUserNotificationHub>();
-		// some code...
-		await _hubContext.User(this.GetPrimaryKeyString()).SendSignalRMessage("Broadcast", State.UserNotification);
-	}
+    public override async Task OnActivateAsync()
+    {
+        _hubContext = GrainFactory.GetHub<IUserNotificationHub>();
+        // some code...
+        await _hubContext.User(this.GetPrimaryKeyString()).Send("Broadcast", State.UserNotification);
+    }
 }
 ```

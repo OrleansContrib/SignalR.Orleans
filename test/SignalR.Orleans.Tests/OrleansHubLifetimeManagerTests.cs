@@ -18,7 +18,7 @@ namespace SignalR.Orleans.Tests
 
         public OrleansHubLifetimeManagerTests(OrleansFixture fixture)
         {
-            this._fixture = fixture;
+            _fixture = fixture;
         }
 
         [Fact]
@@ -27,7 +27,7 @@ namespace SignalR.Orleans.Tests
             using (var client1 = new TestClient())
             using (var client2 = new TestClient())
             {
-                var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
+                var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
 
                 var connection1 = HubConnectionContextUtils.Create(client1.Connection);
                 var connection2 = HubConnectionContextUtils.Create(client2.Connection);
@@ -43,12 +43,63 @@ namespace SignalR.Orleans.Tests
         }
 
         [Fact]
+        public async Task Hub_InterfaceMatchingNaming_Output()
+        {
+            using (var client1 = new TestClient())
+            {
+                var manager = new OrleansHubLifetimeManager<DaHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<DaHub>>(), _fixture.ClientProvider);
+
+                var connection1 = HubConnectionContextUtils.Create(client1.Connection);
+
+                await manager.OnConnectedAsync(connection1).OrTimeout();
+
+                await manager.SendAllAsync("Hello", new object[] { "World" }).OrTimeout();
+
+                await AssertMessageAsync(client1);
+            }
+        }
+
+        [Fact]
+        public async Task Hub_NonInterfaceMatchingNaming_Output()
+        {
+            using (var client1 = new TestClient())
+            {
+                var manager = new OrleansHubLifetimeManager<DaHubx>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<DaHubx>>(), _fixture.ClientProvider);
+
+                var connection1 = HubConnectionContextUtils.Create(client1.Connection);
+
+                await manager.OnConnectedAsync(connection1).OrTimeout();
+
+                await manager.SendAllAsync("Hello", new object[] { "World" }).OrTimeout();
+
+                await AssertMessageAsync(client1);
+            }
+        }
+
+        [Fact]
+        public async Task HubUsingGenericBase_NonInterfaceMatchingNaming_Output()
+        {
+            using (var client1 = new TestClient())
+            {
+                var manager = new OrleansHubLifetimeManager<DaHubUsingBase>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<DaHubUsingBase>>(), _fixture.ClientProvider);
+
+                var connection1 = HubConnectionContextUtils.Create(client1.Connection);
+
+                await manager.OnConnectedAsync(connection1).OrTimeout();
+
+                await manager.SendAllAsync("Hello", new object[] { "World" }).OrTimeout();
+
+                await AssertMessageAsync(client1);
+            }
+        }
+
+        [Fact]
         public async Task InvokeAllAsync_DoesNotWriteTo_DisconnectedConnections_Output()
         {
             using (var client1 = new TestClient())
             using (var client2 = new TestClient())
             {
-                var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
+                var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
 
                 var connection1 = HubConnectionContextUtils.Create(client1.Connection);
                 var connection2 = HubConnectionContextUtils.Create(client2.Connection);
@@ -72,7 +123,7 @@ namespace SignalR.Orleans.Tests
             using (var client1 = new TestClient())
             using (var client2 = new TestClient())
             {
-                var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
+                var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
                 var connection1 = HubConnectionContextUtils.Create(client1.Connection);
                 var connection2 = HubConnectionContextUtils.Create(client2.Connection);
 
@@ -95,7 +146,7 @@ namespace SignalR.Orleans.Tests
             using (var client1 = new TestClient())
             using (var client2 = new TestClient())
             {
-                var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
+                var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
                 var connection1 = HubConnectionContextUtils.Create(client1.Connection);
                 var connection2 = HubConnectionContextUtils.Create(client2.Connection);
 
@@ -119,7 +170,7 @@ namespace SignalR.Orleans.Tests
             using (var client1 = new TestClient())
             using (var client2 = new TestClient())
             {
-                var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
+                var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
                 var connection1 = HubConnectionContextUtils.Create(client1.Connection);
                 var connection2 = HubConnectionContextUtils.Create(client2.Connection);
 
@@ -137,11 +188,38 @@ namespace SignalR.Orleans.Tests
         }
 
         [Fact]
+        public async Task InvokeGroupAsync_WhenOneDisconnected_ShouldDeliverOthers()
+        {
+            using (var client1 = new TestClient())
+            using (var client2 = new TestClient())
+            using (var client3 = new TestClient())
+            {
+                var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
+                var connection1 = HubConnectionContextUtils.Create(client1.Connection);
+                var connection2 = HubConnectionContextUtils.Create(client2.Connection);
+                var connection3 = HubConnectionContextUtils.Create(client3.Connection);
+
+                await manager.OnConnectedAsync(connection1);
+                await manager.OnConnectedAsync(connection2);
+
+                var groupName = "gunit";
+                await manager.AddToGroupAsync(connection1.ConnectionId, groupName);
+                await manager.AddToGroupAsync(connection2.ConnectionId, groupName);
+                await manager.AddToGroupAsync(connection3.ConnectionId, groupName);
+
+                await manager.SendGroupAsync(groupName, "Hello", new object[] { "World" });
+
+                await AssertMessageAsync(client1);
+                await AssertMessageAsync(client2);
+            }
+        }
+
+        [Fact]
         public async Task InvokeConnectionAsync_WritesToConnection_Output()
         {
             using (var client = new TestClient())
             {
-                var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
+                var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
                 var connection = HubConnectionContextUtils.Create(client.Connection);
 
                 await manager.OnConnectedAsync(connection);
@@ -158,7 +236,7 @@ namespace SignalR.Orleans.Tests
             using (var client1 = new TestClient())
             using (var client2 = new TestClient())
             {
-                var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
+                var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
                 var connection1 = HubConnectionContextUtils.Create(client1.Connection);
                 var connection2 = HubConnectionContextUtils.Create(client2.Connection);
 
@@ -176,24 +254,17 @@ namespace SignalR.Orleans.Tests
         public async Task InvokeConnectionAsync_OnNonExistentConnection_DoesNotThrow()
         {
             var invalidConnection = "NotARealConnectionId";
-            var grain = this._fixture.ClientProvider.GetClient().GetClientGrain("MyHub", invalidConnection);
-            await grain.OnConnect(Guid.NewGuid(), "MyHub", invalidConnection);
-            var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
+            var grain = _fixture.ClientProvider.GetClient().GetClientGrain("MyHub", invalidConnection);
+            await grain.OnConnect(Guid.NewGuid());
+            var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
             await manager.SendConnectionAsync(invalidConnection, "Hello", new object[] { "World" });
-        }
-
-        [Fact]
-        public async Task InvokeConnectionAsync_OnNonExistentConnection_WithoutCalling_OnConnect_ThrowsException()
-        {
-            var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
-            await Assert.ThrowsAsync<InvalidOperationException>(() => manager.SendConnectionAsync("NotARealConnectionIdV2", "Hello", new object[] { "World" }));
         }
 
         [Fact]
         public async Task InvokeAllAsync_WithMultipleServers_WritesToAllConnections_Output()
         {
-            var manager1 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
-            var manager2 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
+            var manager1 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
+            var manager2 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
 
             using (var client1 = new TestClient())
             using (var client2 = new TestClient())
@@ -214,8 +285,8 @@ namespace SignalR.Orleans.Tests
         [Fact]
         public async Task InvokeAllAsync_WithMultipleServers_DoesNotWrite_ToDisconnectedConnections_Output()
         {
-            var manager1 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
-            var manager2 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
+            var manager1 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
+            var manager2 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
 
             using (var client1 = new TestClient())
             using (var client2 = new TestClient())
@@ -239,8 +310,8 @@ namespace SignalR.Orleans.Tests
         [Fact]
         public async Task InvokeConnectionAsync_OnServer_WithoutConnection_WritesOutputTo_Connection()
         {
-            var manager1 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
-            var manager2 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
+            var manager1 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
+            var manager2 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
 
             using (var client = new TestClient())
             {
@@ -257,8 +328,8 @@ namespace SignalR.Orleans.Tests
         [Fact]
         public async Task InvokeGroupAsync_OnServer_WithoutConnection_WritesOutputTo_GroupConnection()
         {
-            var manager1 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
-            var manager2 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
+            var manager1 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
+            var manager2 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
 
             using (var client = new TestClient())
             {
@@ -277,7 +348,7 @@ namespace SignalR.Orleans.Tests
         [Fact]
         public async Task DisconnectConnection_RemovesConnection_FromGroup()
         {
-            var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
+            var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
 
             using (var client = new TestClient())
             {
@@ -289,7 +360,7 @@ namespace SignalR.Orleans.Tests
 
                 await manager.OnDisconnectedAsync(connection);
 
-                var grain = this._fixture.ClientProvider.GetClient().GetGroupGrain("MyHub", "dre");
+                var grain = _fixture.ClientProvider.GetClient().GetGroupGrain("MyHub", "dre");
                 var result = await grain.Count();
                 Assert.Equal(0, result);
             }
@@ -298,7 +369,7 @@ namespace SignalR.Orleans.Tests
         [Fact]
         public async Task RemoveGroup_FromLocalConnection_NotInGroup_DoesNothing()
         {
-            var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
+            var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
 
             using (var client = new TestClient())
             {
@@ -313,8 +384,8 @@ namespace SignalR.Orleans.Tests
         [Fact]
         public async Task RemoveGroup_FromConnection_OnDifferentServer_NotInGroup_DoesNothing()
         {
-            var manager1 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
-            var manager2 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
+            var manager1 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
+            var manager2 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
 
             using (var client = new TestClient())
             {
@@ -329,8 +400,8 @@ namespace SignalR.Orleans.Tests
         [Fact]
         public async Task AddGroupAsync_ForConnection_OnDifferentServer_Works()
         {
-            var manager1 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
-            var manager2 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
+            var manager1 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
+            var manager2 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
 
             using (var client = new TestClient())
             {
@@ -349,7 +420,7 @@ namespace SignalR.Orleans.Tests
         [Fact]
         public async Task AddGroupAsync_ForLocalConnection_AlreadyInGroup_SkipsDuplicate()
         {
-            var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
+            var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
 
             using (var client = new TestClient())
             {
@@ -360,7 +431,7 @@ namespace SignalR.Orleans.Tests
                 await manager.AddToGroupAsync(connection.ConnectionId, "dmx");
                 await manager.AddToGroupAsync(connection.ConnectionId, "dmx");
 
-                var grain = this._fixture.ClientProvider.GetClient().GetGroupGrain("MyHub", "dmx");
+                var grain = _fixture.ClientProvider.GetClient().GetGroupGrain("MyHub", "dmx");
                 var result = await grain.Count();
                 Assert.Equal(1, result);
             }
@@ -369,8 +440,8 @@ namespace SignalR.Orleans.Tests
         [Fact]
         public async Task AddGroupAsync_ForConnection_OnDifferentServer_AlreadyInGroup_SkipsDuplicate()
         {
-            var manager1 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
-            var manager2 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
+            var manager1 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
+            var manager2 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
 
             using (var client = new TestClient())
             {
@@ -391,8 +462,8 @@ namespace SignalR.Orleans.Tests
         [Fact]
         public async Task RemoveGroupAsync_ForConnection_OnDifferentServer_Works()
         {
-            var manager1 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
-            var manager2 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
+            var manager1 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
+            var manager2 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
 
             using (var client = new TestClient())
             {
@@ -417,8 +488,8 @@ namespace SignalR.Orleans.Tests
         [Fact]
         public async Task InvokeConnectionAsync_ForLocalConnection_DoesNotPublish()
         {
-            var manager1 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
-            var manager2 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
+            var manager1 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
+            var manager2 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
 
             using (var client = new TestClient())
             {
@@ -438,9 +509,9 @@ namespace SignalR.Orleans.Tests
         [Fact]
         public async Task InvokeAllAsync_ForSpecificHub_WithMultipleServers_WritesTo_AllConnections_Output()
         {
-            var manager1 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
-            var manager2 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), this._fixture.ClientProvider);
-            var manager3 = new OrleansHubLifetimeManager<DifferentHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<DifferentHub>>(), this._fixture.ClientProvider);
+            var manager1 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
+            var manager2 = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
+            var manager3 = new OrleansHubLifetimeManager<DifferentHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<DifferentHub>>(), _fixture.ClientProvider);
 
             using (var client1 = new TestClient())
             using (var client2 = new TestClient())
