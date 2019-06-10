@@ -37,6 +37,7 @@ namespace SignalR.Orleans
             _serverId = Guid.NewGuid();
             _logger = logger;
             _clusterClientProvider = clusterClientProvider;
+            _ = EnsureStreamSetup();
         }
 
         private async Task EnsureStreamSetup()
