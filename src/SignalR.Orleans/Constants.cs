@@ -5,6 +5,9 @@ namespace SignalR.Orleans
     public static class Constants
     {
         public const string PUBSUB_PROVIDER = "PubSubStore";
+        // todo: ideally it doesnt use the default name so consumers can replace the provider and not affecting the default - it will be breaking tho.
+        //public const string PUBSUB_PROVIDER = "ORLEANS_SIGNALR_PUBSUB_PROVIDER";
+
         public const string STORAGE_PROVIDER = "ORLEANS_SIGNALR_STORAGE_PROVIDER";
 
         public const string SERVERS_STREAM = "SERVERS_STREAM";

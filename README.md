@@ -85,7 +85,7 @@ public void ConfigureServices(IServiceCollection services)
 {
   ...
   services
-    .AddSingleton<IClusterClient>(client);
+    .AddSingleton<IClusterClient>(client)
     .AddSignalR()
     .AddOrleans();
   ...
