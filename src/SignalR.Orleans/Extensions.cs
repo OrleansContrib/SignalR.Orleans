@@ -6,10 +6,13 @@ using Orleans.Hosting;
 using SignalR.Orleans;
 using SignalR.Orleans.Clients;
 
+// ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.DependencyInjection
 {
     public static class OrleansServerExtensions
     {
+#pragma warning disable 618
+        [Obsolete("Use UseSignalR(this ISiloBuilder builder, Action<SignalrOrleansSiloConfigBuilder> configure = null) from Orleans.Hosting instead.")]
         public static ISiloHostBuilder UseSignalR(this ISiloHostBuilder builder, Action<SignalrServerConfig> config)
         {
             var cfg = new SignalrServerConfig();
@@ -18,10 +21,12 @@ namespace Microsoft.Extensions.DependencyInjection
             return builder.UseSignalR(cfg);
         }
 
-        public static ISiloHostBuilder UseSignalR(this ISiloHostBuilder builder, SignalrServerConfig config = null)
+        [Obsolete("Use UseSignalR(this ISiloBuilder builder, Action<SignalrOrleansSiloConfigBuilder> configure = null) from Orleans.Hosting instead.")]
+        public static ISiloHostBuilder UseSignalR(this ISiloHostBuilder builder, SignalrServerConfig config)
         {
             if (config == null)
                 config = new SignalrServerConfig();
+#pragma warning restore 618
 
             config.ConfigureBuilder?.Invoke(builder, new HostBuilderConfig());
 
