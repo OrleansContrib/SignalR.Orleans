@@ -26,6 +26,11 @@ namespace SignalR.Orleans
     public class SignalrOrleansConfigBaseBuilder
     {
         public bool UseFireAndForgetDelivery { get; set; }
+
+        /// <summary>
+        /// Gets or sets whether 'PubSub' storage is auto registered as memory or not (defaults: true).
+        /// </summary>
+        public bool AutoRegisterPubSubStorage { get; set; } = true;
     }
 
     public class SignalrOrleansSiloConfigBuilder : SignalrOrleansConfigBaseBuilder

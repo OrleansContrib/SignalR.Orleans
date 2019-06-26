@@ -14,13 +14,16 @@ namespace Orleans.Hosting
 
             cfg.ConfigureBuilder?.Invoke(builder, new HostBuilderConfig());
 
-            try
+            if (cfg.AutoRegisterPubSubStorage)
             {
-                builder.AddMemoryGrainStorage(Constants.PUBSUB_PROVIDER);
-            }
-            catch
-            {
-                /** PubSubStore was already added. Do nothing. **/
+                try
+                {
+                    builder.AddMemoryGrainStorage(Constants.PUBSUB_PROVIDER);
+                }
+                catch
+                {
+                    /** PubSubStore was already added. Do nothing. **/
+                }
             }
 
             try
@@ -47,13 +50,16 @@ namespace Orleans.Hosting
 
             cfg.ConfigureBuilder?.Invoke(builder, new HostBuilderConfig());
 
-            try
+            if (cfg.AutoRegisterPubSubStorage)
             {
-                builder.AddMemoryGrainStorage(Constants.PUBSUB_PROVIDER);
-            }
-            catch
-            {
-                /** PubSubStore was already added. Do nothing. **/
+                try
+                {
+                    builder.AddMemoryGrainStorage(Constants.PUBSUB_PROVIDER);
+                }
+                catch
+                {
+                    /** PubSubStore was already added. Do nothing. **/
+                }
             }
 
             try
