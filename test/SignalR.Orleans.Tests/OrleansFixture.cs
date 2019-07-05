@@ -17,6 +17,7 @@ namespace SignalR.Orleans.Tests
             var silo = new SiloHostBuilder()
                 .UseLocalhostClustering()
                 .Configure<EndpointOptions>(options => options.AdvertisedIPAddress = IPAddress.Loopback)
+                .AddMemoryGrainStorage(Constants.PUBSUB_PROVIDER)
                 .UseSignalR()
                 .Build();
             silo.StartAsync().Wait();
