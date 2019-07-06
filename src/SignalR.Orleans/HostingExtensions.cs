@@ -19,7 +19,10 @@ namespace Orleans.Hosting
 
             cfg.ConfigureBuilder?.Invoke(builder, new HostBuilderConfig());
 
-            builder.ConfigureServices(services => services.AddSingleton<IConfigurationValidator,SignalRConfigurationValidator>());
+            try { builder.AddMemoryGrainStorage(Constants.STORAGE_PROVIDER); }
+            catch { /** Grain storage provider was already added. Do nothing. **/ }
+
+            builder.ConfigureServices(services => services.AddSingleton<IConfigurationValidator, SignalRConfigurationValidator>());
 
             return builder
                 .AddSimpleMessageStreamProvider(Constants.STREAM_PROVIDER, opt => opt.FireAndForgetDelivery = cfg.UseFireAndForgetDelivery)
@@ -35,6 +38,9 @@ namespace Orleans.Hosting
             configure?.Invoke(cfg);
 
             cfg.ConfigureBuilder?.Invoke(builder, new HostBuilderConfig());
+
+            try { builder.AddMemoryGrainStorage(Constants.STORAGE_PROVIDER); }
+            catch { /** Grain storage provider was already added. Do nothing. **/ }
 
             builder.ConfigureServices(services => services.AddSingleton<IConfigurationValidator, SignalRConfigurationValidator>());
 
