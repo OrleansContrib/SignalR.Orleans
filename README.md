@@ -40,6 +40,7 @@ We need to configure the Orleans Silo with the below:
 ```cs
 var silo = new SiloHostBuilder()
   .UseSignalR()
+  .AddMemoryGrainStorage("PubSubStore") // You can use any other storage provider as long as you have one registered as "PubSubStore".
   .Build();
 
 await silo.StartAsync();
