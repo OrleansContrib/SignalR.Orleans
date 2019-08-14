@@ -13,7 +13,7 @@ namespace SignalR.Orleans.Core
     {
         private readonly ILogger _logger;
         private IStreamProvider _streamProvider;
-        private Dictionary<string, StreamSubscriptionHandle<string>> _connectionStreams;
+        private Dictionary<string, StreamSubscriptionHandle<string>> _connectionStreamHandles;
 
         protected ConnectionGrainKey KeyData;
 
@@ -25,7 +25,7 @@ namespace SignalR.Orleans.Core
         public override async Task OnActivateAsync()
         {
             KeyData = new ConnectionGrainKey(this.GetPrimaryKeyString());
-            _connectionStreams = new Dictionary<string, StreamSubscriptionHandle<string>>();
+            _connectionStreamHandles = new Dictionary<string, StreamSubscriptionHandle<string>>();
             _streamProvider = GetStreamProvider(Constants.STREAM_PROVIDER);
             var subscriptionTasks = new List<Task>();
             foreach (var connection in State.Connections)
@@ -48,17 +48,17 @@ namespace SignalR.Orleans.Core
             var clientDisconnectStream = _streamProvider.GetStream<string>(Constants.CLIENT_DISCONNECT_STREAM_ID, connectionId);
             var subscription = await clientDisconnectStream.SubscribeAsync(async (connId, _) => await Remove(connId));
             State.Connections.Add(connectionId);
-            _connectionStreams[connectionId] = subscription;
+            _connectionStreamHandles[connectionId] = subscription;
             await WriteStateAsync();
         }
 
         public virtual async Task Remove(string connectionId)
         {
             State.Connections.Remove(connectionId);
-            if (_connectionStreams.TryGetValue(connectionId, out var stream))
+            if (_connectionStreamHandles.TryGetValue(connectionId, out var stream))
             {
                 await stream.UnsubscribeAsync();
-                _connectionStreams.Remove(connectionId);
+                _connectionStreamHandles.Remove(connectionId);
             }
 
             if (State.Connections.Count == 0)
