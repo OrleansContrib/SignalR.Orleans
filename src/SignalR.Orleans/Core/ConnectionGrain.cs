@@ -42,19 +42,21 @@ namespace SignalR.Orleans.Core
 
         public virtual async Task Add(string connectionId)
         {
-            if (State.Connections.Contains(connectionId))
-                return;
+            var shouldWriteState = State.Connections.Add(connectionId);
+            if (!_connectionStreamHandles.ContainsKey(connectionId))
+            {
+                var clientDisconnectStream = _streamProvider.GetStream<string>(Constants.CLIENT_DISCONNECT_STREAM_ID, connectionId);
+                var subscription = await clientDisconnectStream.SubscribeAsync(async (connId, _) => await Remove(connId));
+                _connectionStreamHandles[connectionId] = subscription;
+            }
 
-            var clientDisconnectStream = _streamProvider.GetStream<string>(Constants.CLIENT_DISCONNECT_STREAM_ID, connectionId);
-            var subscription = await clientDisconnectStream.SubscribeAsync(async (connId, _) => await Remove(connId));
-            State.Connections.Add(connectionId);
-            _connectionStreamHandles[connectionId] = subscription;
-            await WriteStateAsync();
+            if (shouldWriteState)
+                await WriteStateAsync();
         }
 
         public virtual async Task Remove(string connectionId)
         {
-            State.Connections.Remove(connectionId);
+            var shouldWriteState = State.Connections.Remove(connectionId);
             if (_connectionStreamHandles.TryGetValue(connectionId, out var stream))
             {
                 await stream.UnsubscribeAsync();
@@ -66,7 +68,7 @@ namespace SignalR.Orleans.Core
                 await ClearStateAsync();
                 DeactivateOnIdle();
             }
-            else
+            else if (shouldWriteState)
             {
                 await WriteStateAsync();
             }
