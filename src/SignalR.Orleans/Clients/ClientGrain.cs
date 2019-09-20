@@ -63,7 +63,7 @@ namespace SignalR.Orleans.Clients
             if (_failAttempts >= _maxFailAttempts)
             {
                 await OnDisconnect();
-                _logger.LogWarning("Force disconnect client for connectionId {connectionId} and hub {hubName} ({targetMethod}) after exceeding attempts limits",
+                _logger.LogWarning("Force disconnect client for connectionId {connectionId} and hub {hubName} ({targetMethod}) after exceeding attempts limit",
                     _keyData.Id, _keyData.HubName, message.Target);
             }
         }
