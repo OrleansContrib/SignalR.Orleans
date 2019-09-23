@@ -26,6 +26,8 @@ namespace SignalR.Orleans.Clients
         private IAsyncStream<ClientMessage> _serverStream;
         private IAsyncStream<string> _clientDisconnectStream;
         private ConnectionGrainKey _keyData;
+        private const int _maxFailAttempts = 3;
+        private int _failAttempts;
 
         public ClientGrain(ILogger<ClientGrain> logger)
         {
@@ -45,16 +47,25 @@ namespace SignalR.Orleans.Clients
             return Task.CompletedTask;
         }
 
-        public Task Send(InvocationMessage message)
+        public async Task Send(InvocationMessage message)
         {
             if (State.ServerId != Guid.Empty)
             {
                 _logger.LogDebug("Sending message on {hubName}.{targetMethod} to connection {connectionId}", _keyData.HubName, message.Target, _keyData.Id);
-                return _serverStream.OnNextAsync(new ClientMessage { ConnectionId = _keyData.Id, Payload = message, HubName = _keyData.HubName });
+                _failAttempts = 0;
+                await _serverStream.OnNextAsync(new ClientMessage { ConnectionId = _keyData.Id, Payload = message, HubName = _keyData.HubName });
+                return;
             }
 
-            _logger.LogError("Client not connected for connectionId '{connectionId}' and hub '{hubName}'", _keyData.Id, _keyData.HubName);
-            return Task.CompletedTask;
+            _logger.LogInformation("Client not connected for connectionId {connectionId} and hub {hubName} ({targetMethod})", _keyData.Id, _keyData.HubName, message.Target);
+
+            _failAttempts++;
+            if (_failAttempts >= _maxFailAttempts)
+            {
+                await OnDisconnect();
+                _logger.LogWarning("Force disconnect client for connectionId {connectionId} and hub {hubName} ({targetMethod}) after exceeding attempts limit",
+                    _keyData.Id, _keyData.HubName, message.Target);
+            }
         }
 
         public Task OnConnect(Guid serverId)

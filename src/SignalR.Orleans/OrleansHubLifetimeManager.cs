@@ -110,14 +110,14 @@ namespace SignalR.Orleans
             {
                 _connections.Add(connection);
 
+                var client = _clusterClientProvider.GetClient().GetClientGrain(_hubName, connection.ConnectionId);
+                await client.OnConnect(_serverId);
+
                 if (connection.User.Identity.IsAuthenticated)
                 {
                     var user = _clusterClientProvider.GetClient().GetUserGrain(_hubName, connection.UserIdentifier);
                     await user.Add(connection.ConnectionId);
                 }
-
-                var client = _clusterClientProvider.GetClient().GetClientGrain(_hubName, connection.ConnectionId);
-                await client.OnConnect(_serverId);
             }
             catch (Exception ex)
             {
@@ -129,16 +129,15 @@ namespace SignalR.Orleans
 
         public override async Task OnDisconnectedAsync(HubConnectionContext connection)
         {
-            var client = _clusterClientProvider.GetClient().GetClientGrain(_hubName, connection.ConnectionId);
-            await client.OnDisconnect();
-
-            if (connection.User.Identity.IsAuthenticated)
+            try
             {
-                var user = _clusterClientProvider.GetClient().GetUserGrain(_hubName, connection.UserIdentifier);
-                await user.Remove(connection.ConnectionId);
+                var client = _clusterClientProvider.GetClient().GetClientGrain(_hubName, connection.ConnectionId);
+                await client.OnDisconnect();
             }
-
-            _connections.Remove(connection);
+            finally
+            {
+                _connections.Remove(connection);
+            }
         }
 
         public override Task SendAllAsync(string methodName, object[] args, CancellationToken cancellationToken = new CancellationToken())

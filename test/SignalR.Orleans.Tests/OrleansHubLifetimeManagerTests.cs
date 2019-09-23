@@ -215,6 +215,38 @@ namespace SignalR.Orleans.Tests
         }
 
         [Fact]
+        public async Task InvokeAsync_WhenNotConnectedAfterFailedAttemptsExceeds_ShouldForceDisconnect()
+        {
+            using (var client1 = new TestClient())
+            using (var client2 = new TestClient())
+            {
+                var manager = new OrleansHubLifetimeManager<MyHub>(new LoggerFactory().CreateLogger<OrleansHubLifetimeManager<MyHub>>(), _fixture.ClientProvider);
+                var connection1 = HubConnectionContextUtils.Create(client1.Connection);
+                var connection2 = HubConnectionContextUtils.Create(client2.Connection);
+
+                await manager.OnConnectedAsync(connection1);
+
+                var groupName = "flex";
+                await manager.AddToGroupAsync(connection1.ConnectionId, groupName);
+                await manager.AddToGroupAsync(connection2.ConnectionId, groupName);
+
+                await manager.SendGroupAsync(groupName, "Hello", new object[] { "World" });
+
+                var grain = _fixture.ClientProvider.GetClient().GetGroupGrain("MyHub", groupName);
+                var connectionsCount = await grain.Count();
+
+                await AssertMessageAsync(client1);
+                Assert.Equal(2, connectionsCount);
+
+                await manager.SendGroupAsync(groupName, "Hello", new object[] { "World" });
+                await manager.SendGroupAsync(groupName, "Hello", new object[] { "World" });
+
+                connectionsCount = await grain.Count();
+                Assert.Equal(1, connectionsCount);
+            }
+        }
+
+        [Fact]
         public async Task InvokeConnectionAsync_WritesToConnection_Output()
         {
             using (var client = new TestClient())
