@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System.Buffers;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.Extensions.Logging;
 using Orleans;
+using Orleans.Concurrency;
 using Orleans.Streams;
 
 namespace SignalR.Orleans.Core
@@ -74,39 +76,43 @@ namespace SignalR.Orleans.Core
             }
         }
 
-        public virtual Task Send(InvocationMessage message)
+        public virtual Task Send(Immutable<InvocationMessage> message)
         {
-            _logger.LogDebug("Sending message to {hubName}.{targetMethod} on group {groupId} to {connectionsCount} connection(s)",
-                KeyData.HubName, message.Target, KeyData.Id, State.Connections.Count);
-
-            var tasks = new List<Task>();
-            foreach (var connection in State.Connections)
-            {
-                var client = GrainFactory.GetClientGrain(KeyData.HubName, connection);
-                tasks.Add(client.Send(message));
-            }
-
-            return Task.WhenAll(tasks);
+            return SendAll(message, State.Connections);
         }
 
         public Task SendExcept(string methodName, object[] args, IReadOnlyList<string> excludedConnectionIds)
         {
-            var message = new InvocationMessage(methodName, args);
-            var tasks = new List<Task>();
-            foreach (var connection in State.Connections)
-            {
-                if (excludedConnectionIds.Contains(connection)) continue;
-
-                var client = GrainFactory.GetClientGrain(KeyData.HubName, connection);
-                tasks.Add(client.Send(message));
-            }
-
-            return Task.WhenAll(tasks);
+            var message = new Immutable<InvocationMessage>(new InvocationMessage(methodName, args));
+            return SendAll(message, State.Connections.Where(x => !excludedConnectionIds.Contains(x)).ToList());
         }
 
         public Task<int> Count()
         {
             return Task.FromResult(State.Connections.Count);
+        }
+
+        protected Task SendAll(Immutable<InvocationMessage> message, IReadOnlyCollection<string> connections)
+        {
+            _logger.LogDebug("Sending message to {hubName}.{targetMethod} on group {groupId} to {connectionsCount} connection(s)",
+                KeyData.HubName, message.Value.Target, KeyData.Id, connections.Count);
+
+            var tasks = ArrayPool<Task>.Shared.Rent(connections.Count);
+            try
+            {
+                int index = 0;
+                foreach (var connection in connections)
+                {
+                    var client = GrainFactory.GetClientGrain(KeyData.HubName, connection);
+                    tasks[index++] = client.Send(message);
+                }
+
+                return Task.WhenAll(tasks.Where(x => x != null).ToArray());
+            }
+            finally
+            {
+                ArrayPool<Task>.Shared.Return(tasks);
+            }
         }
     }
 

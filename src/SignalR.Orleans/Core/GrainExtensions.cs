@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Protocol;
+using Orleans.Concurrency;
 using SignalR.Orleans.Clients;
 using SignalR.Orleans.Core;
 using SignalR.Orleans.Groups;
@@ -14,7 +15,7 @@ namespace Orleans
         [Obsolete("Use Send instead", false)]
         public static async Task SendSignalRMessage(this IConnectionGrain grain, string methodName, params object[] message)
         {
-            var invocationMessage = new InvocationMessage(methodName, message);
+            var invocationMessage = new InvocationMessage(methodName, message).AsImmutable();
             await grain.Send(invocationMessage);
         }
 
@@ -26,8 +27,19 @@ namespace Orleans
         /// <param name="args">Arguments to pass to the target method.</param>
         public static Task Send(this IHubMessageInvoker grain, string methodName, params object[] args)
         {
-            var invocationMessage = new InvocationMessage(methodName, args);
+            var invocationMessage = new InvocationMessage(methodName, args).AsImmutable();
             return grain.Send(invocationMessage);
+        }
+
+        /// <summary>
+        /// Invokes a method on the hub (one way).
+        /// </summary>
+        /// <param name="grain"></param>
+        /// <param name="methodName">Target method name to invoke.</param>
+        /// <param name="args">Arguments to pass to the target method.</param>
+        public static void SendOneWay(this IHubMessageInvoker grain, string methodName, params object[] args)
+        {
+            grain.InvokeOneWay(g => g.Send(methodName, args));
         }
     }
 
