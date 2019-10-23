@@ -61,7 +61,7 @@ namespace SignalR.Orleans.Clients
         {
             if (State.ServerId != Guid.Empty)
             {
-                _logger.LogDebug("Sending message on {hubName}.{targetMethod} to connection {connectionId}", _keyData.HubName, message.Target, _keyData.Id);
+                _logger.LogDebug("Sending message on {hubName}.{targetMethod} to connection {connectionId} for server {serverId}", _keyData.HubName, message.Target, _keyData.Id, State.ServerId);
                 _failAttempts = 0;
                 await _serverStream.OnNextAsync(new ClientMessage { ConnectionId = _keyData.Id, Payload = message, HubName = _keyData.HubName });
                 return;
