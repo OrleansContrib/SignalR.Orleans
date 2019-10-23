@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.Extensions.Logging;
 using Orleans;
+using Orleans.Concurrency;
 using Orleans.Providers;
 using Orleans.Streams;
 using SignalR.Orleans.Core;
@@ -47,24 +49,24 @@ namespace SignalR.Orleans.Clients
             return Task.CompletedTask;
         }
 
-        public async Task Send(InvocationMessage message)
+        public async Task Send(Immutable<InvocationMessage> message)
         {
             if (State.ServerId != Guid.Empty)
             {
-                _logger.LogDebug("Sending message on {hubName}.{targetMethod} to connection {connectionId}", _keyData.HubName, message.Target, _keyData.Id);
+                _logger.LogDebug("Sending message on {hubName}.{targetMethod} to connection {connectionId}", _keyData.HubName, message.Value.Target, _keyData.Id);
                 _failAttempts = 0;
-                await _serverStream.OnNextAsync(new ClientMessage { ConnectionId = _keyData.Id, Payload = message, HubName = _keyData.HubName });
+                await _serverStream.OnNextAsync(new ClientMessage { ConnectionId = _keyData.Id, Payload = message.Value, HubName = _keyData.HubName });
                 return;
             }
 
-            _logger.LogInformation("Client not connected for connectionId {connectionId} and hub {hubName} ({targetMethod})", _keyData.Id, _keyData.HubName, message.Target);
+            _logger.LogInformation("Client not connected for connectionId {connectionId} and hub {hubName} ({targetMethod})", _keyData.Id, _keyData.HubName, message.Value.Target);
 
             _failAttempts++;
             if (_failAttempts >= _maxFailAttempts)
             {
                 await OnDisconnect();
                 _logger.LogWarning("Force disconnect client for connectionId {connectionId} and hub {hubName} ({targetMethod}) after exceeding attempts limit",
-                    _keyData.Id, _keyData.HubName, message.Target);
+                    _keyData.Id, _keyData.HubName, message.Value.Target);
             }
         }
 
