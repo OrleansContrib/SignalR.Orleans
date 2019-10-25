@@ -46,5 +46,8 @@ namespace Orleans
 
         internal static IUserGrain GetUserGrain(this IGrainFactory factory, string hubName, string userId)
             => factory.GetGrain<IUserGrain>(ConnectionGrainKey.Build(hubName, userId));
+
+        internal static IServerDirectoryGrain GetServerDirectoryGrain(this IGrainFactory factory)
+            => factory.GetGrain<IServerDirectoryGrain>(0);
     }
 }

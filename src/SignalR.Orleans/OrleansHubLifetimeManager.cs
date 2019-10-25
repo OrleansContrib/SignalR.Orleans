@@ -15,6 +15,7 @@ namespace SignalR.Orleans
 {
     public class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>, IDisposable where THub : Hub
     {
+        private Timer _timer;
         private readonly HubConnectionStore _connections = new HubConnectionStore();
         private readonly ILogger _logger;
         private readonly IClusterClientProvider _clusterClientProvider;
@@ -38,6 +39,12 @@ namespace SignalR.Orleans
             _logger = logger;
             _clusterClientProvider = clusterClientProvider;
             _ = EnsureStreamSetup();
+        }
+
+        private Task HeartbeatCheck()
+        {
+            var client = _clusterClientProvider.GetClient().GetServerDirectoryGrain();
+            return client.Heartbeat(_serverId);
         }
 
         private async Task EnsureStreamSetup()
@@ -66,6 +73,7 @@ namespace SignalR.Orleans
             _streamProvider = _clusterClientProvider.GetClient().GetStreamProvider(Constants.STREAM_PROVIDER);
             _serverStream = _streamProvider.GetStream<ClientMessage>(_serverId, Constants.SERVERS_STREAM);
             _allStream = _streamProvider.GetStream<AllMessage>(Constants.ALL_STREAM_ID, Utils.BuildStreamHubName(_hubName));
+            _timer = new Timer(_ => Task.Run(HeartbeatCheck), null, TimeSpan.FromSeconds(0), TimeSpan.FromMinutes(Constants.HEARTBEAT_PULSE_IN_MINUTES));
 
             var subscribeTasks = new List<Task>
             {
@@ -131,8 +139,10 @@ namespace SignalR.Orleans
         {
             try
             {
+                _logger.LogDebug("Handle disconnection {connectionId} on hub {hubName} (serverId: {serverId})",
+                    connection.ConnectionId, _hubName, _serverId);
                 var client = _clusterClientProvider.GetClient().GetClientGrain(_hubName, connection.ConnectionId);
-                await client.OnDisconnect();
+                await client.OnDisconnect("hub-disconnect");
             }
             finally
             {
@@ -260,7 +270,12 @@ namespace SignalR.Orleans
                 toUnsubscribe.AddRange(subscriptions.Select(s => s.UnsubscribeAsync()));
             }
 
+            var serverDirectoryGrain = _clusterClientProvider.GetClient().GetServerDirectoryGrain();
+            toUnsubscribe.Add(serverDirectoryGrain.Unregister(_serverId));
+
             Task.WaitAll(toUnsubscribe.ToArray());
+
+            _timer?.Dispose();
         }
     }
 
