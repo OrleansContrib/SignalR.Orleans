@@ -32,11 +32,11 @@
   <!-- Shared Package Versions -->
   <PropertyGroup>
     <!-- vendors -->
-    <OrleansCoreVersion>2.3.5</OrleansCoreVersion>
-    <OrleansProvidersVersion>2.3.5</OrleansProvidersVersion>
-    <OrleansCodeGeneratorVersion>2.3.5</OrleansCodeGeneratorVersion>
-    <OrleansRuntimeAbstractionsVersion>2.3.5</OrleansRuntimeAbstractionsVersion>
-    <OrleansRuntimeVersion>2.3.5</OrleansRuntimeVersion>
+    <OrleansCoreVersion>3.0.0</OrleansCoreVersion>
+    <OrleansProvidersVersion>3.0.0</OrleansProvidersVersion>
+    <OrleansCodeGeneratorVersion>3.0.0</OrleansCodeGeneratorVersion>
+    <OrleansRuntimeAbstractionsVersion>3.0.0</OrleansRuntimeAbstractionsVersion>
+    <OrleansRuntimeVersion>3.0.0</OrleansRuntimeVersion>
     <SignalRVersion>1.1.0</SignalRVersion>
   </PropertyGroup>
 </Project>
