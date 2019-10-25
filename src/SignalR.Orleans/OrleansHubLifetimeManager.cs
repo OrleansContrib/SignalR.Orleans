@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.Extensions.Logging;
 using Orleans;
+using Orleans.Concurrency;
 using Orleans.Streams;
 using SignalR.Orleans.Clients;
 using SignalR.Orleans.Core;
@@ -252,7 +253,7 @@ namespace SignalR.Orleans
         private Task SendExternal(string connectionId, InvocationMessage hubMessage)
         {
             var client = _clusterClientProvider.GetClient().GetClientGrain(_hubName, connectionId);
-            return client.Send(hubMessage);
+            return client.Send(hubMessage.AsImmutable());
         }
 
         public void Dispose()
