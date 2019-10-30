@@ -6,7 +6,7 @@ DIR=`dirname "${THIS}"` # This directory path
 . "$DIR/version-builder.sh"
 
 err(){
-	echo -e "\e[31m $* \e[0m" >>/dev/stderr
+	echo -e "\e[31m $* \e[0m" >&2
 }
 
 echo -e "\e[36m ---- Publish ---- \e[39m"
