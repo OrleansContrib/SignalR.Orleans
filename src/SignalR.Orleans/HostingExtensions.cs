@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Orleans.Runtime;
@@ -20,7 +19,7 @@ namespace Orleans.Hosting
             cfg.ConfigureBuilder?.Invoke(builder, new HostBuilderConfig());
 
             try { builder.AddMemoryGrainStorage(Constants.STORAGE_PROVIDER); }
-            catch { /** Grain storage provider was already added. Do nothing. **/ }
+            catch { /* Grain storage provider was already added. Do nothing. */ }
 
             builder.ConfigureServices(services => services.AddSingleton<IConfigurationValidator, SignalRConfigurationValidator>());
 
@@ -40,7 +39,7 @@ namespace Orleans.Hosting
             cfg.ConfigureBuilder?.Invoke(builder, new HostBuilderConfig());
 
             try { builder.AddMemoryGrainStorage(Constants.STORAGE_PROVIDER); }
-            catch { /** Grain storage provider was already added. Do nothing. **/ }
+            catch { /* Grain storage provider was already added. Do nothing. */ }
 
             builder.ConfigureServices(services => services.AddSingleton<IConfigurationValidator, SignalRConfigurationValidator>());
 

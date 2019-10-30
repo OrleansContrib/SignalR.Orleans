@@ -1,0 +1,12 @@
+{
+  "name": "@sketch7/signalr-orleans",
+  "version": "1.0.0",
+  "versionSuffix": "dev1",
+  "scripts": {
+    "pack": "bash ./tools/pack.sh",
+    "prepublish:dev": "npm run pack",
+    "publish:dev": "bash ./tools/publish.sh",
+    "postpublish:dev": "rm -rf *.*nupkg",
+    "test": "find test/*.csproj | xargs -i dotnet test {} --no-build -c Release --filter Category!=e2e"
+  }
+}

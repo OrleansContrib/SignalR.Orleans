@@ -6,15 +6,18 @@
 
   <!-- Set common properties regarding assembly information and nuget packages -->
   <PropertyGroup>
-    <Authors>Gutemberg Ribeiro, Clayton Lautier</Authors>
-    <Owners>Gutemberg Ribeiro, Clayton Lautier</Owners>
+    <Authors>stephen.lautier, clayton.lautier</Authors>
+    <Company>Sketch7</Company>
     <Product>Orleans SignalR Backplane</Product>
-    <RepositoryUrl>https://github.com/OrleansContrib/SignalR.Orleans</RepositoryUrl>
+    <RepositoryUrl>https://github.com/sketch7/SignalR.Orleans</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseUrl>https://github.com/dotnet/Orleans#license</PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/OrleansContrib/SignalR.Orleans</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/sketch7/SignalR.Orleans</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/dotnet/orleans/gh-pages/assets/logo_128.png</PackageIconUrl>
     <PackageTags>Orleans Cloud-Computing Actor-Model Actors Distributed-Systems Real-Time SignalR C# .NET</PackageTags>
+    <IncludeSymbols>true</IncludeSymbols>
+    <IncludeSource>true</IncludeSource>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <!-- Common compile parameters -->
@@ -32,11 +35,6 @@
   <!-- Shared Package Versions -->
   <PropertyGroup>
     <!-- vendors -->
-    <OrleansCoreVersion>3.0.0</OrleansCoreVersion>
-    <OrleansProvidersVersion>3.0.0</OrleansProvidersVersion>
-    <OrleansCodeGeneratorVersion>3.0.0</OrleansCodeGeneratorVersion>
-    <OrleansRuntimeAbstractionsVersion>3.0.0</OrleansRuntimeAbstractionsVersion>
-    <OrleansRuntimeVersion>3.0.0</OrleansRuntimeVersion>
-    <SignalRVersion>1.1.0</SignalRVersion>
+    <OrleansVersion>3.0.0</OrleansVersion>
   </PropertyGroup>
 </Project>

@@ -31,10 +31,10 @@ namespace Microsoft.Extensions.DependencyInjection
             config.ConfigureBuilder?.Invoke(builder, new HostBuilderConfig());
 
             try { builder.AddMemoryGrainStorage(Constants.PUBSUB_PROVIDER); }
-            catch { /** PubSubStore was already added. Do nothing. **/ }
+            catch { /* PubSubStore was already added. Do nothing. */ }
 
             try { builder.AddMemoryGrainStorage(Constants.STORAGE_PROVIDER); }
-            catch { /** Grain storage provider was already added. Do nothing. **/ }
+            catch { /* Grain storage provider was already added. Do nothing. */ }
 
             return builder
                 .AddSimpleMessageStreamProvider(Constants.STREAM_PROVIDER, opt => opt.FireAndForgetDelivery = config.UseFireAndForgetDelivery)

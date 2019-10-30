@@ -1,34 +1,33 @@
 <p align="center">
   <img src="https://github.com/dotnet/orleans/blob/gh-pages/assets/logo.png" alt="SignalR.Orleans" width="300px"> 
-  <h1>SignalR.Orleans</h1>
+  <h1>Sketch7 SignalR.Orleans</h1><small>fork from <a href="https://github.com/OrleansContrib/SignalR.Orleans">OrleansContrib/SignalR.Orleans</a></small>
 </p>
 
-[![Build status](https://dotnet-ci.visualstudio.com/DotnetCI/_apis/build/status/SignalR-Orleans-CI?branch=master)](https://dotnet-ci.visualstudio.com/DotnetCI/_build/latest?definitionId=1&branch=master)
-[![NuGet](https://img.shields.io/nuget/v/SignalR.Orleans.svg?style=flat)](http://www.nuget.org/packages/SignalR.Orleans)
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dotnet/orleans?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+[![CircleCI](https://circleci.com/gh/sketch7/Sketch7.SignalR.Orleans.svg?style=shield)](https://circleci.com/gh/sketch7/Sketch7.SignalR.Orleans)
+[![NuGet version](https://badge.fury.io/nu/Sketch7.SignalR.Orleans.svg)](https://badge.fury.io/nu/Sketch7.SignalR.Orleans)
 
 [Orleans](https://github.com/dotnet/orleans) is a framework that provides a straight-forward approach to building distributed high-scale computing applications, without the need to learn and apply complex concurrency or other scaling patterns. 
 
 [ASP.NET Core SignalR](https://github.com/aspnet/SignalR) is a new library for ASP.NET Core developers that makes it incredibly simple to add real-time web functionality to your applications. What is "real-time web" functionality? It's the ability to have your server-side code push content to the connected clients as it happens, in real-time.
 
-**SignalR.Orleans** is a package that allow us to enhance the _real-time_ capabilities of SignalR by leveraging Orleans distributed cloud platform capabilities.
+**Sketch7.SignalR.Orleans** is a package that allow us to enhance the _real-time_ capabilities of SignalR by leveraging Orleans distributed cloud platform capabilities.
 
 
 # Installation
 
-Installation is performed via [NuGet](https://www.nuget.org/packages/SignalR.Orleans/)
+Installation is performed via [NuGet](https://www.nuget.org/packages/Sketch7.SignalR.Orleans/)
 
 From Package Manager:
 
-> PS> Install-Package SignalR.Orleans
+> PS> Install-Package Sketch7.SignalR.Orleans
 
 .Net CLI:
 
-> \# dotnet add package SignalR.Orleans
+> \# dotnet add package Sketch7.SignalR.Orleans
 
 Paket:
 
-> \# paket add SignalR.Orleans
+> \# paket add Sketch7.SignalR.Orleans
 
 # Configuration
 
