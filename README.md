@@ -20,14 +20,17 @@ Installation is performed via [NuGet](https://www.nuget.org/packages/Sketch7.Sig
 From Package Manager:
 
 > PS> Install-Package Sketch7.SignalR.Orleans
+> PS> Install-Package Sketch7.SignalR.Orleans.AspNet
 
 .Net CLI:
 
 > \# dotnet add package Sketch7.SignalR.Orleans
+> \# dotnet add package Sketch7.SignalR.Orleans.AspNet
 
 Paket:
 
 > \# paket add Sketch7.SignalR.Orleans
+> \# paket add Sketch7.SignalR.Orleans.AspNet
 
 # Configuration
 
@@ -37,12 +40,13 @@ We need to configure the Orleans Silo with the below:
 
 ***Example***
 ```cs
-var silo = new SiloHostBuilder()
-  .UseSignalR()
-  .AddMemoryGrainStorage("PubSubStore") // You can use any other storage provider as long as you have one registered as "PubSubStore".
-  .Build();
-
-await silo.StartAsync();
+new HostBuilder()
+  .UseOrleans((context, siloBuilder) =>
+  {
+    siloBuilder
+      .AddMemoryGrainStorage("PubSubStore") // You can use any other storage provider as long as you have one registered as "PubSubStore".
+      .UseSignalR();
+  });
 ```
 
 ### Configure Silo Storage Provider and Grain Persistance
@@ -50,15 +54,10 @@ Optional configuration to override the default implementation for both providers
 
 ***Example***
 ```cs
-.UseSignalR(cfg =>
+.UseSignalR(signalrBuilder => signalrBuilder.Configure((sb, opts) =>
 {
-  cfg.ConfigureBuilder = (builder, config) =>
-  {
-    builder
-      .AddMemoryGrainStorage(config.PubSubProvider)
-      .AddMemoryGrainStorage(config.StorageProvider);
-  };
-})
+  siloBuilder.AddMemoryGrainStorage(opts.StorageProvider);
+}));
 ```
 
 ## Client
