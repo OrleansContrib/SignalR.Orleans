@@ -1,5 +1,5 @@
-﻿using System;
-using Orleans.Hosting;
+﻿using Orleans.Hosting;
+using System;
 
 namespace SignalR.Orleans
 {
@@ -14,13 +14,6 @@ namespace SignalR.Orleans
         /// Gets the pubsub provider name which is used for registration.
         /// </summary>
         public string PubSubProvider { get; } = Constants.PUBSUB_PROVIDER;
-    }
-
-    [Obsolete("Use SignalrOrleansSiloHostConfigBuilder instead.")]
-    public class SignalrServerConfig
-    {
-        public Action<ISiloHostBuilder, HostBuilderConfig> ConfigureBuilder { get; set; }
-        public bool UseFireAndForgetDelivery { get; set; }
     }
 
     public class SignalrOrleansConfigBaseBuilder

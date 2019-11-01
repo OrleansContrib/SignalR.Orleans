@@ -1,10 +1,10 @@
-using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Orleans.Runtime;
 using Orleans.Storage;
 using SignalR.Orleans;
 using SignalR.Orleans.Clients;
+using System;
 
 // ReSharper disable once CheckNamespace
 namespace Orleans.Hosting
@@ -56,23 +56,23 @@ namespace Orleans.Hosting
 
         public SignalRConfigurationValidator(IServiceProvider serviceProvider)
         {
-            this._logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<SignalRConfigurationValidator>();
-            this._sp = serviceProvider;
+            _logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<SignalRConfigurationValidator>();
+            _sp = serviceProvider;
         }
 
         public void ValidateConfiguration()
         {
-            this._logger.LogInformation("Checking if a PubSub storage provider was registered...");
+            _logger.LogInformation("Checking if a PubSub storage provider was registered...");
 
-            var pubSubProvider = this._sp.GetServiceByName<IGrainStorage>(Constants.PUBSUB_PROVIDER);
+            var pubSubProvider = _sp.GetServiceByName<IGrainStorage>(Constants.PUBSUB_PROVIDER);
             if (pubSubProvider == null)
             {
                 var err = "No PubSub storage provider was registered. You need to register one. To use the default/in-memory provider, call 'siloBuilder.AddMemoryGrainStorage(\"PubSubStore\")' when building your Silo.";
-                this._logger.LogError(err);
+                _logger.LogError(err);
                 throw new InvalidOperationException(err);
             }
 
-            this._logger.LogInformation($"Found the PubSub storage provider of type '{pubSubProvider.GetType().FullName}'.");
+            _logger.LogInformation($"Found the PubSub storage provider of type '{pubSubProvider.GetType().FullName}'.");
         }
     }
 }

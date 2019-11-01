@@ -1,24 +1,16 @@
-﻿using System;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.SignalR.Protocol;
+﻿using Microsoft.AspNetCore.SignalR.Protocol;
 using Orleans.Concurrency;
 using SignalR.Orleans.Clients;
 using SignalR.Orleans.Core;
 using SignalR.Orleans.Groups;
 using SignalR.Orleans.Users;
+using System.Threading.Tasks;
 
 // ReSharper disable once CheckNamespace
 namespace Orleans
 {
     public static class GrainSignalRExtensions
     {
-        [Obsolete("Use Send instead", false)]
-        public static async Task SendSignalRMessage(this IConnectionGrain grain, string methodName, params object[] message)
-        {
-            var invocationMessage = new InvocationMessage(methodName, message).AsImmutable();
-            await grain.Send(invocationMessage);
-        }
-
         /// <summary>
         /// Invokes a method on the hub.
         /// </summary>
@@ -38,17 +30,13 @@ namespace Orleans
         /// <param name="methodName">Target method name to invoke.</param>
         /// <param name="args">Arguments to pass to the target method.</param>
         public static void SendOneWay(this IHubMessageInvoker grain, string methodName, params object[] args)
-        {
-            grain.InvokeOneWay(g => g.Send(methodName, args));
-        }
+            => grain.InvokeOneWay(g => g.Send(methodName, args));
     }
 
     public static class GrainFactoryExtensions
     {
         public static HubContext<THub> GetHub<THub>(this IGrainFactory grainFactory)
-        {
-            return new HubContext<THub>(grainFactory);
-        }
+            => new HubContext<THub>(grainFactory);
 
         internal static IClientGrain GetClientGrain(this IGrainFactory factory, string hubName, string connectionId)
             => factory.GetGrain<IClientGrain>(ConnectionGrainKey.Build(hubName, connectionId));

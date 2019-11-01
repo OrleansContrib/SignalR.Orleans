@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Sketch7.SignalR.Orleans.AspNet</PackageId>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Title>SignalR.Orleans - Orleans backplane for SignalR Core</Title>
+    <Description>Orleans backplane for SignalR Core.</Description>
+    <PackageTags>$(PackageTags) AspNetCore</PackageTags>
+    <PackageReleaseNotes></PackageReleaseNotes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.Orleans.CodeGenerator.MSBuild" Version="$(OrleansVersion)" PrivateAssets="all">
+     <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+   </PackageReference>
+   
+    <PackageReference Include="Microsoft.Orleans.Core" Version="$(OrleansVersion)" />
+    <PackageReference Include="Microsoft.Orleans.OrleansProviders" Version="$(OrleansVersion)" />
+    <PackageReference Include="Microsoft.Orleans.Runtime.Abstractions" Version="$(OrleansVersion)" />
+  </ItemGroup>
+
+  <!-- src libraries -->
+  <ItemGroup>
+    <ProjectReference Include="..\SignalR.Orleans\SignalR.Orleans.csproj" />
+  </ItemGroup>
+
+</Project>

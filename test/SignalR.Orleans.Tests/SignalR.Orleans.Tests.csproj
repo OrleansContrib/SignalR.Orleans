@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\SignalR.Orleans.AspNet\SignalR.Orleans.AspNet.csproj" />
     <ProjectReference Include="..\..\src\SignalR.Orleans\SignalR.Orleans.csproj" />
   </ItemGroup>
 
