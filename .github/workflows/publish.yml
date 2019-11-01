@@ -22,7 +22,7 @@ jobs:
       run: dotnet test --no-build --configuration Release
     - name: Pack
       working-directory: src/SignalR.Orleans
-      run: dotnet pack --configuration Release
+      run: dotnet pack --configuration Release --no-build
     - name: Push
       working-directory: src/SignalR.Orleans/bin/Release
       run: |
