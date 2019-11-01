@@ -3,8 +3,10 @@
   <h1>SignalR.Orleans</h1>
 </p>
 
-[![Build status](https://dotnet-ci.visualstudio.com/DotnetCI/_apis/build/status/SignalR-Orleans-CI?branch=master)](https://dotnet-ci.visualstudio.com/DotnetCI/_build/latest?definitionId=1&branch=master)
-[![NuGet](https://img.shields.io/nuget/v/SignalR.Orleans.svg?style=flat)](http://www.nuget.org/packages/SignalR.Orleans)
+[![Build](https://github.com/OrleansContrib/SignalR.Orleans/workflows/CI/badge.svg)](https://github.com/OrleansContrib/SignalR.Orleans/actions)
+[![Package Version](https://img.shields.io/nuget/v/SignalR.Orleans.svg)](https://www.nuget.org/packages/SignalR.Orleans)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/SignalR.Orleans.svg)](https://www.nuget.org/packages/SignalR.Orleans)
+[![License](https://img.shields.io/github/license/OrleansContrib/SignalR.Orleans.svg)](https://github.com/OrleansContrib/SignalR.Orleans/blob/master/LICENSE)
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dotnet/orleans?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 [Orleans](https://github.com/dotnet/orleans) is a framework that provides a straight-forward approach to building distributed high-scale computing applications, without the need to learn and apply complex concurrency or other scaling patterns. 
