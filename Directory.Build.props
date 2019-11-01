@@ -1,42 +1,46 @@
 <Project>
-  <!-- Set the repository root into a variable -->
-  <PropertyGroup>
-    <SourceRoot>$(MSBuildThisFileDirectory)</SourceRoot>
-  </PropertyGroup>
+    <!-- Set the repository root into a variable -->
+    <PropertyGroup>
+        <SourceRoot>$(MSBuildThisFileDirectory)</SourceRoot>
+    </PropertyGroup>
 
-  <!-- Set common properties regarding assembly information and nuget packages -->
-  <PropertyGroup>
-    <Authors>Gutemberg Ribeiro, Clayton Lautier</Authors>
-    <Owners>Gutemberg Ribeiro, Clayton Lautier</Owners>
-    <Product>Orleans SignalR Backplane</Product>
-    <RepositoryUrl>https://github.com/OrleansContrib/SignalR.Orleans</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <PackageLicenseUrl>https://github.com/dotnet/Orleans#license</PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/OrleansContrib/SignalR.Orleans</PackageProjectUrl>
-    <PackageIconUrl>https://raw.githubusercontent.com/dotnet/orleans/gh-pages/assets/logo_128.png</PackageIconUrl>
-    <PackageTags>Orleans Cloud-Computing Actor-Model Actors Distributed-Systems Real-Time SignalR C# .NET</PackageTags>
-  </PropertyGroup>
+    <!-- Set common properties regarding assembly information and nuget packages -->
+    <PropertyGroup>
+        <Authors>Gutemberg Ribeiro, Clayton Lautier</Authors>
+        <Owners>Gutemberg Ribeiro, Clayton Lautier</Owners>
+        <Product>Orleans SignalR Backplane</Product>
+        <RepositoryUrl>https://github.com/OrleansContrib/SignalR.Orleans</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageProjectUrl>https://github.com/OrleansContrib/SignalR.Orleans</PackageProjectUrl>
+        <PackageIcon>logo_128.png</PackageIcon>
+        <PackageTags>Orleans Cloud-Computing Actor-Model Actors Distributed-Systems Real-Time SignalR C# .NET</PackageTags>
+    </PropertyGroup>
 
-  <!-- Common compile parameters -->
-  <PropertyGroup>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <NoWarn>$(NoWarn);1701;1702;1705;1591</NoWarn>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
+    <!-- Common compile parameters -->
+    <PropertyGroup>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <NoWarn>$(NoWarn);1701;1702;1705;1591</NoWarn>
+        <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+        <LangVersion>latest</LangVersion>
+    </PropertyGroup>
 
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+    </PropertyGroup>
 
-  <!-- Shared Package Versions -->
-  <PropertyGroup>
-    <!-- vendors -->
-    <OrleansCoreVersion>3.0.0</OrleansCoreVersion>
-    <OrleansProvidersVersion>3.0.0</OrleansProvidersVersion>
-    <OrleansCodeGeneratorVersion>3.0.0</OrleansCodeGeneratorVersion>
-    <OrleansRuntimeAbstractionsVersion>3.0.0</OrleansRuntimeAbstractionsVersion>
-    <OrleansRuntimeVersion>3.0.0</OrleansRuntimeVersion>
-    <SignalRVersion>1.1.0</SignalRVersion>
-  </PropertyGroup>
+    <!-- Shared Package Versions -->
+    <PropertyGroup>
+        <!-- vendors -->
+        <OrleansCoreVersion>3.0.0</OrleansCoreVersion>
+        <OrleansProvidersVersion>3.0.0</OrleansProvidersVersion>
+        <OrleansCodeGeneratorVersion>3.0.0</OrleansCodeGeneratorVersion>
+        <OrleansRuntimeAbstractionsVersion>3.0.0</OrleansRuntimeAbstractionsVersion>
+        <OrleansRuntimeVersion>3.0.0</OrleansRuntimeVersion>
+        <SignalRVersion>1.1.0</SignalRVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="$(SourceRoot)assets/logo_128.png" Pack="true" Visible="false" PackagePath="/" />
+    </ItemGroup>
 </Project>
