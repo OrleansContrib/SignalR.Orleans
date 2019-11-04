@@ -1,14 +1,15 @@
-﻿using Interfaces;
+﻿using System;
+using System.Threading.Tasks;
+using Interfaces;
 using Microsoft.Extensions.Logging;
 using Orleans;
 using SignalR.Orleans.Core;
-using System;
-using System.Threading.Tasks;
 
 namespace Grains
 {
     public class UserNotificationGrain : Grain, IUserNotificationGrain
     {
+        private const string BroadcastMessage = "BroadcastMessage";
         private readonly ILogger<UserNotificationGrain> _logger;
         private HubContext<IChatHub> _hubContext;
 
@@ -26,13 +27,11 @@ namespace Grains
 
         public async Task SendMessageAsync(string name, string message)
         {
-            var key = this.GetPrimaryKeyString();
-            _logger.LogInformation($"{nameof(SendMessageAsync)} called. Name:{name}, Message:{message}, Key:{key}");
-
-            var methodName = "broadcastMessage";
-            _logger.LogInformation($"Sending message. MethodName:{methodName} Name:{name}, Message:{message}, Key:{key}");
-
-            await _hubContext.Group(key).Send("BroadcastMessage", name, message);
+            var groupId = this.GetPrimaryKeyString();
+            _logger.LogInformation($"{nameof(SendMessageAsync)} called. Name:{name}, Message:{message}, Key:{groupId}");
+            _logger.LogInformation($"Sending message to group: {groupId}. MethodName:{BroadcastMessage} Name:{name}, Message:{message}");
+            
+            await _hubContext.Group(groupId).Send(BroadcastMessage, name, message);
         }
     }
 }

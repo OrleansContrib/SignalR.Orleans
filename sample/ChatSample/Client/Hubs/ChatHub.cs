@@ -1,9 +1,9 @@
-﻿using Interfaces;
+﻿using System;
+using System.Threading.Tasks;
+using Interfaces;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Orleans;
-using System;
-using System.Threading.Tasks;
 
 namespace Client.Hubs
 {

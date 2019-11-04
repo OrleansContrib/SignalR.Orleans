@@ -1,4 +1,6 @@
-﻿using Client.Hubs;
+﻿using System;
+using System.Threading.Tasks;
+using Client.Hubs;
 using Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -7,8 +9,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Orleans;
 using SignalR.Orleans.Clients;
-using System;
-using System.Threading.Tasks;
 
 namespace Client
 {
@@ -23,7 +23,7 @@ namespace Client
                 .AddOrleans();
 
             var client = new ClientBuilder()
-                .UseLocalhostClustering(serviceId: "HelloWorldApp", clusterId: "dev")
+                .UseLocalhostClustering(serviceId: "ChatSampleApp", clusterId: "dev")
                 .UseSignalR()
                 .ConfigureApplicationParts(parts =>
                 {
