@@ -5,7 +5,7 @@ using Orleans;
 using System;
 using System.Threading.Tasks;
 
-namespace ChatSample.Hubs
+namespace Client.Hubs
 {
     public class ChatHub : Hub, IChatHub
     {
@@ -20,9 +20,7 @@ namespace ChatSample.Hubs
 
         public async Task Send(string name, string message)
         {
-
-            name = Context.ConnectionId;
-            _logger.LogInformation($"{nameof(Send)} called. Name:{name}, Message:{message}");
+            _logger.LogInformation($"{nameof(Send)} called. ConnectionId:{Context.ConnectionId}, Name:{name}, Message:{message}");
 
             var userNotificationGrain = _clusterClient.GetGrain<IUserNotificationGrain>(Guid.Empty.ToString());
             await userNotificationGrain.SendMessageAsync(name, message);

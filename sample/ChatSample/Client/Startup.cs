@@ -1,4 +1,4 @@
-﻿using ChatSample.Hubs;
+﻿using Client.Hubs;
 using Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -10,7 +10,7 @@ using SignalR.Orleans.Clients;
 using System;
 using System.Threading.Tasks;
 
-namespace ChatSample
+namespace Client
 {
     public class Startup
     {
