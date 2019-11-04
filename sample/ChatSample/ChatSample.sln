@@ -8,6 +8,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{52C4A1E5-78AA-4475-9F8B-742427E42811}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		run-client.cmd = run-client.cmd
+		run-silo.cmd = run-silo.cmd
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Silo", "Silo\Silo.csproj", "{1884437F-7E3E-4155-8505-887B400C7F92}"
