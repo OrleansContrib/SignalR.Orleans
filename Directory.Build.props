@@ -39,6 +39,7 @@
   <!-- Shared Package Versions -->
   <PropertyGroup>
     <!-- vendors -->
-    <OrleansVersion>3.0.0</OrleansVersion>
+    <OrleansVersion>2.3.5</OrleansVersion>
+    <SignalRVersion>1.1.0</SignalRVersion>
   </PropertyGroup>
 </Project>

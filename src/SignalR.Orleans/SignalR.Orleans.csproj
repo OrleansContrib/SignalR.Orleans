@@ -20,7 +20,7 @@
     <PackageReference Include="Microsoft.Orleans.Core" Version="$(OrleansVersion)" />
     <PackageReference Include="Microsoft.Orleans.OrleansProviders" Version="$(OrleansVersion)" />
     <PackageReference Include="Microsoft.Orleans.Runtime.Abstractions" Version="$(OrleansVersion)" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Common" Version="3.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Core" Version="$(SignalRVersion)" />
   </ItemGroup>
 
 </Project>

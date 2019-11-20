@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <PackageId>Sketch7.SignalR.Orleans.AspNet</PackageId>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -13,11 +13,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="Microsoft.Orleans.CodeGenerator.MSBuild" Version="$(OrleansVersion)" PrivateAssets="all">
-     <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-   </PackageReference>
-   
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Core" Version="$(SignalRVersion)" />
     <PackageReference Include="Microsoft.Orleans.Core" Version="$(OrleansVersion)" />
     <PackageReference Include="Microsoft.Orleans.OrleansProviders" Version="$(OrleansVersion)" />
     <PackageReference Include="Microsoft.Orleans.Runtime.Abstractions" Version="$(OrleansVersion)" />

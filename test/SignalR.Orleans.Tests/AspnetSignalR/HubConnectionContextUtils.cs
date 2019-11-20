@@ -1,11 +1,11 @@
 ﻿// COPIED AND REFACTORED :: Microsoft.AspNetCore.SignalR.Tests
 
-using System;
-using System.Reflection;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.Extensions.Logging.Abstractions;
+using System;
+using System.Reflection;
 
 namespace SignalR.Orleans.Tests.AspnetSignalR
 {
@@ -13,15 +13,11 @@ namespace SignalR.Orleans.Tests.AspnetSignalR
     {
         public static HubConnectionContext Create(ConnectionContext connection)
         {
-            var ctx = new HubConnectionContext(connection, new HubConnectionContextOptions
-            {
-                KeepAliveInterval = TimeSpan.FromSeconds(15)
-            }, NullLoggerFactory.Instance);
-
-            var protocolProp = ctx.GetType().GetProperty(nameof(HubConnectionContext.Protocol), BindingFlags.Instance |
+            var ctx = new HubConnectionContext(connection, TimeSpan.FromSeconds(15), NullLoggerFactory.Instance);
+            var protocolProp = ctx.GetType().GetProperty("Protocol", BindingFlags.Instance |
                                                                      BindingFlags.NonPublic |
                                                                      BindingFlags.Public);
-            protocolProp.SetValue(ctx, new NewtonsoftJsonHubProtocol());
+            protocolProp.SetValue(ctx, new JsonHubProtocol());
             return ctx;
         }
     }
