@@ -28,18 +28,13 @@ jobs:
       - run:
           name: Check if branch is publishable
           command: |
-            if ! ([ $CIRCLE_BRANCH = "develop" ] || [ $CIRCLE_BRANCH = "master" ]); then
+            if ! ([ $CIRCLE_BRANCH = "master" ] || [[ "$CIRCLE_BRANCH" =~ ^(([0-9]+|\.)+x)$ ]]); then
               echo "Non-publishable branch; finishing build..."
               circleci step halt
             fi
       - deploy:
           name: Publish NuGet
           command: |
-            if [ "$CIRCLE_BRANCH" != "master" ]; then
-              echo -e "\e[33m Branch does not publish -- exit!"
-              exit
-            fi
-
             export SKETCH7_NUGET_API_KEY=$API_KEY
 
             npm run publish:dev
