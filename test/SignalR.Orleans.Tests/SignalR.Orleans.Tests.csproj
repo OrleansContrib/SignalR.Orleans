@@ -1,8 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
     <IsPackable>false</IsPackable>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,6 +16,7 @@
     <PackageReference Include="Microsoft.Orleans.Core" Version="$(OrleansVersion)" />
     <PackageReference Include="Microsoft.Orleans.OrleansProviders" Version="$(OrleansVersion)" />
     <PackageReference Include="Microsoft.Orleans.OrleansRuntime" Version="$(OrleansVersion)" />
+    <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
   </ItemGroup>
 
   <ItemGroup>
