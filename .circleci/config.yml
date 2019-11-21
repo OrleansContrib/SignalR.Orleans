@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: /app
     docker:
-      - image: stephenlautier/netcore-docker-ci:2.2.0
+      - image: stephenlautier/netcore-docker-ci:3.0.1
     environment:
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "1"
       DOTNET_CLI_TELEMETRY_OPTOUT: "1"

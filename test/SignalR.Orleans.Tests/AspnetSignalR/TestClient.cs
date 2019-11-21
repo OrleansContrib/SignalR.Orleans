@@ -1,15 +1,15 @@
 // COPIED AND REFACTORED :: Microsoft.AspNetCore.SignalR.Tests
 
-using Microsoft.AspNetCore.Connections;
-using Microsoft.AspNetCore.Connections.Features;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.AspNetCore.SignalR.Protocol;
 using System;
 using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Connections;
+using Microsoft.AspNetCore.Connections.Features;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR.Protocol;
 
 namespace SignalR.Orleans.Tests.AspnetSignalR
 {
@@ -42,7 +42,7 @@ namespace SignalR.Orleans.Tests.AspnetSignalR
             Connection.User = new ClaimsPrincipal(new ClaimsIdentity(claims));
             Connection.Items["ConnectedTask"] = new TaskCompletionSource<bool>();
 
-            _protocol = protocol ?? new JsonHubProtocol();
+            _protocol = protocol ?? new NewtonsoftJsonHubProtocol();
             _invocationBinder = invocationBinder ?? new DefaultInvocationBinder();
 
             _cts = new CancellationTokenSource();
@@ -233,6 +233,11 @@ namespace SignalR.Orleans.Tests.AspnetSignalR
             public Type GetReturnType(string invocationId)
             {
                 return typeof(object);
+            }
+
+            public Type GetStreamItemType(string streamId)
+            {
+                throw new NotImplementedException();
             }
         }
 
