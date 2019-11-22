@@ -17,6 +17,10 @@
 
 Installation is performed via [NuGet](https://www.nuget.org/packages/Sketch7.SignalR.Orleans/)
 
+## Netcore support
+- Use 1.x for netcore2
+- Use 2.x for netcore3
+
 From Package Manager:
 
 > PS> Install-Package Sketch7.SignalR.Orleans
