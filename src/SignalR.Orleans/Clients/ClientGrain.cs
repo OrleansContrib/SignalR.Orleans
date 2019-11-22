@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.Extensions.Logging;
 using Orleans;
@@ -9,6 +5,10 @@ using Orleans.Concurrency;
 using Orleans.Providers;
 using Orleans.Streams;
 using SignalR.Orleans.Core;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace SignalR.Orleans.Clients
 {
@@ -47,8 +47,7 @@ namespace SignalR.Orleans.Clients
             if (State.ServerId == Guid.Empty)
                 return;
 
-            _serverStream = _streamProvider.GetStream<ClientMessage>(State.ServerId, Constants.SERVERS_STREAM);
-            _serverDisconnectedStream = _streamProvider.GetStream<Guid>(State.ServerId, Constants.SERVER_DISCONNECTED);
+            SetupStreams();
             var subscriptions = await _serverDisconnectedStream.GetAllSubscriptionHandles();
             var subscriptionTasks = new List<Task>();
             foreach (var subscription in subscriptions)
@@ -82,8 +81,7 @@ namespace SignalR.Orleans.Clients
         public async Task OnConnect(Guid serverId)
         {
             State.ServerId = serverId;
-            _serverStream = _streamProvider.GetStream<ClientMessage>(State.ServerId, Constants.SERVERS_STREAM);
-            _serverDisconnectedStream = _streamProvider.GetStream<Guid>(State.ServerId, Constants.SERVER_DISCONNECTED);
+            SetupStreams();
             _serverDisconnectedSubscription = await _serverDisconnectedStream.SubscribeAsync(async _ => await OnDisconnect("server-disconnected"));
             await WriteStateAsync();
         }
@@ -103,6 +101,12 @@ namespace SignalR.Orleans.Clients
                 await _serverDisconnectedSubscription.UnsubscribeAsync();
 
             DeactivateOnIdle();
+        }
+
+        private void SetupStreams()
+        {
+            _serverStream = _streamProvider.GetStreamReplicaRandom<ClientMessage>(State.ServerId, Constants.SERVERS_STREAM, Constants.STREAM_SEND_REPLICAS);
+            _serverDisconnectedStream = _streamProvider.GetStream<Guid>(State.ServerId, Constants.SERVER_DISCONNECTED);
         }
     }
 }

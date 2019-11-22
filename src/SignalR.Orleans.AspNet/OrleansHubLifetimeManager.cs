@@ -22,10 +22,10 @@ namespace SignalR.Orleans
         private readonly IClusterClientProvider _clusterClientProvider;
         private readonly Guid _serverId;
         private IStreamProvider _streamProvider;
-        private IAsyncStream<ClientMessage> _serverStream;
         private IAsyncStream<AllMessage> _allStream;
         private readonly string _hubName;
         private readonly SemaphoreSlim _streamSetupLock = new SemaphoreSlim(1);
+        private StreamReplicaContainer<ClientMessage> _serverStreamsReplicaContainer;
 
         public OrleansHubLifetimeManager(
             ILogger<OrleansHubLifetimeManager<THub>> logger,
@@ -36,7 +36,7 @@ namespace SignalR.Orleans
             _hubName = hubType.IsInterface && hubType.Name.StartsWith("I")
                 ? hubType.Name.Substring(1)
                 : hubType.Name;
-            _serverId = Guid.NewGuid();
+            _serverId = Guid.NewGuid(); // todo: include machine name
             _logger = logger;
             _clusterClientProvider = clusterClientProvider;
             _ = EnsureStreamSetup();
@@ -72,14 +72,15 @@ namespace SignalR.Orleans
             _logger.LogInformation("Initializing: Orleans HubLifetimeManager {hubName} (serverId: {serverId})...", _hubName, _serverId);
 
             _streamProvider = _clusterClientProvider.GetClient().GetStreamProvider(Constants.STREAM_PROVIDER);
-            _serverStream = _streamProvider.GetStream<ClientMessage>(_serverId, Constants.SERVERS_STREAM);
+            _serverStreamsReplicaContainer = new StreamReplicaContainer<ClientMessage>(_streamProvider, _serverId, Constants.SERVERS_STREAM, Constants.STREAM_SEND_REPLICAS);
+
             _allStream = _streamProvider.GetStream<AllMessage>(Constants.ALL_STREAM_ID, Utils.BuildStreamHubName(_hubName));
             _timer = new Timer(_ => Task.Run(HeartbeatCheck), null, TimeSpan.FromSeconds(0), TimeSpan.FromMinutes(Constants.HEARTBEAT_PULSE_IN_MINUTES));
 
             var subscribeTasks = new List<Task>
             {
                 _allStream.SubscribeAsync((msg, _) => ProcessAllMessage(msg)),
-                _serverStream.SubscribeAsync((msg, _) => ProcessServerMessage(msg))
+                _serverStreamsReplicaContainer.SubscribeAsync((msg, _) => ProcessServerMessage(msg))
             };
 
             await Task.WhenAll(subscribeTasks);
@@ -259,9 +260,9 @@ namespace SignalR.Orleans
         public void Dispose()
         {
             var toUnsubscribe = new List<Task>();
-            if (_serverStream != null)
+            if (_serverStreamsReplicaContainer != null)
             {
-                var subscriptions = _serverStream.GetAllSubscriptionHandles().Result;
+                var subscriptions = _serverStreamsReplicaContainer.GetAllSubscriptionHandles().Result;
                 toUnsubscribe.AddRange(subscriptions.Select(s => s.UnsubscribeAsync()));
             }
 

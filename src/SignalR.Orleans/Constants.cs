@@ -16,6 +16,7 @@ namespace SignalR.Orleans
         public static readonly Guid CLIENT_DISCONNECT_STREAM_ID = Guid.Parse("bdcff7e7-3734-48ab-8599-17d915011b85");
         public static readonly Guid ALL_STREAM_ID = Guid.Parse("fbe53ecd-d896-4916-8281-5571d6733566");
 
+        internal const int STREAM_SEND_REPLICAS = 10; // todo: make configurable instead
         internal const int HEARTBEAT_PULSE_IN_MINUTES = 30;
         internal const int SERVERDIRECTORY_CLEANUP_IN_MINUTES = HEARTBEAT_PULSE_IN_MINUTES * 3;
     }
