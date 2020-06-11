@@ -123,6 +123,9 @@ namespace SignalR.Orleans
                 var client = _clusterClientProvider.GetClient().GetClientGrain(_hubName, connection.ConnectionId);
                 await client.OnConnect(_serverId);
 
+                _logger.LogInformation("Connected {connectionId} on hub {hubName} with userId {userId} (serverId: {serverId})",
+                    connection.ConnectionId, _hubName, connection.UserIdentifier, _serverId);
+
                 if (connection.User.Identity.IsAuthenticated)
                 {
                     var user = _clusterClientProvider.GetClient().GetUserGrain(_hubName, connection.UserIdentifier);
@@ -131,7 +134,8 @@ namespace SignalR.Orleans
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error has occurred 'OnConnectedAsync' while adding connection {connectionId} [hub: {hubName} (serverId: {serverId})]", connection?.ConnectionId, _hubName, _serverId);
+                _logger.LogError(ex, "An error has occurred 'OnConnectedAsync' while adding connection {connectionId} on hub {hubName} with userId {userId} (serverId: {serverId})",
+                    connection?.ConnectionId, _hubName, connection?.UserIdentifier, _serverId);
                 _connections.Remove(connection);
                 throw;
             }
@@ -141,10 +145,10 @@ namespace SignalR.Orleans
         {
             try
             {
-                _logger.LogDebug("Handle disconnection {connectionId} on hub {hubName} (serverId: {serverId})",
-                    connection.ConnectionId, _hubName, _serverId);
+                _logger.LogInformation("Disconnection {connectionId} on hub {hubName} with userId {userId} (serverId: {serverId})",
+                    connection.ConnectionId, _hubName, connection.UserIdentifier, _serverId);
                 var client = _clusterClientProvider.GetClient().GetClientGrain(_hubName, connection.ConnectionId);
-                await client.OnDisconnect("hub-disconnect");
+                await client.OnDisconnect(ClientDisconnectReasons.HubDisconnect);
             }
             finally
             {

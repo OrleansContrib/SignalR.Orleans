@@ -1,13 +1,13 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using System;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.Extensions.Logging;
 using Orleans;
 using SignalR.Orleans.Tests.AspnetSignalR;
 using SignalR.Orleans.Tests.Models;
+using System;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace SignalR.Orleans.Tests
@@ -241,6 +241,7 @@ namespace SignalR.Orleans.Tests
                 await manager.SendGroupAsync(groupName, "Hello", new object[] { "World" });
                 await manager.SendGroupAsync(groupName, "Hello", new object[] { "World" });
 
+                await Task.Delay(1);
                 connectionsCount = await grain.Count();
                 Assert.Equal(1, connectionsCount);
             }
