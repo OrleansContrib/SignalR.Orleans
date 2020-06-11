@@ -1,12 +1,13 @@
-﻿using System.Buffers;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.SignalR.Protocol;
+﻿using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.Extensions.Logging;
 using Orleans;
 using Orleans.Concurrency;
+using Orleans.Runtime;
 using Orleans.Streams;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace SignalR.Orleans.Core
 {
@@ -15,9 +16,11 @@ namespace SignalR.Orleans.Core
     {
         private readonly ILogger _logger;
         private IStreamProvider _streamProvider;
-        private Dictionary<string, StreamSubscriptionHandle<string>> _connectionStreamHandles;
+        private readonly HashSet<string> _connectionStreamToUnsubscribe = new HashSet<string>();
+        private readonly TimeSpan _cleanupPeriod = TimeSpan.Parse(Constants.CONNECTION_STREAM_CLEANUP);
 
         protected ConnectionGrainKey KeyData;
+        private IDisposable _cleanupTimer;
 
         internal ConnectionGrain(ILogger logger)
         {
@@ -27,48 +30,62 @@ namespace SignalR.Orleans.Core
         public override async Task OnActivateAsync()
         {
             KeyData = new ConnectionGrainKey(this.GetPrimaryKeyString());
-            _connectionStreamHandles = new Dictionary<string, StreamSubscriptionHandle<string>>();
+            _logger.Info("Activate {hubName} ({groupId})", KeyData.HubName, KeyData.Id);
             _streamProvider = GetStreamProvider(Constants.STREAM_PROVIDER);
-            var subscriptionTasks = new List<Task>();
+
+            _cleanupTimer = RegisterTimer(
+                _ => CleanupStreams(),
+                State,
+                _cleanupPeriod,
+                _cleanupPeriod);
+
+            if (State.Connections.Count == 0)
+            {
+                return;
+            }
+
+            var subscriptionTasks = new Dictionary<string, Task<StreamSubscriptionHandle<string>>>();
             foreach (var connection in State.Connections)
             {
-                var clientDisconnectStream = _streamProvider.GetStream<string>(Constants.CLIENT_DISCONNECT_STREAM_ID, connection);
+                var clientDisconnectStream = GetClientDisconnectStream(connection);
                 var subscriptions = await clientDisconnectStream.GetAllSubscriptionHandles();
-                foreach (var subscription in subscriptions)
-                {
-                    subscriptionTasks.Add(subscription.ResumeAsync(async (connectionId, _) => await Remove(connectionId)));
-                }
+                var subscription = subscriptions.FirstOrDefault();
+                if (subscription == null)
+                    continue;
+                subscriptionTasks.Add(connection, subscription.ResumeAsync(async (connectionId, _) => await Remove(connectionId)));
             }
-            await Task.WhenAll(subscriptionTasks);
+            await Task.WhenAll(subscriptionTasks.Values);
+        }
+
+        public override Task OnDeactivateAsync()
+        {
+            _logger.Info("Deactivate {hubName} ({groupId})", KeyData.HubName, KeyData.Id);
+            _cleanupTimer?.Dispose();
+            return CleanupStreams();
         }
 
         public virtual async Task Add(string connectionId)
         {
-            var shouldWriteState = State.Connections.Add(connectionId);
-            if (!_connectionStreamHandles.ContainsKey(connectionId))
-            {
-                var clientDisconnectStream = _streamProvider.GetStream<string>(Constants.CLIENT_DISCONNECT_STREAM_ID, connectionId);
-                var subscription = await clientDisconnectStream.SubscribeAsync(async (connId, _) => await Remove(connId));
-                _connectionStreamHandles[connectionId] = subscription;
-            }
+            if (!State.Connections.Add(connectionId))
+                return;
+            _logger.Info("Added connection '{connectionId}' on {hubName} ({groupId}). {connectionsCount} connection(s)",
+                connectionId, KeyData.HubName, KeyData.Id, State.Connections.Count);
 
-            if (shouldWriteState)
-                await WriteStateAsync();
+            var clientDisconnectStream = GetClientDisconnectStream(connectionId);
+            await clientDisconnectStream.SubscribeAsync(async (connId, _) => await Remove(connId));
+            await WriteStateAsync();
         }
 
         public virtual async Task Remove(string connectionId)
         {
             var shouldWriteState = State.Connections.Remove(connectionId);
-            if (_connectionStreamHandles.TryGetValue(connectionId, out var stream))
-            {
-                await stream.UnsubscribeAsync();
-                _connectionStreamHandles.Remove(connectionId);
-            }
+            _logger.Info("Removing connection '{connectionId}' on {hubName} ({groupId}). Remaining {connectionsCount} connection(s), was found: {isConnectionFound}",
+                connectionId, KeyData.HubName, KeyData.Id, State.Connections.Count, shouldWriteState);
+            _connectionStreamToUnsubscribe.Add(connectionId);
 
             if (State.Connections.Count == 0)
             {
                 await ClearStateAsync();
-                DeactivateOnIdle();
             }
             else if (shouldWriteState)
             {
@@ -77,9 +94,7 @@ namespace SignalR.Orleans.Core
         }
 
         public virtual Task Send(Immutable<InvocationMessage> message)
-        {
-            return SendAll(message, State.Connections);
-        }
+            => SendAll(message, State.Connections);
 
         public Task SendExcept(string methodName, object[] args, IReadOnlyList<string> excludedConnectionIds)
         {
@@ -88,32 +103,38 @@ namespace SignalR.Orleans.Core
         }
 
         public Task<int> Count()
-        {
-            return Task.FromResult(State.Connections.Count);
-        }
+            => Task.FromResult(State.Connections.Count);
 
         protected Task SendAll(Immutable<InvocationMessage> message, IReadOnlyCollection<string> connections)
         {
-            _logger.LogDebug("Sending message to {hubName}.{targetMethod} on group {groupId} to {connectionsCount} connection(s)",
+            _logger.Debug("Sending message to {hubName}.{targetMethod} on group {groupId} to {connectionsCount} connection(s)",
                 KeyData.HubName, message.Value.Target, KeyData.Id, connections.Count);
 
-            var tasks = ArrayPool<Task>.Shared.Rent(connections.Count);
-            try
+            foreach (var connection in connections)
             {
-                int index = 0;
-                foreach (var connection in connections)
-                {
-                    var client = GrainFactory.GetClientGrain(KeyData.HubName, connection);
-                    tasks[index++] = client.Send(message);
-                }
-
-                return Task.WhenAll(tasks.Where(x => x != null).ToArray());
+                GrainFactory.GetClientGrain(KeyData.HubName, connection)
+                    .InvokeOneWay(x => x.Send(message));
             }
-            finally
+
+            return Task.CompletedTask;
+        }
+
+        private async Task CleanupStreams()
+        {
+            if (_connectionStreamToUnsubscribe.Count > 0)
             {
-                ArrayPool<Task>.Shared.Return(tasks);
+                foreach (var connectionId in _connectionStreamToUnsubscribe.ToList())
+                {
+                    var handles = await GetClientDisconnectStream(connectionId).GetAllSubscriptionHandles();
+                    var unsubscribes = handles.Select(x => x.UnsubscribeAsync()).ToList();
+                    await Task.WhenAll(unsubscribes);
+                    _connectionStreamToUnsubscribe.Remove(connectionId);
+                }
             }
         }
+
+        private IAsyncStream<string> GetClientDisconnectStream(string connectionId)
+            => _streamProvider.GetStream<string>(Constants.CLIENT_DISCONNECT_STREAM_ID, connectionId);
     }
 
     internal abstract class ConnectionState

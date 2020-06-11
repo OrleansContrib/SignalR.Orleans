@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Orleans;
 using Orleans.Providers;
 using Orleans.Streams;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace SignalR.Orleans.Core
 {
@@ -26,26 +26,33 @@ namespace SignalR.Orleans.Core
         private IStreamProvider _streamProvider;
 
         private readonly ILogger<ServerDirectoryGrain> _logger;
+        private IDisposable _cleanupTimer;
 
         public ServerDirectoryGrain(ILogger<ServerDirectoryGrain> logger)
         {
             _logger = logger;
         }
 
-        public override async Task OnActivateAsync()
+        public override Task OnActivateAsync()
         {
             _streamProvider = GetStreamProvider(Constants.STREAM_PROVIDER);
 
             _logger.LogInformation("Available servers {serverIds}",
                 string.Join(", ", State.Servers?.Count > 0 ? string.Join(", ", State.Servers) : "empty"));
 
-            RegisterTimer(
-               ValidateAndCleanUp,
-               State,
-               TimeSpan.FromSeconds(15),
-               TimeSpan.FromMinutes(Constants.SERVERDIRECTORY_CLEANUP_IN_MINUTES));
+            _cleanupTimer = RegisterTimer(
+                ValidateAndCleanUp,
+                State,
+                TimeSpan.FromSeconds(15),
+                TimeSpan.FromMinutes(Constants.SERVERDIRECTORY_CLEANUP_IN_MINUTES));
 
-            await base.OnActivateAsync();
+            return Task.CompletedTask;
+        }
+
+        public override Task OnDeactivateAsync()
+        {
+            _cleanupTimer?.Dispose();
+            return Task.CompletedTask;
         }
 
         public Task Heartbeat(Guid serverId)

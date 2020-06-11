@@ -1,15 +1,15 @@
 // COPIED AND REFACTORED :: Microsoft.AspNetCore.SignalR.Tests
 
+using Microsoft.AspNetCore.Connections;
+using Microsoft.AspNetCore.Connections.Features;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR.Protocol;
 using System;
 using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Connections;
-using Microsoft.AspNetCore.Connections.Features;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.AspNetCore.SignalR.Protocol;
 
 namespace SignalR.Orleans.Tests.AspnetSignalR
 {
@@ -114,10 +114,8 @@ namespace SignalR.Orleans.Tests.AspnetSignalR
             }
         }
 
-        public Task<string> SendInvocationAsync(string methodName, params object[] args)
-        {
-            return SendInvocationAsync(methodName, nonBlocking: false, args: args);
-        }
+        public Task<string> SendInvocationAsync(string methodName, params object[] args) 
+            => SendInvocationAsync(methodName, nonBlocking: false, args: args);
 
         public Task<string> SendInvocationAsync(string methodName, bool nonBlocking, params object[] args)
         {
@@ -217,28 +215,17 @@ namespace SignalR.Orleans.Tests.AspnetSignalR
             Connection.Application.Output.Complete();
         }
 
-        private static string GetInvocationId()
-        {
-            return Guid.NewGuid().ToString("N");
-        }
+        private static string GetInvocationId() 
+            => Guid.NewGuid().ToString("N");
 
         private class DefaultInvocationBinder : IInvocationBinder
         {
-            public IReadOnlyList<Type> GetParameterTypes(string methodName)
-            {
-                // TODO: Possibly support actual client methods
-                return new[] { typeof(object) };
-            }
+            public IReadOnlyList<Type> GetParameterTypes(string methodName) 
+                => new[] { typeof(object) };  // TODO: Possibly support actual client methods
 
-            public Type GetReturnType(string invocationId)
-            {
-                return typeof(object);
-            }
+            public Type GetStreamItemType(string streamId) => throw new NotImplementedException();
 
-            public Type GetStreamItemType(string streamId)
-            {
-                throw new NotImplementedException();
-            }
+            public Type GetReturnType(string invocationId) => typeof(object);
         }
 
         public TransferFormat SupportedFormats { get; set; } = TransferFormat.Text | TransferFormat.Binary;

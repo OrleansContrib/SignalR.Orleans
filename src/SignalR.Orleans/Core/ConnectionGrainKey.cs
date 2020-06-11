@@ -17,10 +17,9 @@ namespace SignalR.Orleans.Core
 
         public void Parse(string primaryKey)
         {
-            var pkArray = primaryKey.Split(':');
-
-            HubName = pkArray[0];
-            Id = pkArray[1];
+            var separatorIndex = primaryKey.IndexOf(':');
+            HubName = primaryKey.Substring(0, separatorIndex);
+            Id = primaryKey.Substring(separatorIndex + 1);
         }
 
         public static string Build(string hubName, string key)

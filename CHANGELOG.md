@@ -2,17 +2,38 @@
 
 [_vNext_](https://github.com/sketch7/SignalR.Orleans/compare/1.0.0...1.1.0) (2019-X-X)
 
-## [2.0.0-rc3](https://github.com/sketch7/SignalR.Orleans/compare/2.0.0-rc2...2.0.0-rc3) (2019-11-21)
+
+## [2.0.0-rc3](https://github.com/sketch7/SignalR.Orleans/compare/2.0.0-rc2...2.0.0-rc3) (2020-06-11)
 
 ### Features
 
+- **netcore:** netcore 3.1 support
+- **orleans:** Orleans 3.2 update
 - **perf:** streams sharding for sending messages to servers - Should fix issue when having high throughput to a specific server it starts timing out
+- **client:** Add logs on `OnConnectedAsync`
+
+### Bug Fixes
+
+- **client:** handle subscribe correctly for `server-disconnected`
+- **connection:** remove `Task` pooling and instead use one way invokes - was noticing timeouts stating after 30sec before 30sec (e.g. ~100ms) in several cases
+- **connection:** on client disconnect defer `Remove` which potentially avoiding deadlock
+- **connection:** fix key parsing when key was containing `:` group was incorrect
+- **server directory:** dispose timer on deactivate
+- **connection:** cleanup streams via timer instead of deferred timer (since it was timing out PubSub) and not triggering deactivation on connection remove
+- **connection:** cleanup streams subscriptions when resume
+- **client:** cleanup streams subscriptions when resume
+- **client:** only clean Client Grain state when `hub-disconnect` gracefully, otherwise don't so it might be possible to recover grain - if for some reason the hub connection is still active but the grain doesn't
+- **client:** avoid reusing stream subscription handlers - attempt fix for `Handle is no longer valid. It has been used to unsubscribe or resume.`
+
+### BREAKING CHANGES
+
+- **connection:** `Send*` will not await a response and now its fire and forget
 
 ## 2.0.0-rc2 (2019-11-21)
 
 ### Features
 
-- **netcore:** netcore3 support
+- **netcore:** netcore 3 support
 
 ## 1.0.0-rc1 (2019-11-21)
 
