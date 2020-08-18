@@ -3,6 +3,12 @@
 [_vNext_](https://github.com/sketch7/SignalR.Orleans/compare/1.0.0...1.1.0) (2019-X-X)
 
 
+## [2.0.0-rc5](https://github.com/sketch7/SignalR.Orleans/compare/2.0.0-rc4...2.0.0-rc5) (2020-08-18)
+
+### Bug Fixes
+
+- **client:** attempt to fix extension not installed in grain
+
 ## [2.0.0-rc4](https://github.com/sketch7/SignalR.Orleans/compare/2.0.0-rc3...2.0.0-rc4) (2020-06-11)
 
 ### Features

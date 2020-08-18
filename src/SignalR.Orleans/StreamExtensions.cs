@@ -28,6 +28,26 @@ namespace SignalR.Orleans
         /// <returns></returns>
         public static IAsyncStream<T> GetStreamReplicaRandom<T>(this IStreamProvider streamProvider, Guid streamId, string streamNamespace, int replicas)
             => streamProvider.GetStream<T>(BuildReplicaStreamName(streamId, Randomizer.Next(0, replicas)), streamNamespace);
+
+        public static async Task ResumeAllSubscriptionHandlers<T>(this IAsyncStream<T> stream, Func<T, StreamSequenceToken, Task> onNextAsync)
+        {
+            var subscriptions = await stream.GetAllSubscriptionHandles();
+            if (subscriptions?.Count > 0)
+            {
+                var tasks = subscriptions.Select(x => x.ResumeAsync(onNextAsync));
+                await Task.WhenAll(tasks);
+            }
+        }
+
+        public static async Task UnsubscribeAllSubscriptionHandlers<T>(this IAsyncStream<T> stream)
+        {
+            var subscriptions = await stream.GetAllSubscriptionHandles();
+            if (subscriptions?.Count > 0)
+            {
+                var tasks = subscriptions.Select(x => x.UnsubscribeAsync());
+                await Task.WhenAll(tasks);
+            }
+        }
     }
 
     /// <summary>

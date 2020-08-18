@@ -44,17 +44,11 @@ namespace SignalR.Orleans.Core
                 return;
             }
 
-            var subscriptionTasks = new Dictionary<string, Task<StreamSubscriptionHandle<string>>>();
             foreach (var connection in State.Connections)
             {
                 var clientDisconnectStream = GetClientDisconnectStream(connection);
-                var subscriptions = await clientDisconnectStream.GetAllSubscriptionHandles();
-                var subscription = subscriptions.FirstOrDefault();
-                if (subscription == null)
-                    continue;
-                subscriptionTasks.Add(connection, subscription.ResumeAsync(async (connectionId, _) => await Remove(connectionId)));
+                await clientDisconnectStream.ResumeAllSubscriptionHandlers(async (connectionId, _) => await Remove(connectionId));
             }
-            await Task.WhenAll(subscriptionTasks.Values);
         }
 
         public override Task OnDeactivateAsync()
@@ -125,9 +119,7 @@ namespace SignalR.Orleans.Core
             {
                 foreach (var connectionId in _connectionStreamToUnsubscribe.ToList())
                 {
-                    var handles = await GetClientDisconnectStream(connectionId).GetAllSubscriptionHandles();
-                    var unsubscribes = handles.Select(x => x.UnsubscribeAsync()).ToList();
-                    await Task.WhenAll(unsubscribes);
+                    await GetClientDisconnectStream(connectionId).UnsubscribeAllSubscriptionHandlers();
                     _connectionStreamToUnsubscribe.Remove(connectionId);
                 }
             }

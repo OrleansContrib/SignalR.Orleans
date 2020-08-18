@@ -7,7 +7,6 @@ using Orleans.Streams;
 using SignalR.Orleans.Core;
 using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace SignalR.Orleans.Clients
@@ -28,7 +27,6 @@ namespace SignalR.Orleans.Clients
         private IAsyncStream<ClientMessage> _serverStream;
         private IAsyncStream<Guid> _serverDisconnectedStream;
         private ConnectionGrainKey _keyData;
-        private StreamSubscriptionHandle<Guid> _serverDisconnectedSubscription;
         private const int _maxFailAttempts = 3;
         private int _failAttempts;
 
@@ -46,10 +44,10 @@ namespace SignalR.Orleans.Clients
                 return;
 
             SetupStreams();
-            var subscriptions = await _serverDisconnectedStream.GetAllSubscriptionHandles();
-            var subscription = subscriptions.FirstOrDefault();
-            if (subscription != null)
-                _serverDisconnectedSubscription = await subscription.ResumeAsync(async (serverId, _) => await OnDisconnect(ClientDisconnectReasons.ServerDisconnected));
+
+            await _serverDisconnectedStream.ResumeAllSubscriptionHandlers(
+                async (serverId, _) => await OnDisconnect(ClientDisconnectReasons.ServerDisconnected)
+            );
         }
 
         public async Task Send(Immutable<InvocationMessage> message)
@@ -78,7 +76,7 @@ namespace SignalR.Orleans.Clients
         {
             State.ServerId = serverId;
             SetupStreams();
-            _serverDisconnectedSubscription = await _serverDisconnectedStream.SubscribeAsync(async (connId, _) => await OnDisconnect(ClientDisconnectReasons.ServerDisconnected));
+            await _serverDisconnectedStream.SubscribeAsync(async (connId, _) => await OnDisconnect(ClientDisconnectReasons.ServerDisconnected));
             await WriteStateAsync();
         }
 
@@ -96,9 +94,7 @@ namespace SignalR.Orleans.Clients
             if (reason == ClientDisconnectReasons.HubDisconnect) // only cleanup if hub disconnects gracefully - otherwise don't so it can recover
                 await ClearStateAsync();
 
-            if (_serverDisconnectedSubscription != null)
-                await _serverDisconnectedSubscription.UnsubscribeAsync();
-
+            await _serverDisconnectedStream.UnsubscribeAllSubscriptionHandlers();
             DeactivateOnIdle();
         }
 
