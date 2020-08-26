@@ -94,7 +94,8 @@ namespace SignalR.Orleans.Clients
             if (reason == ClientDisconnectReasons.HubDisconnect) // only cleanup if hub disconnects gracefully - otherwise don't so it can recover
                 await ClearStateAsync();
 
-            await _serverDisconnectedStream.UnsubscribeAllSubscriptionHandlers();
+            if (_serverDisconnectedStream != null)
+                await _serverDisconnectedStream.UnsubscribeAllSubscriptionHandlers();
             DeactivateOnIdle();
         }
 
