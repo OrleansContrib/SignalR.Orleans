@@ -1,26 +1,29 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>netcoreapp3.1</TargetFramework>
+	</PropertyGroup>
 
-  <PropertyGroup>
-    <PackageId>SignalR.Orleans</PackageId>
-    <Title>SignalR.Orleans - Orleans backplane for SignalR Core</Title>
-    <Description>Orleans backplane for SignalR Core.</Description>
-    <PackageTags>$(PackageTags) AspNetCore</PackageTags>
-    <PackageReleaseNotes></PackageReleaseNotes>
-    <IncludeSymbols>true</IncludeSymbols>
-    <IncludeSource>true</IncludeSource>
-    <PackageVersion>1.5.0</PackageVersion>
-  </PropertyGroup>
+	<PropertyGroup>
+		<PackageId>SignalR.Orleans</PackageId>
+		<Title>SignalR.Orleans - Orleans backplane for SignalR Core</Title>
+		<Description>Orleans backplane for SignalR Core.</Description>
+		<PackageTags>$(PackageTags) AspNetCore</PackageTags>
+		<PackageReleaseNotes></PackageReleaseNotes>
+		<IncludeSymbols>true</IncludeSymbols>
+		<IncludeSource>true</IncludeSource>
+		<PackageVersion>1.5.0</PackageVersion>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Core" Version="$(SignalRVersion)" />
-    <PackageReference Include="Microsoft.Orleans.Core" Version="$(OrleansCoreVersion)" />
-    <PackageReference Include="Microsoft.Orleans.OrleansProviders" Version="$(OrleansProvidersVersion)" />
-    <PackageReference Include="Microsoft.Orleans.OrleansCodeGenerator.Build" Version="$(OrleansCodeGeneratorVersion)" />
-    <PackageReference Include="Microsoft.Orleans.Runtime.Abstractions" Version="$(OrleansRuntimeAbstractionsVersion)" />
-  </ItemGroup>
-
+	<ItemGroup>
+		<!-- see https://gist.github.com/tebeco/a6e0d9a3885a0a36e702795219bd4fe9 -->
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+		<PackageReference Include="Microsoft.Orleans.CodeGenerator.MSBuild" Version="$(OrleansCodeGeneratorVersion)">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.Orleans.Core" Version="$(OrleansCoreVersion)" />
+		<PackageReference Include="Microsoft.Orleans.OrleansProviders" Version="$(OrleansProvidersVersion)" />
+		<PackageReference Include="Microsoft.Orleans.Runtime.Abstractions" Version="$(OrleansRuntimeAbstractionsVersion)" />
+	</ItemGroup>
 </Project>

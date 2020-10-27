@@ -21,6 +21,7 @@ namespace SignalR.Orleans.Clients
     }
 
     [StorageProvider(ProviderName = Constants.STORAGE_PROVIDER)]
+    [Reentrant]
     internal class ClientGrain : Grain<ClientState>, IClientGrain
     {
         private readonly ILogger<ClientGrain> _logger;
