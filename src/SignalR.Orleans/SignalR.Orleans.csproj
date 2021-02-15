@@ -12,7 +12,7 @@
 		<PackageReleaseNotes></PackageReleaseNotes>
 		<IncludeSymbols>true</IncludeSymbols>
 		<IncludeSource>true</IncludeSource>
-		<PackageVersion>2.0.0</PackageVersion>
+		<PackageVersion>2.0.1</PackageVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
