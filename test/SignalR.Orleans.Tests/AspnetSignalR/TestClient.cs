@@ -234,6 +234,11 @@ namespace SignalR.Orleans.Tests.AspnetSignalR
             {
                 return typeof(object);
             }
+
+            public Type GetStreamItemType(string streamId)
+            {
+                return typeof(object);
+            }
         }
 
         public TransferFormat SupportedFormats { get; set; } = TransferFormat.Text | TransferFormat.Binary;

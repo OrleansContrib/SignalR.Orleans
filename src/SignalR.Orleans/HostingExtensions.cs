@@ -1,11 +1,10 @@
-using System;
-using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Orleans.Runtime;
 using Orleans.Storage;
 using SignalR.Orleans;
 using SignalR.Orleans.Clients;
+using System;
 
 // ReSharper disable once CheckNamespace
 namespace Orleans.Hosting
@@ -18,6 +17,9 @@ namespace Orleans.Hosting
             configure?.Invoke(cfg);
 
             cfg.ConfigureBuilder?.Invoke(builder, new HostBuilderConfig());
+
+            try { builder.AddMemoryGrainStorage(Constants.PUBSUB_PROVIDER); }
+            catch { /** PubSubStore was already added. Do nothing. **/ }
 
             try { builder.AddMemoryGrainStorage(Constants.STORAGE_PROVIDER); }
             catch { /** Grain storage provider was already added. Do nothing. **/ }
@@ -52,8 +54,8 @@ namespace Orleans.Hosting
 
     internal class SignalRConfigurationValidator : IConfigurationValidator
     {
-        private readonly IServiceProvider _sp;
         private readonly ILogger _logger;
+        private readonly IServiceProvider _sp;
 
         public SignalRConfigurationValidator(IServiceProvider serviceProvider)
         {
