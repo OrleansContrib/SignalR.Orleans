@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>netcoreapp3.1</TargetFramework>
+		<TargetFramework>net5.0</TargetFramework>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -12,7 +12,7 @@
 		<PackageReleaseNotes></PackageReleaseNotes>
 		<IncludeSymbols>true</IncludeSymbols>
 		<IncludeSource>true</IncludeSource>
-		<PackageVersion>1.5.0</PackageVersion>
+		<PackageVersion>2.0.0</PackageVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
