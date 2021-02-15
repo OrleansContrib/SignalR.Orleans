@@ -37,11 +37,13 @@ Paket:
 ## Silo
 We need to configure the Orleans Silo with the below:
 * Use `.UseSignalR()` on `ISiloHostBuilder`.
+* Make sure to call `RegisterHub<THub>()` where `THub` is the type of the Hub you want to be added to the backplane.
 
 ***Example***
 ```cs
 var silo = new SiloHostBuilder()
   .UseSignalR()
+  .RegisterHub<MyHub>() // You need to call this per `Hub` type.
   .AddMemoryGrainStorage("PubSubStore") // You can use any other storage provider as long as you have one registered as "PubSubStore".
   .Build();
 
@@ -62,6 +64,7 @@ Optional configuration to override the default implementation for both providers
       .AddMemoryGrainStorage(config.StorageProvider);
   };
 })
+.RegisterHub<MyHub>()
 ```
 
 ## Client
