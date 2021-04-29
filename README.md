@@ -20,6 +20,7 @@ Installation is performed via [NuGet](https://www.nuget.org/packages/Sketch7.Sig
 ## Netcore support
 - Use 1.x for netcore2
 - Use 2.x for netcore3
+- Use 3.x for netcore5
 
 From Package Manager:
 
@@ -70,15 +71,17 @@ Now your SignalR application needs to connect to the Orleans Cluster by using an
 
 ***Example***
 ```cs
-var client = new ClientBuilder()
-  .UseSignalR()
-  .Build();
+			var hostBuilder = new HostBuilder()
+				.UseOrleans((ctx, builder) =>
+				{
+					builder.UseSignalR()
+				});
 
-await client.Connect();
+hostBuilder.RunConsoleAsync();
 ```
 
 Somewhere in your `Startup.cs`:
-* Add `IClusterClient` (created in the above example) to `IServiceCollection`.
+* Add the following in `ConfigureServices`.
 * Use `.AddSignalR()` on `IServiceCollection` (this is part of `Microsoft.AspNetCore.SignalR` nuget package).
 * Use `AddOrleans()` on `.AddSignalR()`.
 
@@ -88,7 +91,6 @@ public void ConfigureServices(IServiceCollection services)
 {
   ...
   services
-    .AddSingleton<IClusterClient>(client)
     .AddSignalR()
     .AddOrleans();
   ...

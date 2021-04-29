@@ -2,8 +2,12 @@
 
   <PropertyGroup>
     <PackageId>Sketch7.SignalR.Orleans</PackageId>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
 
   <PropertyGroup>
     <Title>SignalR.Orleans - Orleans backplane for SignalR Core</Title>
@@ -21,7 +25,6 @@
     <PackageReference Include="Microsoft.Orleans.Core" Version="$(OrleansVersion)" />
     <PackageReference Include="Microsoft.Orleans.OrleansProviders" Version="$(OrleansVersion)" />
     <PackageReference Include="Microsoft.Orleans.Runtime.Abstractions" Version="$(OrleansVersion)" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Core" Version="$(SignalRVersion)" />
     <PackageReference Include="Orleans.Streams.Utils" Version="$(OrleansStreamsUtilsVersion)" />
   </ItemGroup>
 

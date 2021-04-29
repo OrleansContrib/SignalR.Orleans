@@ -2,6 +2,13 @@
 
 [_vNext_](https://github.com/sketch7/SignalR.Orleans/compare/1.0.0...1.1.0) (2019-X-X)
 
+## [3.0.0](https://github.com/sketch7/SignalR.Orleans/compare/2.0.0-rc4...3.0.0) (2021-04-29)
+
+### Features
+
+- **netcore:** netcore 5.0 support
+- **orleans:** Orleans 3.4.2 update
+- **signalr:** SignalR 5.0.5 update
 
 ## [2.0.0](https://github.com/sketch7/SignalR.Orleans/compare/2.0.0-rc6...2.0.0) (2020-11-16)
 No new changes - release as stable release
