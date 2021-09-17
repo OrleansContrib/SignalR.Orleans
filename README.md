@@ -119,11 +119,12 @@ public class UserNotificationGrain : Grain<UserNotificationState>, IUserNotifica
   }
 }
 ```
-# Example configuration cohosting aspnetcore website and orleans
+
+# Complete examples
+
+### Cohosting aspnetcore website and orleans
 
 ```cs
-using System.Linq;
-using FFT.SignalServer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -157,11 +158,15 @@ var host = Host.CreateDefaultBuilder(args)
 
     webBuilder.Configure((ctx, app) =>
     {
+      // Adds response compression for use by the SignalR hubs
+      app.UseResponseCompression();
+      
       // Map SignalR hub endpoints
       app.UseEndpoints(endpoints =>
       {
-        endpoints.MapHub<SignalsHub>("/signals");
-        endpoints.MapHub<DataFeedHub>("/datafeed");
+        endpoints.MapHub<MyHubType1>("/hub1"); // use your own hub types
+        endpoints.MapHub<MyHubType2>("/hub2"); // use your own hub types
+        // ... etc
       });
     });
   })
@@ -189,8 +194,9 @@ var host = Host.CreateDefaultBuilder(args)
       })
 
       // Allows Orleans grains to inject IHubContext<HubType>
-      .RegisterHub<SignalsHub>()
-      .RegisterHub<DataFeedHub>();
+      .RegisterHub<MyHubType1>()
+      .RegisterHub<MyHubType2>();
+      // ... etc
   })
   .UseConsoleLifetime()
   .Build();
