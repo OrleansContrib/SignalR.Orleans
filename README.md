@@ -120,5 +120,90 @@ public class UserNotificationGrain : Grain<UserNotificationState>, IUserNotifica
 }
 ```
 
+# Complete examples
+
+### Cohosting aspnetcore website and orleans
+
+```cs
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Orleans;
+using Orleans.Hosting;
+
+// Cohosting aspnetcore website and Orleans with signalR
+var host = Host.CreateDefaultBuilder(args)
+
+  // Add the webhost with SignalR configured.
+  .ConfigureWebHostDefaults(webBuilder =>
+  {
+    webBuilder.ConfigureServices((webBuilderContext, services) =>
+    {
+      // Add response compression used by the SignalR hubs.
+      services.AddResponseCompression(opts =>
+      {
+        opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+            new[] { "application/octet-stream" });
+      });
+
+      // Adds SignalR hubs to the aspnetcore website 
+      services.AddSignalR(options =>
+      {
+      })
+      .AddOrleans(); // Tells SignalR to use Orleans as the backplane.
+    });
+
+    webBuilder.Configure((ctx, app) =>
+    {
+      // Adds response compression for use by the SignalR hubs
+      app.UseResponseCompression();
+      
+      // Map SignalR hub endpoints
+      app.UseEndpoints(endpoints =>
+      {
+        endpoints.MapHub<MyHubType1>("/hub1"); // use your own hub types
+        endpoints.MapHub<MyHubType2>("/hub2"); // use your own hub types
+        // ... etc
+      });
+    });
+  })
+
+  // Add Orleans with SignalR configured
+  .UseOrleans((context, siloBuilder) =>
+  {
+    siloBuilder
+      .UseSignalR(signalRConfig =>
+      {
+        // Optional.
+        signalRConfig.UseFireAndForgetDelivery = true;
+
+        signalRConfig.Configure((siloBuilder, signalRConstants) =>
+        {
+          // **************************************************************************
+          // Use memory storage ONLY when your app is not clustered, otherwise you'll
+          // need to use proper external storage providers
+          // **************************************************************************
+
+          siloBuilder.AddMemoryGrainStorage(signalRConstants.StorageProvider);
+          // This wouldn't be be necessary if you already added "PubSubStore" elsewhere.
+          siloBuilder.AddMemoryGrainStorage(signalRConstants.PubSubProvider /*Same as "PubSubStore"*/);
+        });
+      })
+
+      // Allows Orleans grains to inject IHubContext<HubType>
+      .RegisterHub<MyHubType1>()
+      .RegisterHub<MyHubType2>();
+      // ... etc
+  })
+  .UseConsoleLifetime()
+  .Build();
+
+await host.StartAsync();
+await host.WaitForShutdownAsync(default);
+```
+
+
 # Contributions
 PRs and feedback are **very** welcome!
