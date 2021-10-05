@@ -19,7 +19,7 @@ namespace SignalR.Orleans
     [Obsolete("Use SignalrOrleansSiloHostConfigBuilder instead.")]
     public class SignalrServerConfig
     {
-        public Action<ISiloHostBuilder, HostBuilderConfig> ConfigureBuilder { get; set; }
+        public Action<ISiloHostBuilder, HostBuilderConfig> ConfigureBuilder { get; set; } = default!;
         public bool UseFireAndForgetDelivery { get; set; }
     }
 
@@ -30,7 +30,7 @@ namespace SignalR.Orleans
 
     public class SignalrOrleansSiloConfigBuilder : SignalrOrleansConfigBaseBuilder
     {
-        internal Action<ISiloBuilder, HostBuilderConfig> ConfigureBuilder { get; set; }
+        internal Action<ISiloBuilder, HostBuilderConfig> ConfigureBuilder { get; set; } = default!;
 
         /// <summary>
         /// Configure builder, such as providers.
@@ -45,7 +45,7 @@ namespace SignalR.Orleans
 
     public class SignalrOrleansSiloHostConfigBuilder : SignalrOrleansConfigBaseBuilder
     {
-        internal Action<ISiloHostBuilder, HostBuilderConfig> ConfigureBuilder { get; set; }
+        internal Action<ISiloHostBuilder, HostBuilderConfig> ConfigureBuilder { get; set; } = default!;
 
         /// <summary>
         /// Configure builder, such as providers.

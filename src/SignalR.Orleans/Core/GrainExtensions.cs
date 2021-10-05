@@ -1,31 +1,23 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Protocol;
 using Orleans.Concurrency;
-using SignalR.Orleans.Clients;
 using SignalR.Orleans.Core;
-using SignalR.Orleans.Groups;
 using SignalR.Orleans.Users;
+using SignalR.Orleans.Groups;
+using SignalR.Orleans.Clients;
 
 // ReSharper disable once CheckNamespace
 namespace Orleans
 {
     public static class GrainSignalRExtensions
     {
-        [Obsolete("Use Send instead", false)]
-        public static async Task SendSignalRMessage(this IConnectionGrain grain, string methodName, params object[] message)
-        {
-            var invocationMessage = new InvocationMessage(methodName, message).AsImmutable();
-            await grain.Send(invocationMessage);
-        }
-
         /// <summary>
         /// Invokes a method on the hub.
         /// </summary>
         /// <param name="grain"></param>
         /// <param name="methodName">Target method name to invoke.</param>
         /// <param name="args">Arguments to pass to the target method.</param>
-        public static Task Send(this IHubMessageInvoker grain, string methodName, params object[] args)
+        public static Task Send(this IHubMessageInvoker grain, string methodName, params object?[]? args)
         {
             var invocationMessage = new InvocationMessage(methodName, args).AsImmutable();
             return grain.Send(invocationMessage);
@@ -37,7 +29,7 @@ namespace Orleans
         /// <param name="grain"></param>
         /// <param name="methodName">Target method name to invoke.</param>
         /// <param name="args">Arguments to pass to the target method.</param>
-        public static void SendOneWay(this IHubMessageInvoker grain, string methodName, params object[] args)
+        public static void SendOneWay(this IHubMessageInvoker grain, string methodName, params object?[]? args)
         {
             grain.InvokeOneWay(g => g.Send(methodName, args));
         }

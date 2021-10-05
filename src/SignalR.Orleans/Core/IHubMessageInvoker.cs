@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Protocol;
-using Orleans.Concurrency;
 using Orleans.Runtime;
+using Orleans.Concurrency;
 
 namespace SignalR.Orleans.Core
 {
