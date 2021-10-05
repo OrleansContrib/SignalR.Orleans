@@ -3,11 +3,11 @@
 
 using System;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.SignalR.Protocol;
 using Orleans;
-using SignalR.Orleans.Tests.AspnetSignalR;
 using SignalR.Orleans.Tests.Models;
+using SignalR.Orleans.Tests.AspnetSignalR;
 using Xunit;
 
 namespace SignalR.Orleans.Tests

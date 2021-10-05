@@ -1,15 +1,18 @@
-using Microsoft.Extensions.Logging;
+using Orleans.Runtime;
 using Orleans.Concurrency;
-using Orleans.Providers;
+using Microsoft.Extensions.Logging;
 using SignalR.Orleans.Core;
 
 namespace SignalR.Orleans.Groups
 {
-    [StorageProvider(ProviderName = Constants.STORAGE_PROVIDER)]
     [Reentrant]
     internal class GroupGrain : ConnectionGrain<GroupState>, IGroupGrain
     {
-        public GroupGrain(ILogger<GroupGrain> logger) : base(logger)
+        private const string GROUP_STORAGE = "GroupState";
+        public GroupGrain(
+            ILogger<GroupGrain> logger,
+            [PersistentState(GROUP_STORAGE, Constants.STORAGE_PROVIDER)] IPersistentState<GroupState> groupState)
+            : base(logger, groupState)
         {
         }
     }

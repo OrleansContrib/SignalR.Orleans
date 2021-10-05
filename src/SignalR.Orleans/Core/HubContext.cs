@@ -1,7 +1,7 @@
 ﻿using Orleans;
-using SignalR.Orleans.Clients;
-using SignalR.Orleans.Groups;
 using SignalR.Orleans.Users;
+using SignalR.Orleans.Groups;
+using SignalR.Orleans.Clients;
 
 namespace SignalR.Orleans.Core
 {

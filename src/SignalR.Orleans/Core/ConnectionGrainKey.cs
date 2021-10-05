@@ -7,15 +7,10 @@ namespace SignalR.Orleans.Core
     {
         private string DebuggerDisplay => $"HubName: '{HubName}', Id: '{Id}'";
 
-        public string HubName { get; set; }
-        public string Id { get; set; }
+        public string HubName { get; }
+        public string Id { get; }
 
-        public ConnectionGrainKey(string primaryKey) : this()
-        {
-            Parse(primaryKey);
-        }
-
-        public void Parse(string primaryKey)
+        public ConnectionGrainKey(string primaryKey)
         {
             var pkArray = primaryKey.Split(':');
 

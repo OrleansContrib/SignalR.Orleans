@@ -1,15 +1,18 @@
 ﻿using Microsoft.Extensions.Logging;
+using Orleans.Runtime;
 using Orleans.Concurrency;
-using Orleans.Providers;
 using SignalR.Orleans.Core;
 
 namespace SignalR.Orleans.Users
 {
-    [StorageProvider(ProviderName = Constants.STORAGE_PROVIDER)]
     [Reentrant]
     internal class UserGrain : ConnectionGrain<UserState>, IUserGrain
     {
-        public UserGrain(ILogger<UserGrain> logger) : base(logger)
+        private const string USER_STORAGE = "UserState";
+        public UserGrain(
+            ILogger<UserGrain> logger,
+            [PersistentState(USER_STORAGE, Constants.STORAGE_PROVIDER)] IPersistentState<UserState> userState)
+            : base(logger, userState)
         {
         }
     }

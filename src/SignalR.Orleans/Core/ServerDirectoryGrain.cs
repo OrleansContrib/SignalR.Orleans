@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using Orleans;
-using Orleans.Providers;
+using Orleans.Runtime;
 using Orleans.Streams;
 
 namespace SignalR.Orleans.Core
@@ -17,67 +17,69 @@ namespace SignalR.Orleans.Core
 
     public class ServerDirectoryState
     {
-        public Dictionary<Guid, DateTime> Servers { get; set; } = new Dictionary<Guid, DateTime>();
+        public Dictionary<Guid, DateTime> Servers { get; set; } = new();
     }
 
-    [StorageProvider(ProviderName = Constants.STORAGE_PROVIDER)]
-    public class ServerDirectoryGrain : Grain<ServerDirectoryState>, IServerDirectoryGrain
+    public class ServerDirectoryGrain : Grain, IServerDirectoryGrain
     {
-        private IStreamProvider _streamProvider;
-
         private readonly ILogger<ServerDirectoryGrain> _logger;
+        private readonly IPersistentState<ServerDirectoryState> _directory;
+        private IStreamProvider _streamProvider = default!;
 
-        public ServerDirectoryGrain(ILogger<ServerDirectoryGrain> logger)
+        public ServerDirectoryGrain(
+            ILogger<ServerDirectoryGrain> logger,
+            [PersistentState(Constants.STORAGE_PROVIDER)] IPersistentState<ServerDirectoryState> directoryState)
         {
             _logger = logger;
+            _directory = directoryState;
         }
 
-        public override async Task OnActivateAsync()
+        public override Task OnActivateAsync()
         {
             _streamProvider = GetStreamProvider(Constants.STREAM_PROVIDER);
 
             _logger.LogInformation("Available servers {serverIds}",
-                string.Join(", ", State.Servers?.Count > 0 ? string.Join(", ", State.Servers) : "empty"));
+                string.Join(", ", _directory.State.Servers?.Count > 0 ? string.Join(", ", _directory.State.Servers) : "empty"));
 
             RegisterTimer(
                ValidateAndCleanUp,
-               State,
+               _directory.State,
                TimeSpan.FromSeconds(15),
                TimeSpan.FromMinutes(Constants.SERVERDIRECTORY_CLEANUP_IN_MINUTES));
 
-            await base.OnActivateAsync();
+            return Task.CompletedTask;
         }
 
         public Task Heartbeat(Guid serverId)
         {
-            State.Servers[serverId] = DateTime.UtcNow;
-            return WriteStateAsync();
+            _directory.State.Servers[serverId] = DateTime.UtcNow;
+            return _directory.WriteStateAsync();
         }
 
         public async Task Unregister(Guid serverId)
         {
-            if (!State.Servers.ContainsKey(serverId))
+            if (!_directory.State.Servers.ContainsKey(serverId))
                 return;
 
             _logger.LogWarning("Unregister server {serverId}", serverId);
-            State.Servers.Remove(serverId);
-            await WriteStateAsync();
+            _directory.State.Servers.Remove(serverId);
+            await _directory.WriteStateAsync();
         }
 
         private async Task ValidateAndCleanUp(object serverDirectory)
         {
-            var expiredServers = State.Servers.Where(server => server.Value < DateTime.UtcNow.AddMinutes(-Constants.SERVERDIRECTORY_CLEANUP_IN_MINUTES)).ToList();
+            var expiredServers = _directory.State.Servers.Where(server => server.Value < DateTime.UtcNow.AddMinutes(-Constants.SERVERDIRECTORY_CLEANUP_IN_MINUTES)).ToList();
             foreach (var server in expiredServers)
             {
                 var serverDisconnectedStream = _streamProvider.GetStream<Guid>(server.Key, Constants.SERVER_DISCONNECTED);
 
                 _logger.LogWarning("Removing server {serverId} due to inactivity {lastUpdatedDate}", server.Key, server.Value);
                 await serverDisconnectedStream.OnNextAsync(server.Key);
-                State.Servers.Remove(server.Key);
+                _directory.State.Servers.Remove(server.Key);
             }
 
             if (expiredServers.Count > 0)
-                await WriteStateAsync();
+                await _directory.WriteStateAsync();
         }
     }
 }

@@ -8,6 +8,6 @@ namespace SignalR.Orleans.Clients
     public interface IClientGrain : IHubMessageInvoker, IGrainWithStringKey
     {
         Task OnConnect(Guid serverId);
-        Task OnDisconnect(string reason = null);
+        Task OnDisconnect(string? reason = null);
     }
 }
