@@ -56,7 +56,15 @@ namespace SignalR.Orleans.Clients
             {
                 _logger.LogDebug("Sending message on {hubName}.{targetMethod} to connection {connectionId}", _keyData.HubName, message.Value.Target, _keyData.Id);
                 _failAttempts = 0;
-                await _serverStream.OnNextAsync(new ClientMessage { ConnectionId = _keyData.Id, Payload = message.Value, HubName = _keyData.HubName });
+                try
+                {
+                    await _serverStream.OnNextAsync(new ClientMessage { ConnectionId = _keyData.Id, Payload = message.Value, HubName = _keyData.HubName });
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while sending message on {hubName}.{targetMethod} to connection {connectionId}", _keyData.HubName, message.Value.Target, _keyData.Id);
+                    throw;
+                }
                 return;
             }
             _failAttempts++;

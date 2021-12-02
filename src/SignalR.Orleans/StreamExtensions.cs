@@ -84,8 +84,8 @@ namespace SignalR.Orleans
             }
         }
 
-        public StreamReplicaContainer(IStreamProvider streamProvider, Guid streamId, string streamNamespace,
-            int maxReplicas) : this(streamProvider, streamId.ToString(), streamNamespace, maxReplicas)
+        public StreamReplicaContainer(IStreamProvider streamProvider, Guid streamId, string streamNamespace, int maxReplicas)
+            : this(streamProvider, streamId.ToString(), streamNamespace, maxReplicas)
         {
 
         }

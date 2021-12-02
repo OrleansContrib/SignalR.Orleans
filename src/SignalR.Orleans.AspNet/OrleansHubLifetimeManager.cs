@@ -53,12 +53,12 @@ namespace SignalR.Orleans
             if (_streamProvider != null)
                 return;
 
-            await _streamSetupLock.WaitAsync();
-
-            if (_streamProvider != null)
-                return;
             try
             {
+                await _streamSetupLock.WaitAsync();
+
+                if (_streamProvider != null)
+                    return;
                 await SetupStreams();
             }
             finally
@@ -107,7 +107,12 @@ namespace SignalR.Orleans
         private Task ProcessServerMessage(ClientMessage message)
         {
             var connection = _connections[message.ConnectionId];
-            if (connection == null) return Task.CompletedTask; // TODO: Log
+            if (connection == null)
+            {
+                _logger.LogWarning("Connection {connectionId} not found when sending {hubName}.{targetMethod} (serverId: {serverId})",
+                    message.ConnectionId, _hubName, message.Payload.Target, _serverId);
+                return Task.CompletedTask;
+            }
 
             return SendLocal(connection, message.Payload);
         }
