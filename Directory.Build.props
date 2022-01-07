@@ -40,6 +40,6 @@
   <PropertyGroup>
     <!-- vendors -->
     <OrleansVersion>3.5.1</OrleansVersion>
-    <OrleansStreamsUtilsVersion>9.0.0</OrleansStreamsUtilsVersion>
+    <OrleansStreamsUtilsVersion>10.0.0</OrleansStreamsUtilsVersion>
   </PropertyGroup>
 </Project>
