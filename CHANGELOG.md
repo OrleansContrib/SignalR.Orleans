@@ -2,6 +2,11 @@
 
 [_vNext_](https://github.com/sketch7/SignalR.Orleans/compare/1.0.0...1.1.0) (2019-X-X)
 
+## [3.1.1](https://github.com/sketch7/SignalR.Orleans/compare/3.1.0...3.1.1) (2022-01-07)
+
+### Features
+
+- **deps:** update `OrleansStreamsUtils` to v10.0.0 which consumes Orleans 3.5.1
 
 ## [3.1.0](https://github.com/sketch7/SignalR.Orleans/compare/3.0.0...3.1.0) (2021-12-02)
 
