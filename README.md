@@ -57,12 +57,12 @@ Optional configuration to override the default implementation for both providers
 ```cs
 .UseSignalR(cfg =>
 {
-  cfg.ConfigureBuilder = (builder, config) =>
+  cfg.Configure((builder, config) =>
   {
-    builder
-      .AddMemoryGrainStorage(config.PubSubProvider)
-      .AddMemoryGrainStorage(config.StorageProvider);
-  };
+      builder
+          .AddMemoryGrainStorage(config.PubSubProvider)
+          .AddMemoryGrainStorage(config.StorageProvider);
+  });
 })
 .RegisterHub<MyHub>()
 ```
