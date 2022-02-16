@@ -34,11 +34,7 @@ namespace SignalR.Orleans
             IClusterClientProvider clusterClientProvider
         )
         {
-            var hubType = typeof(THub).BaseType?.GenericTypeArguments.FirstOrDefault() ?? typeof(THub);
-            var name = hubType.Name.AsSpan();
-            _hubName = hubType.IsInterface && name[0] == 'I'
-                ? new string(name.Slice(1))
-                : hubType.Name;
+            _hubName = HubUtility.GetHubName<THub>();
             _serverId = Guid.NewGuid();
             _logger = logger;
             _clusterClientProvider = clusterClientProvider;

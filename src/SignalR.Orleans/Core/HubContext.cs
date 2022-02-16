@@ -1,11 +1,12 @@
-﻿using Orleans;
+﻿using Microsoft.AspNetCore.SignalR;
+using Orleans;
 using SignalR.Orleans.Users;
 using SignalR.Orleans.Groups;
 using SignalR.Orleans.Clients;
 
 namespace SignalR.Orleans.Core
 {
-    public class HubContext<THub>
+    public class HubContext<THub> where THub : Hub
     {
         private readonly IGrainFactory _grainFactory;
         private readonly string _hubName;
@@ -13,10 +14,7 @@ namespace SignalR.Orleans.Core
         public HubContext(IGrainFactory grainFactory)
         {
             _grainFactory = grainFactory;
-            var hubType = typeof(THub);
-            _hubName = hubType.IsInterface && hubType.Name.StartsWith("I")
-                ? hubType.Name.Substring(1)
-                : hubType.Name;
+            _hubName = HubUtility.GetHubName<THub>();
         }
 
         public IClientGrain Client(string connectionId) => _grainFactory.GetClientGrain(_hubName, connectionId);
