@@ -21,6 +21,7 @@ Installation is performed via [NuGet](https://www.nuget.org/packages/Sketch7.Sig
 - Use 1.x for netcore2
 - Use 2.x for netcore3
 - Use 3.x for netcore5
+- Use 4.x for netcore6
 
 From Package Manager:
 
