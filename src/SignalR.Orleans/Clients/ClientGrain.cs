@@ -9,6 +9,7 @@ using Orleans.Runtime;
 using Orleans.Streams;
 using Orleans.Concurrency;
 using SignalR.Orleans.Core;
+using System.Linq;
 
 namespace SignalR.Orleans.Clients
 {
@@ -62,7 +63,7 @@ namespace SignalR.Orleans.Clients
                 subscriptionTasks[i] = subscription.ResumeAsync((serverId, _) => OnDisconnect("server-disconnected"));
             }
 
-            await Task.WhenAll(subscriptionTasks);
+            await Task.WhenAll(subscriptionTasks.Where(task => task != null));
             ArrayPool<Task>.Shared.Return(subscriptionTasks);
         }
 
