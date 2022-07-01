@@ -1,5 +1,4 @@
 using System;
-using System.Buffers;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -63,7 +62,6 @@ namespace SignalR.Orleans.Clients
             }
 
             await Task.WhenAll(subscriptionTasks);
-            ArrayPool<Task>.Shared.Return(subscriptionTasks);
         }
 
         public async Task Send(Immutable<InvocationMessage> message)
