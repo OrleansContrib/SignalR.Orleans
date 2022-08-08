@@ -15,7 +15,7 @@ namespace SignalR.Orleans.Core
             _grainFactory = grainFactory;
             var hubType = typeof(THub);
             _hubName = hubType.IsInterface && hubType.Name.StartsWith("I")
-                ? hubType.Name.Substring(1)
+                ? hubType.Name[1..]
                 : hubType.Name;
         }
 
