@@ -13,7 +13,6 @@
     <PackageReleaseNotes></PackageReleaseNotes>
     <IncludeSymbols>true</IncludeSymbols>
     <IncludeSource>true</IncludeSource>
-    <PackageVersion>2.1.0</PackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
