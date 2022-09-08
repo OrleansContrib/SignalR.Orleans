@@ -71,6 +71,7 @@ Now your SignalR application needs to connect to the Orleans Cluster by using an
 ```cs
 var client = new ClientBuilder()
   .UseSignalR()
+  // optional: .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(IClientGrain).Assembly).WithReferences())
   .Build();
 
 await client.Connect();
