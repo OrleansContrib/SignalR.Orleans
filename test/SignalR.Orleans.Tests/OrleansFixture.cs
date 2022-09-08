@@ -27,6 +27,7 @@ namespace SignalR.Orleans.Tests
                 .UseLocalhostClustering()
                 .Configure<EndpointOptions>(options => options.AdvertisedIPAddress = IPAddress.Loopback)
                 .UseSignalR()
+                .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(IClientGrain).Assembly).WithReferences())
                 .Build();
 
             client.Connect().Wait();
