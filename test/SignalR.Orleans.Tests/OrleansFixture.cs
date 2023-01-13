@@ -4,26 +4,32 @@ using Microsoft.Extensions.DependencyInjection;
 using Orleans;
 using Orleans.Hosting;
 using Orleans.Configuration;
+using Microsoft.Extensions.Hosting;
 
 namespace SignalR.Orleans.Tests
 {
     public class OrleansFixture : IDisposable
     {
-        public ISiloHost Silo { get; }
-        public IClusterClientProvider ClientProvider { get; }
+        public IHost Silo { get; }
+        public IClusterClient Client { get; }
 
         public OrleansFixture()
         {
-            var silo = new SiloHostBuilder()
-                .UseLocalhostClustering()
-                .Configure<EndpointOptions>(options => options.AdvertisedIPAddress = IPAddress.Loopback)
-                .AddMemoryGrainStorage(Constants.PUBSUB_PROVIDER)
-                .UseSignalR()
+            var silo = new HostBuilder()
+                .UseOrleans(siloBuilder =>
+                {
+                    siloBuilder.UseLocalhostClustering();
+                    siloBuilder.Configure<EndpointOptions>(options => options.AdvertisedIPAddress = IPAddress.Loopback);
+                    siloBuilder.UseSignalR();
+                })
                 .Build();
-            silo.StartAsync().Wait();
+
+            silo.StartAsync().GetAwaiter().GetResult();
             Silo = silo;
 
-            var client = new ClientBuilder()
+            new client
+
+            var client = new ClientBuilder(silo.Services)
                 .UseLocalhostClustering()
                 .Configure<EndpointOptions>(options => options.AdvertisedIPAddress = IPAddress.Loopback)
                 .UseSignalR()

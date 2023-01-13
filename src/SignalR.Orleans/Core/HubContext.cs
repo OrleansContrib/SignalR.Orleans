@@ -1,7 +1,5 @@
-﻿using Orleans;
-using SignalR.Orleans.Users;
-using SignalR.Orleans.Groups;
-using SignalR.Orleans.Clients;
+﻿using SignalR.Orleans.Clients;
+using SignalR.Orleans.ConnectionGroups;
 
 namespace SignalR.Orleans.Core
 {
@@ -20,7 +18,7 @@ namespace SignalR.Orleans.Core
         }
 
         public IClientGrain Client(string connectionId) => _grainFactory.GetClientGrain(_hubName, connectionId);
-        public IGroupGrain Group(string groupName) => _grainFactory.GetGroupGrain(_hubName, groupName);
-        public IUserGrain User(string userId) => _grainFactory.GetUserGrain(_hubName, userId);
+        public IConnectionGroupGrain Group(string groupName) => _grainFactory.GetGroupGrain(_hubName, groupName);
+        public IConnectionGroupGrain User(string userId) => _grainFactory.GetUserGrain(_hubName, userId);
     }
 }

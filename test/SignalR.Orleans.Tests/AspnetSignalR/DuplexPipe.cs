@@ -1,4 +1,5 @@
 ﻿// COPIED AND REFACTORED :: Signalr/src/common/DuplexPipe.cs
+// TODO: Since we're up a couple of SignalR versions now, this could have changed -- should revisit original implementation
 
 namespace System.IO.Pipelines
 {

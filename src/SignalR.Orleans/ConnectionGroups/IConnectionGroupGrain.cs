@@ -1,13 +1,13 @@
-﻿using System.Threading.Tasks;
+﻿using System;
 using System.Collections.Generic;
-using Orleans;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using SignalR.Orleans.Core;
 
-namespace SignalR.Orleans.Core
+namespace SignalR.Orleans.ConnectionGroups
 {
-    /// <summary>
-    /// Grain interface Grouped of connections, such as user or custom group.
-    /// </summary>
-    public interface IConnectionGrain : IHubMessageInvoker, IGrainWithStringKey
+    public interface IConnectionGroupGrain : IGrainWithStringKey, IHubMessageInvoker
     {
         /// <summary>
         /// Add connection id to the group.
@@ -16,13 +16,13 @@ namespace SignalR.Orleans.Core
         Task Add(string connectionId);
 
         /// <summary>
-        /// Remove the connection id to the group.
+        /// Remove the connection id from the group.
         /// </summary>
         /// <param name="connectionId">Connection id to remove.</param>
         Task Remove(string connectionId);
 
         /// <summary>
-        /// Gets the connection count in the group.
+        /// Gets the connection count of the group.
         /// </summary>
         Task<int> Count();
 
@@ -32,6 +32,6 @@ namespace SignalR.Orleans.Core
         /// <param name="methodName">Target method name to invoke.</param>
         /// <param name="args">Arguments to pass to the target method.</param>
         /// <param name="excludedConnectionIds">Connection ids to exclude.</param>
-        Task SendExcept(string methodName, object?[] args, IReadOnlyList<string> excludedConnectionIds);
+        Task SendExcept(string methodName, object?[] args, IEnumerable<string> excludedConnectionIds);
     }
 }

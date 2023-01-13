@@ -1,11 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <PackageId>SignalR.Orleans</PackageId>
     <Title>SignalR.Orleans - Orleans backplane for SignalR Core</Title>
     <Description>Orleans backplane for SignalR Core.</Description>
@@ -18,13 +13,12 @@
   <ItemGroup>
     <!-- see https://gist.github.com/tebeco/a6e0d9a3885a0a36e702795219bd4fe9 -->
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="Microsoft.Orleans.CodeGenerator.MSBuild" Version="$(OrleansCodeGeneratorVersion)">
+    <PackageReference Include="Microsoft.Orleans.Server" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Orleans.Streaming" Version="7.0.0" />
+    <PackageReference Include="Nerdbank.GitVersioning" Version="3.5.119">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Orleans.Core" Version="$(OrleansCoreVersion)" />
-    <PackageReference Include="Microsoft.Orleans.OrleansProviders" Version="$(OrleansProvidersVersion)" />
-    <PackageReference Include="Microsoft.Orleans.Runtime.Abstractions" Version="$(OrleansRuntimeAbstractionsVersion)" />
   </ItemGroup>
 
   <ItemGroup>
