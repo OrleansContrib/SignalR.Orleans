@@ -15,7 +15,7 @@ namespace SignalR.Orleans.Clients
 
         public static ClientKey FromGrainPrimaryKey(string primaryKey)
         {
-            var parts = primaryKey.Split('.', 2);
+            var parts = primaryKey.Split(':', 2);
             return new() { HubType = parts[0], ConnectionId = parts[1] };
         }
     }

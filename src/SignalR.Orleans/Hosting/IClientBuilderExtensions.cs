@@ -7,10 +7,10 @@ namespace Orleans.Hosting
 {
     public static class IClientBuilderExtensions
     {
-        public static IClientBuilder UseSignalR(this IClientBuilder builder, Action<SignalRClientConfig>? config = null)
+        public static IClientBuilder UseSignalR(this IClientBuilder builder, Action<SignalRClientConfig>? configure = null)
         {
             var cfg = new SignalRClientConfig();
-            config?.Invoke(cfg);
+            configure?.Invoke(cfg);
             return builder.UseSignalR(cfg);
         }
 

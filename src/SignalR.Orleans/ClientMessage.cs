@@ -3,6 +3,6 @@ using Orleans.Concurrency;
 
 namespace SignalR.Orleans
 {
-    [Immutable]
+    [Immutable, GenerateSerializer]
     public sealed record ClientMessage(string HubName, string ConnectionId, Immutable<InvocationMessage> Message);
 }

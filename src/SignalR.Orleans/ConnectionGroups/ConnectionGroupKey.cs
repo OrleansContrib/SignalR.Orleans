@@ -10,7 +10,7 @@
 
         public static ConnectionGroupKey FromPrimaryGrainKey(string primaryGrainKey)
         {
-            var parts = primaryGrainKey.Split('.', 3);
+            var parts = primaryGrainKey.Split(':', 3);
             return new()
             {
                 GroupType = Enum.Parse<ConnectionGroupType>(parts[0]),

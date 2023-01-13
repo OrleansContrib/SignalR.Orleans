@@ -27,7 +27,7 @@ namespace SignalR.Orleans.ConnectionGroups
         public ConnectionGroupGrain(
             IGrainContext grainContext,
             IGrainFactory grainFactory,
-            ILogger logger,
+            ILogger<ConnectionGroupGrain> logger,
             [PersistentState("ConnectionGroups", Constants.STORAGE_PROVIDER)] IPersistentState<ConnectionGroupGrainState> state)
         {
             _logger = logger;

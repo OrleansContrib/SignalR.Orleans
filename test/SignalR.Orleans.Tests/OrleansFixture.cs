@@ -5,6 +5,7 @@ using Orleans;
 using Orleans.Hosting;
 using Orleans.Configuration;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace SignalR.Orleans.Tests
 {
@@ -12,10 +13,11 @@ namespace SignalR.Orleans.Tests
     {
         public IHost Silo { get; }
         public IClusterClient Client { get; }
+        public IHost ClientHost { get; }
 
         public OrleansFixture()
         {
-            var silo = new HostBuilder()
+            Silo = new HostBuilder()
                 .UseOrleans(siloBuilder =>
                 {
                     siloBuilder.UseLocalhostClustering();
@@ -24,25 +26,26 @@ namespace SignalR.Orleans.Tests
                 })
                 .Build();
 
-            silo.StartAsync().GetAwaiter().GetResult();
-            Silo = silo;
+            Silo.StartAsync().GetAwaiter().GetResult();
 
-            new client
-
-            var client = new ClientBuilder(silo.Services)
-                .UseLocalhostClustering()
-                .Configure<EndpointOptions>(options => options.AdvertisedIPAddress = IPAddress.Loopback)
-                .UseSignalR()
+            ClientHost = new HostBuilder()
+                .UseOrleansClient(clientBuilder =>
+                {
+                    clientBuilder.UseLocalhostClustering();
+                    clientBuilder.UseSignalR(config: null); // fixes compiler confusion
+                })
                 .Build();
 
-            client.Connect().Wait();
-            ClientProvider = new DefaultClusterClientProvider(client);
+            ClientHost.StartAsync().GetAwaiter().GetResult();
+            Client = ClientHost.Services.GetRequiredService<IClusterClient>();
         }
 
         public void Dispose()
         {
-            ClientProvider.GetClient().Close().Wait();
-            Silo.StopAsync().Wait();
+            ClientHost.StopAsync().GetAwaiter().GetResult();
+            Silo.StopAsync().GetAwaiter().GetResult();
+            ClientHost.Dispose();
+            Silo.Dispose();
         }
     }
 }
