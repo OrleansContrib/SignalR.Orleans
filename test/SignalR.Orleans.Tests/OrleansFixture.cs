@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Orleans;
 using Orleans.Hosting;
 using Orleans.Configuration;
+using SignalR.Orleans.Clients;
 
 namespace SignalR.Orleans.Tests
 {
