@@ -1,5 +1,4 @@
 using System;
-using System.Buffers;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -55,7 +54,7 @@ namespace SignalR.Orleans.Clients
             _serverStream = _streamProvider.GetStream<ClientMessage>(_clientState.State.ServerId, Constants.SERVERS_STREAM);
             _serverDisconnectedStream = _streamProvider.GetStream<Guid>(_clientState.State.ServerId, Constants.SERVER_DISCONNECTED);
             var subscriptions = await _serverDisconnectedStream.GetAllSubscriptionHandles();
-            var subscriptionTasks = ArrayPool<Task>.Shared.Rent(subscriptions.Count);
+            var subscriptionTasks = new Task[subscriptions.Count];
             for (int i = 0; i < subscriptions.Count; i++)
             {
                 var subscription = subscriptions[i];
@@ -63,7 +62,6 @@ namespace SignalR.Orleans.Clients
             }
 
             await Task.WhenAll(subscriptionTasks);
-            ArrayPool<Task>.Shared.Return(subscriptionTasks);
         }
 
         public async Task Send(Immutable<InvocationMessage> message)

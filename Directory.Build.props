@@ -26,17 +26,17 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <TargetFramework>net5.0</TargetFramework>
+        <TargetFramework>net6.0</TargetFramework>
     </PropertyGroup>
 
     <!-- Shared Package Versions -->
     <PropertyGroup>
         <!-- vendors -->
-        <OrleansCoreVersion>3.5.0</OrleansCoreVersion>
-        <OrleansProvidersVersion>3.5.0</OrleansProvidersVersion>
-        <OrleansCodeGeneratorVersion>3.5.0</OrleansCodeGeneratorVersion>
-        <OrleansRuntimeAbstractionsVersion>3.5.0</OrleansRuntimeAbstractionsVersion>
-        <OrleansRuntimeVersion>3.5.0</OrleansRuntimeVersion>
+        <OrleansCoreVersion>3.6.3</OrleansCoreVersion>
+        <OrleansProvidersVersion>3.6.3</OrleansProvidersVersion>
+        <OrleansCodeGeneratorVersion>3.6.3</OrleansCodeGeneratorVersion>
+        <OrleansRuntimeAbstractionsVersion>3.6.3</OrleansRuntimeAbstractionsVersion>
+        <OrleansRuntimeVersion>3.6.3</OrleansRuntimeVersion>
     </PropertyGroup>
 
     <ItemGroup>

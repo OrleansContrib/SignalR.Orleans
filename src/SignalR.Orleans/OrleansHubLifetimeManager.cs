@@ -55,12 +55,13 @@ namespace SignalR.Orleans
             if (_streamProvider is not null)
                 return;
 
-            await _streamSetupLock.WaitAsync();
-
-            if (_streamProvider is not null)
-                return;
             try
             {
+                await _streamSetupLock.WaitAsync();
+
+                if (_streamProvider is not null)
+                    return;
+                    
                 await SetupStreams();
             }
             finally
@@ -157,14 +158,14 @@ namespace SignalR.Orleans
             }
         }
 
-        public override Task SendAllAsync(string methodName, object?[]? args,
+        public override Task SendAllAsync(string methodName, object?[] args,
             CancellationToken cancellationToken = new CancellationToken())
         {
             var message = new InvocationMessage(methodName, args);
             return _allStream.OnNextAsync(new AllMessage(message));
         }
 
-        public override Task SendAllExceptAsync(string methodName, object?[]? args,
+        public override Task SendAllExceptAsync(string methodName, object?[] args,
             IReadOnlyList<string> excludedConnectionIds,
             CancellationToken cancellationToken = new CancellationToken())
         {
@@ -172,7 +173,7 @@ namespace SignalR.Orleans
             return _allStream.OnNextAsync(new AllMessage(message, excludedConnectionIds));
         }
 
-        public override Task SendConnectionAsync(string connectionId, string methodName, object?[]? args,
+        public override Task SendConnectionAsync(string connectionId, string methodName, object?[] args,
             CancellationToken cancellationToken = new CancellationToken())
         {
             if (string.IsNullOrWhiteSpace(connectionId)) throw new ArgumentNullException(nameof(connectionId));
@@ -186,14 +187,14 @@ namespace SignalR.Orleans
             return SendExternal(connectionId, message);
         }
 
-        public override Task SendConnectionsAsync(IReadOnlyList<string> connectionIds, string methodName, object?[]? args,
+        public override Task SendConnectionsAsync(IReadOnlyList<string> connectionIds, string methodName, object?[] args,
             CancellationToken cancellationToken = new CancellationToken())
         {
             var tasks = connectionIds.Select(c => SendConnectionAsync(c, methodName, args, cancellationToken));
             return Task.WhenAll(tasks);
         }
 
-        public override Task SendGroupAsync(string groupName, string methodName, object?[]? args,
+        public override Task SendGroupAsync(string groupName, string methodName, object?[] args,
             CancellationToken cancellationToken = new CancellationToken())
         {
             if (string.IsNullOrWhiteSpace(groupName)) throw new ArgumentNullException(nameof(groupName));
@@ -203,14 +204,14 @@ namespace SignalR.Orleans
             return group.Send(methodName, args);
         }
 
-        public override Task SendGroupsAsync(IReadOnlyList<string> groupNames, string methodName, object?[]? args,
+        public override Task SendGroupsAsync(IReadOnlyList<string> groupNames, string methodName, object?[] args,
             CancellationToken cancellationToken = new CancellationToken())
         {
             var tasks = groupNames.Select(g => SendGroupAsync(g, methodName, args, cancellationToken));
             return Task.WhenAll(tasks);
         }
 
-        public override Task SendGroupExceptAsync(string groupName, string methodName, object?[]? args,
+        public override Task SendGroupExceptAsync(string groupName, string methodName, object?[] args,
             IReadOnlyList<string> excludedConnectionIds,
             CancellationToken cancellationToken = new CancellationToken())
         {
@@ -221,7 +222,7 @@ namespace SignalR.Orleans
             return group.SendExcept(methodName, args, excludedConnectionIds);
         }
 
-        public override Task SendUserAsync(string userId, string methodName, object?[]? args,
+        public override Task SendUserAsync(string userId, string methodName, object?[] args,
             CancellationToken cancellationToken = new CancellationToken())
         {
             if (string.IsNullOrWhiteSpace(userId)) throw new ArgumentNullException(nameof(userId));
@@ -231,7 +232,7 @@ namespace SignalR.Orleans
             return user.Send(methodName, args);
         }
 
-        public override Task SendUsersAsync(IReadOnlyList<string> userIds, string methodName, object?[]? args,
+        public override Task SendUsersAsync(IReadOnlyList<string> userIds, string methodName, object?[] args,
             CancellationToken cancellationToken = new CancellationToken())
         {
             var tasks = userIds.Select(u => SendGroupAsync(u, methodName, args, cancellationToken));
