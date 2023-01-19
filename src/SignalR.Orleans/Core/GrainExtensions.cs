@@ -18,7 +18,7 @@ namespace Orleans
         /// <param name="grain"></param>
         /// <param name="methodName">Target method name to invoke.</param>
         /// <param name="args">Arguments to pass to the target method.</param>
-        public static Task Send(this IHubMessageInvoker grain, string methodName, params object?[]? args)
+        public static Task Send(this IHubMessageInvoker grain, string methodName, params object?[] args)
         {
             var invocationMessage = new InvocationMessage(methodName, args).AsImmutable();
             return grain.Send(invocationMessage);
@@ -30,7 +30,7 @@ namespace Orleans
         /// <param name="grain"></param>
         /// <param name="methodName">Target method name to invoke.</param>
         /// <param name="args">Arguments to pass to the target method.</param>
-        public static void SendOneWay(this IHubMessageInvoker grain, string methodName, params object?[]? args)
+        public static void SendOneWay(this IHubMessageInvoker grain, string methodName, params object?[] args)
         {
             grain.InvokeOneWay(g => g.Send(methodName, args));
         }

@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Orleans;
 using Orleans.Hosting;
 using Orleans.Configuration;
+using SignalR.Orleans.Clients;
 
 namespace SignalR.Orleans.Tests
 {
@@ -27,6 +28,7 @@ namespace SignalR.Orleans.Tests
                 .UseLocalhostClustering()
                 .Configure<EndpointOptions>(options => options.AdvertisedIPAddress = IPAddress.Loopback)
                 .UseSignalR()
+                .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(IClientGrain).Assembly).WithReferences())
                 .Build();
 
             client.Connect().Wait();

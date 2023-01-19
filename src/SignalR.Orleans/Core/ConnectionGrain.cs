@@ -82,7 +82,7 @@ namespace SignalR.Orleans.Core
 
         public virtual Task Send(Immutable<InvocationMessage> message) => SendAll(message, _connectionState.State.Connections);
 
-        public Task SendExcept(string methodName, object?[]? args, IReadOnlyList<string> excludedConnectionIds)
+        public Task SendExcept(string methodName, object?[] args, IReadOnlyList<string> excludedConnectionIds)
         {
             var message = new Immutable<InvocationMessage>(new InvocationMessage(methodName, args));
             return SendAll(message, _connectionState.State.Connections.Where(x => !excludedConnectionIds.Contains(x)).ToList());

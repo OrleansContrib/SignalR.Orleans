@@ -32,6 +32,6 @@ namespace SignalR.Orleans.Core
         /// <param name="methodName">Target method name to invoke.</param>
         /// <param name="args">Arguments to pass to the target method.</param>
         /// <param name="excludedConnectionIds">Connection ids to exclude.</param>
-        Task SendExcept(string methodName, object?[]? args, IReadOnlyList<string> excludedConnectionIds);
+        Task SendExcept(string methodName, object?[] args, IReadOnlyList<string> excludedConnectionIds);
     }
 }
