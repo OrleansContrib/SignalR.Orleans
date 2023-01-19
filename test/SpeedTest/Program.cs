@@ -8,6 +8,8 @@ using SignalR.Orleans;
 using SignalR.Orleans.Tests.AspnetSignalR;
 using SignalR.Orleans.Tests.Models;
 
+Console.WriteLine("Starting.");
+
 var loggerFactory = new LoggerFactory();
 // Creates 10 silos
 var silos = await CreateSilos(10);
@@ -16,7 +18,12 @@ var managers = silos.Select(silo => new OrleansHubLifetimeManager<DaHub>(loggerF
 // Connects 1000 clients to each signalR Hub (total 10,000 clients)
 var signalRClients = await CreateSignalRClients();
 
+Console.WriteLine("Silos are created.");
+
+// Warm up
 await Task.WhenAll(SendAllMessages(), ReadAllMessages());
+
+Console.WriteLine("Warm up is finished.");
 
 var sw = Stopwatch.StartNew();
 for (var i = 0; i < 10; i++)
@@ -25,7 +32,8 @@ for (var i = 0; i < 10; i++)
     await Task.WhenAll(SendAllMessages(), ReadAllMessages());
 }
 var elapsed = sw.Elapsed; // 4.3 seconds
-Debugger.Break();
+Console.WriteLine($"Performance test ran in {elapsed.TotalSeconds:00} seconds. Press a key to close the app.");
+Console.ReadKey();
 
 async Task SendAllMessages()
 {
