@@ -1,12 +1,11 @@
-﻿using System.Threading.Tasks;
-using Microsoft.AspNetCore.SignalR.Protocol;
-using Orleans.Runtime;
+﻿using Microsoft.AspNetCore.SignalR.Protocol;
 using Orleans.Concurrency;
+using Orleans.Runtime;
 
 namespace SignalR.Orleans.Core
 {
     /// <summary>
-    /// Represents an object that can invoke hub methods.
+    /// Represents an object that can invoke hub methods on a single connection.
     /// </summary>
     public interface IHubMessageInvoker : IAddressable
     {

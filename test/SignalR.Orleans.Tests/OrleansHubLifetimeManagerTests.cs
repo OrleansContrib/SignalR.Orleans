@@ -100,10 +100,10 @@ namespace SignalR.Orleans.Tests
                 Assert.Equal(1, await groupGrain.Count());
 
                 await manager.OnDisconnectedAsync(connection);
-                
+
                 // Give the disconnection stream message time to be processed.
                 var sw = Stopwatch.StartNew();
-                while(await groupGrain.Count() != 0)
+                while (await groupGrain.Count() != 0)
                 {
                     if (sw.ElapsedMilliseconds > 1000) throw new Exception("User was not cleared from group after disconnection.");
                     await Task.Delay(20);

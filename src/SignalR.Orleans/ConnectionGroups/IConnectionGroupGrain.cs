@@ -7,7 +7,7 @@ using SignalR.Orleans.Core;
 
 namespace SignalR.Orleans.ConnectionGroups
 {
-    public interface IConnectionGroupGrain : IGrainWithStringKey, IHubMessageInvoker
+    public interface IConnectionGroupGrain : IGrainWithStringKey, IHubGroupMessageInvoker
     {
         /// <summary>
         /// Add connection id to the group.
@@ -25,13 +25,5 @@ namespace SignalR.Orleans.ConnectionGroups
         /// Gets the connection count of the group.
         /// </summary>
         Task<int> Count();
-
-        /// <summary>
-        /// Invokes a method on the hub except the specified connection ids.
-        /// </summary>
-        /// <param name="methodName">Target method name to invoke.</param>
-        /// <param name="args">Arguments to pass to the target method.</param>
-        /// <param name="excludedConnectionIds">Connection ids to exclude.</param>
-        Task SendExcept(string methodName, object?[] args, IEnumerable<string> excludedConnectionIds);
     }
 }
