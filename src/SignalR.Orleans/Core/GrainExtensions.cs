@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Protocol;
 using Orleans.Concurrency;
 using SignalR.Orleans.Core;
@@ -37,7 +38,7 @@ namespace Orleans
 
     public static class GrainFactoryExtensions
     {
-        public static HubContext<THub> GetHub<THub>(this IGrainFactory grainFactory)
+        public static HubContext<THub> GetHub<THub>(this IGrainFactory grainFactory) where THub : Hub
         {
             return new HubContext<THub>(grainFactory);
         }
