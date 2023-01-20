@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -84,9 +84,11 @@ namespace SignalR.Orleans.ConnectionGroups
         public Task<int> Count()
           => Task.FromResult(_state.State.ConnectionIds.Count);
 
+        // NB: Interface method is marked [ReadOnly] so this method will be re-entrant/interleaved.
         public Task Send(Immutable<InvocationMessage> message)
           => SendAll(message, _state.State.ConnectionIds);
 
+        // NB: Interface method is marked [ReadOnly] so this method will be re-entrant/interleaved.
         public Task SendExcept(string methodName, object?[] args, IEnumerable<string> excludedConnectionIds)
         {
             var message = new InvocationMessage(methodName, args).AsImmutable();

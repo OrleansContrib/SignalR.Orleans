@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Orleans.Concurrency;
 using SignalR.Orleans.Core;
 
 namespace SignalR.Orleans.ConnectionGroups
@@ -24,6 +25,7 @@ namespace SignalR.Orleans.ConnectionGroups
         /// <summary>
         /// Gets the connection count of the group.
         /// </summary>
+        [ReadOnly] // Allows re-entrancy on this method
         Task<int> Count();
     }
 }

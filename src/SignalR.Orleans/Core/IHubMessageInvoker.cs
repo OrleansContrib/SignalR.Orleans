@@ -13,6 +13,7 @@ namespace SignalR.Orleans.Core
         /// Invokes a method on the hub.
         /// </summary>
         /// <param name="message">Message to invoke.</param>
+        [ReadOnly] // Allows re-entrancy on this method
         Task Send(Immutable<InvocationMessage> message);
 
         // TODO: Implement this

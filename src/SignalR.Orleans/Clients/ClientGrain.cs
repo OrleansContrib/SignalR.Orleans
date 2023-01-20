@@ -12,7 +12,6 @@ using System.Diagnostics;
 namespace SignalR.Orleans.Clients
 {
     /// <inheritdoc cref="IClientGrain"/>
-    [Reentrant]
     internal sealed class ClientGrain : Grain, IClientGrain
     {
         private const string CLIENT_STORAGE = "ClientState";
@@ -84,6 +83,7 @@ namespace SignalR.Orleans.Clients
             DeactivateOnIdle();
         }
 
+        // NB: Interface method is marked [ReadOnly] so this method will be re-entrant/interleaved.
         public async Task Send(Immutable<InvocationMessage> message)
         {
             if (_serverId != default)
@@ -94,14 +94,14 @@ namespace SignalR.Orleans.Clients
                 // Routes the message to the silo (server) where the client is actually connected.
                 await _streamProvider.GetServerStream(_serverId).OnNextAsync(new ClientMessage(_hubName, _connectionId, message));
 
-                _failAttempts = 0;
-            } 
+                Interlocked.Exchange(ref _failAttempts, 0);
+            }
             else
             {
                 _logger.LogInformation("Client not connected for connectionId '{connectionId}' and hub '{hubName}' ({targetMethod})",
                     _connectionId, _hubName, message.Value.Target);
 
-                if (++_failAttempts >= MAX_FAIL_ATTEMPTS)
+                if (Interlocked.Increment(ref _failAttempts) >= MAX_FAIL_ATTEMPTS)
                 {
                     _logger.LogWarning("Force disconnect client for connectionId {connectionId} and hub {hubName} ({targetMethod}) after exceeding attempts limit",
                         _connectionId, _hubName, message.Value.Target);
