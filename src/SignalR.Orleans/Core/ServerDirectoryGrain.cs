@@ -22,13 +22,14 @@ namespace SignalR.Orleans.Core
 
     public class ServerDirectoryGrain : Grain, IServerDirectoryGrain
     {
+        private const string SERVER_DIRECTORY_STORAGE = "ServerDirectoryState";
         private readonly ILogger<ServerDirectoryGrain> _logger;
         private readonly IPersistentState<ServerDirectoryState> _directory;
         private IStreamProvider _streamProvider = default!;
 
         public ServerDirectoryGrain(
             ILogger<ServerDirectoryGrain> logger,
-            [PersistentState(Constants.STORAGE_PROVIDER)] IPersistentState<ServerDirectoryState> directoryState)
+            [PersistentState(SERVER_DIRECTORY_STORAGE, Constants.STORAGE_PROVIDER)] IPersistentState<ServerDirectoryState> directoryState)
         {
             _logger = logger;
             _directory = directoryState;
