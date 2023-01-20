@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -28,7 +28,7 @@ namespace SignalR.Orleans.ConnectionGroups
             IGrainContext grainContext,
             IGrainFactory grainFactory,
             ILogger<ConnectionGroupGrain> logger,
-            [PersistentState("ConnectionGroups", Constants.STORAGE_PROVIDER)] IPersistentState<ConnectionGroupGrainState> state)
+            [PersistentState("ConnectionGroups", SignalROrleansConstants.SIGNALR_ORLEANS_STREAM_STORAGE_PROVIDER)] IPersistentState<ConnectionGroupGrainState> state)
         {
             _logger = logger;
             _state = state;

@@ -12,13 +12,13 @@ namespace Orleans
         /// Gets the OrleansSignalR stream provider.
         /// </summary>
         public static IStreamProvider GetOrleansSignalRStreamProvider(this IClusterClient client)
-            => client.GetStreamProvider(Constants.STREAM_PROVIDER);
+            => client.GetStreamProvider(SignalROrleansConstants.SIGNALR_ORLEANS_STREAM_PROVIDER);
 
         /// <summary>
         /// Gets the OrleansSignalR stream provider.
         /// </summary>
         public static IStreamProvider GetOrleansSignalRStreamProvider(this IGrainBase grain)
-            => grain.GetStreamProvider(Constants.STREAM_PROVIDER);
+            => grain.GetStreamProvider(SignalROrleansConstants.SIGNALR_ORLEANS_STREAM_PROVIDER);
 
         /// <summary>
         ///  Gets a stream that you can listen on to receive the server disconnection (silo shutdown) event

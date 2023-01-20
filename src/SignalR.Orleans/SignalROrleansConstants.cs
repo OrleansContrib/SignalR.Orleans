@@ -3,23 +3,22 @@ using Orleans.Streams;
 
 namespace SignalR.Orleans
 {
-    public static class Constants
+    public static class SignalROrleansConstants
     {
         /// <summary>
         /// Name of the streams storage provider used by the signalR orleans backplane grain streams.
         /// </summary>
-        //public const string PUBSUB_PROVIDER = "ORLEANS_SIGNALR_PUBSUB_PROVIDER";
-        public const string PUBSUB_PROVIDER = "PubSubStore";
+        public const string PUBSUB_STORAGE_PROVIDER = "PubSubStore";
 
         /// <summary>
         /// Name of the state storage provider used by signalR orleans backplane grains.
         /// </summary>
-        public const string STORAGE_PROVIDER = "ORLEANS_SIGNALR_STORAGE_PROVIDER";
+        public const string SIGNALR_ORLEANS_STREAM_STORAGE_PROVIDER = nameof(SIGNALR_ORLEANS_STREAM_STORAGE_PROVIDER);
 
         /// <summary>
         /// Name used to access the <see cref="IStreamProvider"/> that supplies signalR orleans backplane streams.
         /// </summary>
-        public const string STREAM_PROVIDER = "ORLEANS_SIGNALR_STREAM_PROVIDER";
+        public const string SIGNALR_ORLEANS_STREAM_PROVIDER = nameof(SIGNALR_ORLEANS_STREAM_PROVIDER);
 
         /// <summary>
         /// The number of minutes that each signalR hub server must heartbeat the server directory grain.

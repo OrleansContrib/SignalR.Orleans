@@ -6,7 +6,7 @@ namespace SignalR.Orleans.Core
 {
     internal sealed class ServerDirectoryGrain : Grain, IServerDirectoryGrain
     {
-        private const int SERVERDIRECTORY_CLEANUP_IN_MINUTES = Constants.SERVER_HEARTBEAT_PULSE_IN_MINUTES * 3;
+        private const int SERVERDIRECTORY_CLEANUP_IN_MINUTES = SignalROrleansConstants.SERVER_HEARTBEAT_PULSE_IN_MINUTES * 3;
 
         private readonly ILogger<ServerDirectoryGrain> _logger;
         private readonly IPersistentState<ServerDirectoryState> _state;
@@ -15,7 +15,7 @@ namespace SignalR.Orleans.Core
 
         public ServerDirectoryGrain(
             ILogger<ServerDirectoryGrain> logger,
-            [PersistentState(nameof(ServerDirectoryState), Constants.STORAGE_PROVIDER)] IPersistentState<ServerDirectoryState> state)
+            [PersistentState(nameof(ServerDirectoryState), SignalROrleansConstants.SIGNALR_ORLEANS_STREAM_STORAGE_PROVIDER)] IPersistentState<ServerDirectoryState> state)
         {
             _logger = logger;
             _state = state;

@@ -17,7 +17,7 @@ namespace Orleans.Hosting
         public static IClientBuilder UseSignalR(this IClientBuilder builder, SignalRClientConfig? config = null)
         {
             config ??= new SignalRClientConfig();
-            return builder.AddMemoryStreams(Constants.STREAM_PROVIDER);
+            return builder.AddMemoryStreams(SignalROrleansConstants.SIGNALR_ORLEANS_STREAM_PROVIDER);
         }
     }
 }

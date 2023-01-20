@@ -31,7 +31,7 @@ namespace SignalR.Orleans.Clients
 
         public ClientGrain(
             ILogger<ClientGrain> logger,
-            [PersistentState(CLIENT_STORAGE, Constants.STORAGE_PROVIDER)] IPersistentState<ClientGrainState> clientState)
+            [PersistentState(CLIENT_STORAGE, SignalROrleansConstants.SIGNALR_ORLEANS_STREAM_STORAGE_PROVIDER)] IPersistentState<ClientGrainState> clientState)
         {
             _logger = logger;
             _clientState = clientState;

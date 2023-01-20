@@ -62,7 +62,7 @@ namespace SignalR.Orleans
 
                 _timer = new Timer(
                     _ => Task.Run(HeartbeatCheck), null, TimeSpan.FromSeconds(0),
-                    TimeSpan.FromMinutes(Constants.SERVER_HEARTBEAT_PULSE_IN_MINUTES));
+                    TimeSpan.FromMinutes(SignalROrleansConstants.SERVER_HEARTBEAT_PULSE_IN_MINUTES));
 
                 await Task.WhenAll(
                     _allStream.SubscribeAsync((msg, _) => ProcessAllMessage(msg)),
