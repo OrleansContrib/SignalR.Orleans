@@ -9,18 +9,31 @@
 [![License](https://img.shields.io/github/license/OrleansContrib/SignalR.Orleans.svg)](https://github.com/OrleansContrib/SignalR.Orleans/blob/master/LICENSE)
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dotnet/orleans?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
-[Orleans](https://github.com/dotnet/orleans) is a framework that provides a straight-forward approach to building distributed high-scale computing applications, without the need to learn and apply complex concurrency or other scaling patterns. 
+[Orleans](https://learn.microsoft.com/en-us/dotnet/orleans/overview) is a cross-platform framework for building robust, scalable distributed applications. Distributed applications are defined as apps that span more than a single process, often beyond hardware boundaries using peer-to-peer communication. Orleans scales from a single on-premises server to hundreds to thousands of distributed, highly available applications in the cloud. [See Orleans source code on Github](https://github.com/dotnet/orleans)
 
-[ASP.NET Core SignalR](https://github.com/aspnet/SignalR) is a new library for ASP.NET Core developers that makes it incredibly simple to add real-time web functionality to your applications. What is "real-time web" functionality? It's the ability to have your server-side code push content to the connected clients as it happens, in real-time.
+[ASP.NET Core SignalR](https://learn.microsoft.com/en-us/aspnet/core/signalr/introduction?view=aspnetcore-7.0) is an open-source library that simplifies adding real-time web functionality to apps. Real-time web functionality enables server-side code to push content to clients instantly.
 
-**SignalR.Orleans** is a package that allow us to enhance the _real-time_ capabilities of SignalR by leveraging Orleans distributed cloud platform capabilities.
+**SignalR.Orleans** is a package that gives you two abilities: 
 
+1. Use your Orleans cluster as a backplane for SignalR. [Learn about scaling out SignalR on multiple servers.](https://learn.microsoft.com/en-us/aspnet/core/signalr/scale?view=aspnetcore-7.0)
+
+> There are various choices of backplane that you can use for SignalR, as you will see in the link above. If you're already using Orleans, then you might want to use Orleans as the backplane to reduce the number of dependencies used by your application and to reduce the number of network hops (and latency) that would be4 required when calling an external service.
+
+2. Send messages from Orleans grains to SignalR clients.
+
+> If the SignalR component of your application is cohosted with Orleans (same server, same process and `Microsoft.AspNetCore.SignalR.IHubContext<MyHub>` can be injected into an Orleans gain), you already have this ability without installing this package.
+
+> However, if the SignalR component of your application is "remote" from the grains, this package will give the grains a way of sending messages to SignalR clients by injecting `SignalR.Orleans.Core.HubContext<MyHub>`.
+
+These two abilities should be provided independently of each other. Unfortunately at this stage, ability #2 is only provided if ability #1 is used as well.
 
 # Installation
 
-Installation is performed via [NuGet](https://www.nuget.org/packages/SignalR.Orleans/)
+Installation is performed via [NuGet.](https://www.nuget.org/packages/SignalR.Orleans/)
 
-From Package Manager:
+Packages with version `7.x.x` are compatible with Orleans `v7.x.x` and above. If you're still using an earlier version of Orleans, you will need to use earlier versions of the package.
+
+Package Manager:
 
 > PS> Install-Package SignalR.Orleans
 
@@ -32,6 +45,19 @@ Paket:
 
 > \# paket add SignalR.Orleans
 
+---
+# Version 7.0.0 documentation
+> Scroll down to see documentation for earlier versions.
+
+A complete starter example, cohosted aspnetcore app with SignalR and Orleans.
+
+```csharp
+```
+
+
+
+---
+# Earlier version documentation
 # Configuration
 
 ## Silo
