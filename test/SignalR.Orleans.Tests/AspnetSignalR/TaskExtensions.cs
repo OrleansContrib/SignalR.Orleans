@@ -1,4 +1,5 @@
 ﻿// COPIED FROM :: Microsoft.AspNetCore.SignalR.Tests.Utils
+// TODO: Since we're up a couple of SignalR versions now, this could have changed -- should revisit original implementation
 
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -9,12 +10,12 @@ namespace System.Threading.Tasks
     {
         private const int DefaultTimeout = 5000;
 
-        public static Task OrTimeout(this Task task, int milliseconds = DefaultTimeout, [CallerMemberName] string memberName = null, [CallerFilePath] string filePath = null, [CallerLineNumber] int? lineNumber = null)
+        public static Task OrTimeout(this Task task, int milliseconds = DefaultTimeout, [CallerMemberName] string? memberName = null, [CallerFilePath] string? filePath = null, [CallerLineNumber] int? lineNumber = null)
         {
             return OrTimeout(task, new TimeSpan(0, 0, 0, 0, milliseconds), memberName, filePath, lineNumber);
         }
 
-        public static async Task OrTimeout(this Task task, TimeSpan timeout, [CallerMemberName] string memberName = null, [CallerFilePath] string filePath = null, [CallerLineNumber] int? lineNumber = null)
+        public static async Task OrTimeout(this Task task, TimeSpan timeout, [CallerMemberName] string? memberName = null, [CallerFilePath] string? filePath = null, [CallerLineNumber] int? lineNumber = null)
         {
             if (task.IsCompleted)
             {
@@ -33,18 +34,18 @@ namespace System.Threading.Tasks
             await task;
         }
 
-        public static Task<T> OrTimeout<T>(this ValueTask<T> task, int milliseconds = DefaultTimeout, [CallerMemberName] string memberName = null, [CallerFilePath] string filePath = null, [CallerLineNumber] int? lineNumber = null) =>
+        public static Task<T> OrTimeout<T>(this ValueTask<T> task, int milliseconds = DefaultTimeout, [CallerMemberName] string? memberName = null, [CallerFilePath] string? filePath = null, [CallerLineNumber] int? lineNumber = null) =>
             OrTimeout(task, new TimeSpan(0, 0, 0, 0, milliseconds), memberName, filePath, lineNumber);
 
-        public static Task<T> OrTimeout<T>(this ValueTask<T> task, TimeSpan timeout, [CallerMemberName] string memberName = null, [CallerFilePath] string filePath = null, [CallerLineNumber] int? lineNumber = null) =>
+        public static Task<T> OrTimeout<T>(this ValueTask<T> task, TimeSpan timeout, [CallerMemberName] string? memberName = null, [CallerFilePath] string? filePath = null, [CallerLineNumber] int? lineNumber = null) =>
             task.AsTask().OrTimeout(timeout, memberName, filePath, lineNumber);
 
-        public static Task<T> OrTimeout<T>(this Task<T> task, int milliseconds = DefaultTimeout, [CallerMemberName] string memberName = null, [CallerFilePath] string filePath = null, [CallerLineNumber] int? lineNumber = null)
+        public static Task<T> OrTimeout<T>(this Task<T> task, int milliseconds = DefaultTimeout, [CallerMemberName] string? memberName = null, [CallerFilePath] string? filePath = null, [CallerLineNumber] int? lineNumber = null)
         {
             return OrTimeout(task, new TimeSpan(0, 0, 0, 0, milliseconds), memberName, filePath, lineNumber);
         }
 
-        public static async Task<T> OrTimeout<T>(this Task<T> task, TimeSpan timeout, [CallerMemberName] string memberName = null, [CallerFilePath] string filePath = null, [CallerLineNumber] int? lineNumber = null)
+        public static async Task<T> OrTimeout<T>(this Task<T> task, TimeSpan timeout, [CallerMemberName] string? memberName = null, [CallerFilePath] string? filePath = null, [CallerLineNumber] int? lineNumber = null)
         {
             if (task.IsCompleted)
             {
@@ -86,7 +87,7 @@ namespace System.Threading.Tasks
             return task.GetAwaiter().GetResult();
         }
 
-        private static string GetMessage(string memberName, string filePath, int? lineNumber)
+        private static string GetMessage(string? memberName, string? filePath, int? lineNumber)
         {
             if (!string.IsNullOrEmpty(memberName))
             {

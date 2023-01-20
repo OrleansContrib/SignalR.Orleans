@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.SignalR.Protocol;
@@ -8,107 +7,108 @@ using Orleans.Runtime;
 using Orleans.Streams;
 using Orleans.Concurrency;
 using SignalR.Orleans.Core;
+using System.Diagnostics;
 
 namespace SignalR.Orleans.Clients
 {
-    [DebuggerDisplay("{DebuggerDisplay,nq}")]
-    internal class ClientState
-    {
-        private string DebuggerDisplay => $"ServerId: '{ServerId}'";
-
-        public Guid ServerId { get; set; }
-    }
-
-    [Reentrant]
-    internal class ClientGrain : Grain, IClientGrain
+    /// <inheritdoc cref="IClientGrain"/>
+    internal sealed class ClientGrain : Grain, IClientGrain
     {
         private const string CLIENT_STORAGE = "ClientState";
+        private const int MAX_FAIL_ATTEMPTS = 3;
+
         private readonly ILogger<ClientGrain> _logger;
-        private readonly IPersistentState<ClientState> _clientState;
+        private readonly IPersistentState<ClientGrainState> _clientState;
+
+        private string _hubName = default!;
+        private string _connectionId = default!;
+        private Guid _serverId => _clientState.State.ServerId;
+
         private IStreamProvider _streamProvider = default!;
-        private IAsyncStream<ClientMessage> _serverStream = default!;
-        private IAsyncStream<Guid> _serverDisconnectedStream = default!;
-        private IAsyncStream<string> _clientDisconnectStream = default!;
-        private ConnectionGrainKey _keyData = default!;
-        private StreamSubscriptionHandle<Guid>? _serverDisconnectedSubscription;
-        private const int _maxFailAttempts = 3;
-        private int _failAttempts;
+        private StreamSubscriptionHandle<Guid>? _serverDisconnectedSubscription = default;
+
+        private int _failAttempts = 0;
 
         public ClientGrain(
             ILogger<ClientGrain> logger,
-            [PersistentState(CLIENT_STORAGE, Constants.STORAGE_PROVIDER)] IPersistentState<ClientState> clientState)
+            [PersistentState(CLIENT_STORAGE, SignalROrleansConstants.SIGNALR_ORLEANS_STORAGE_PROVIDER)] IPersistentState<ClientGrainState> clientState)
         {
             _logger = logger;
             _clientState = clientState;
         }
 
-        public override async Task OnActivateAsync()
+        public override async Task OnActivateAsync(CancellationToken cancellationToken)
         {
-            _keyData = new ConnectionGrainKey(this.GetPrimaryKeyString());
-            _streamProvider = GetStreamProvider(Constants.STREAM_PROVIDER);
-            _clientDisconnectStream = _streamProvider.GetStream<string>(Constants.CLIENT_DISCONNECT_STREAM_ID, _keyData.Id);
+            var key = ClientKey.FromGrainPrimaryKey(this.GetPrimaryKeyString());
+            _hubName = key.HubType;
+            _connectionId = key.ConnectionId;
 
-            if (_clientState.State.ServerId == Guid.Empty)
-                return;
+            _streamProvider = this.GetOrleansSignalRStreamProvider();
 
-            _serverStream = _streamProvider.GetStream<ClientMessage>(_clientState.State.ServerId, Constants.SERVERS_STREAM);
-            _serverDisconnectedStream = _streamProvider.GetStream<Guid>(_clientState.State.ServerId, Constants.SERVER_DISCONNECTED);
-            var subscriptions = await _serverDisconnectedStream.GetAllSubscriptionHandles();
-            var subscriptionTasks = new Task[subscriptions.Count];
-            for (int i = 0; i < subscriptions.Count; i++)
+            // Resume subscriptions if we have already been "connected".
+            // We know we have already been connected if the "ServerId" parameter is set.
+            if (_serverId != default)
             {
-                var subscription = subscriptions[i];
-                subscriptionTasks[i] = subscription.ResumeAsync((serverId, _) => OnDisconnect("server-disconnected"));
-            }
-
-            await Task.WhenAll(subscriptionTasks);
-        }
-
-        public async Task Send(Immutable<InvocationMessage> message)
-        {
-            if (_clientState.State.ServerId != Guid.Empty)
-            {
-                _logger.LogDebug("Sending message on {hubName}.{targetMethod} to connection {connectionId}", _keyData.HubName, message.Value.Target, _keyData.Id);
-                _failAttempts = 0;
-                await _serverStream.OnNextAsync(new ClientMessage(_keyData.HubName, _keyData.Id, message.Value));
-                return;
-            }
-
-            _logger.LogInformation("Client not connected for connectionId {connectionId} and hub {hubName} ({targetMethod})", _keyData.Id, _keyData.HubName, message.Value.Target);
-
-            _failAttempts++;
-            if (_failAttempts >= _maxFailAttempts)
-            {
-                await OnDisconnect("attempts-limit-reached");
-                _logger.LogWarning("Force disconnect client for connectionId {connectionId} and hub {hubName} ({targetMethod}) after exceeding attempts limit",
-                    _keyData.Id, _keyData.HubName, message.Value.Target);
+                // We will listen to this stream to know if the server is disconnected (silo goes down) so that we can enact client disconnected procedure.
+                var serverDisconnectedStream = _streamProvider.GetServerDisconnectionStream(_clientState.State.ServerId);
+                var _serverDisconnectedSubscription = (await serverDisconnectedStream.GetAllSubscriptionHandles())[0];
+                await _serverDisconnectedSubscription.ResumeAsync((serverId, _) => OnDisconnect("server-disconnected"));
             }
         }
 
         public async Task OnConnect(Guid serverId)
         {
+            var serverDisconnectedStream = _streamProvider.GetServerDisconnectionStream(serverId);
+            _serverDisconnectedSubscription = await serverDisconnectedStream.SubscribeAsync(_ => OnDisconnect("server-disconnected"));
+
             _clientState.State.ServerId = serverId;
-            _serverStream = _streamProvider.GetStream<ClientMessage>(_clientState.State.ServerId, Constants.SERVERS_STREAM);
-            _serverDisconnectedStream = _streamProvider.GetStream<Guid>(_clientState.State.ServerId, Constants.SERVER_DISCONNECTED);
-            _serverDisconnectedSubscription = await _serverDisconnectedStream.SubscribeAsync(_ => OnDisconnect("server-disconnected"));
             await _clientState.WriteStateAsync();
         }
 
         public async Task OnDisconnect(string? reason = null)
         {
-            _logger.LogDebug("Disconnecting connection on {hubName} for connection {connectionId} from server {serverId} via {reason}",
-                _keyData.HubName, _keyData.Id, _clientState.State.ServerId, reason);
+            _logger.LogDebug("Disconnecting connection on {hubName} for connection {connectionId} from server {serverId} via reason '{reason}'.",
+                _hubName, _connectionId, _clientState.State.ServerId, reason);
 
-            if (_keyData.Id != null)
+            if (_serverDisconnectedSubscription is not null)
             {
-                await _clientDisconnectStream.OnNextAsync(_keyData.Id);
+                await _serverDisconnectedSubscription.UnsubscribeAsync();
+                _serverDisconnectedSubscription = null;
             }
+
+            await _streamProvider.GetClientDisconnectionStream(_connectionId).OnNextAsync(_connectionId);
+
             await _clientState.ClearStateAsync();
 
-            if (_serverDisconnectedSubscription != null)
-                await _serverDisconnectedSubscription.UnsubscribeAsync();
-
             DeactivateOnIdle();
+        }
+
+        // NB: Interface method is marked [ReadOnly] so this method will be re-entrant/interleaved.
+        public async Task Send(Immutable<InvocationMessage> message)
+        {
+            if (_serverId != default)
+            {
+                _logger.LogDebug("Sending message on {hubName}.{message.Value.Target} to connection {connectionId}",
+                    _hubName, message.Value.Target, _connectionId);
+
+                // Routes the message to the silo (server) where the client is actually connected.
+                await _streamProvider.GetServerStream(_serverId).OnNextAsync(new ClientMessage(_hubName, _connectionId, message));
+
+                Interlocked.Exchange(ref _failAttempts, 0);
+            }
+            else
+            {
+                _logger.LogInformation("Client not connected for connectionId '{connectionId}' and hub '{hubName}' ({targetMethod})",
+                    _connectionId, _hubName, message.Value.Target);
+
+                if (Interlocked.Increment(ref _failAttempts) >= MAX_FAIL_ATTEMPTS)
+                {
+                    _logger.LogWarning("Force disconnect client for connectionId {connectionId} and hub {hubName} ({targetMethod}) after exceeding attempts limit",
+                        _connectionId, _hubName, message.Value.Target);
+
+                    await OnDisconnect("attempts-limit-reached");
+                }
+            }
         }
     }
 }

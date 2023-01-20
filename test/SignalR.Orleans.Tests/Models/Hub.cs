@@ -4,12 +4,10 @@ namespace SignalR.Orleans.Tests.Models
 {
     public class MyHub : Hub
     {
-
     }
 
     public class DifferentHub : Hub
     {
-
     }
 
     // matching interface naming
