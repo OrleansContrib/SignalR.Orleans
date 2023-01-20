@@ -7,7 +7,7 @@
 [![Package Version](https://img.shields.io/nuget/v/SignalR.Orleans.svg)](https://www.nuget.org/packages/SignalR.Orleans)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/SignalR.Orleans.svg)](https://www.nuget.org/packages/SignalR.Orleans)
 [![License](https://img.shields.io/github/license/OrleansContrib/SignalR.Orleans.svg)](https://github.com/OrleansContrib/SignalR.Orleans/blob/master/LICENSE)
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dotnet/orleans?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+[![Discord](https://img.shields.io/discord/333727978460676096)](https://discord.gg/TCSAgM9k)
 
 [Orleans](https://learn.microsoft.com/en-us/dotnet/orleans/overview) is a cross-platform framework for building robust, scalable distributed applications. Distributed applications are defined as apps that span more than a single process, often beyond hardware boundaries using peer-to-peer communication. Orleans scales from a single on-premises server to hundreds to thousands of distributed, highly available applications in the cloud. [See Orleans source code on Github](https://github.com/dotnet/orleans)
 
@@ -17,7 +17,7 @@
 
 1. Use your Orleans cluster as a backplane for SignalR. [Learn about scaling out SignalR on multiple servers.](https://learn.microsoft.com/en-us/aspnet/core/signalr/scale?view=aspnetcore-7.0)
 
-> There are various choices of backplane that you can use for SignalR, as you will see in the link above. If you're already using Orleans, then you might want to use Orleans as the backplane to reduce the number of dependencies used by your application and to reduce the number of network hops (and latency) that would be4 required when calling an external service.
+> There are various choices of backplane that you can use for SignalR, as you will see in the link above. If you're already using Orleans, then you might want to use Orleans as the backplane to reduce the number of dependencies used by your application and to reduce the number of network hops (and latency) that would be required when calling an external service.
 
 2. Send messages from Orleans grains to SignalR clients.
 
@@ -25,7 +25,7 @@
 
 > However, if the SignalR component of your application is "remote" from the grains, this package will give the grains a way of sending messages to SignalR clients by injecting `SignalR.Orleans.Core.HubContext<MyHub>`.
 
-These two abilities should be provided independently of each other. Unfortunately at this stage, ability #2 is only provided if ability #1 is used as well.
+TODO: These two abilities should be provided independently of each other. Unfortunately at this stage, ability #2 is only provided if ability #1 is used as well.
 
 # Installation
 
@@ -49,18 +49,146 @@ Paket:
 # Version 7.0.0 documentation
 > Scroll down to see documentation for earlier versions.
 
-A complete starter example, cohosted aspnetcore app with SignalR and Orleans.
+Here is a complete starter example featuring cohosted aspnetcore app with SignalR and Orleans.
 
 ```csharp
+using Microsoft.AspNetCore.SignalR;
+using Orleans.Hosting;
+using SignalR.Orleans;
+
+// Create a host that can cohost aspnetcore AND orleans together in a single process.
+var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseOrleans(siloBuilder => 
+{
+    siloBuilder.UseLocalhostClustering();
+    siloBuilder.UseSignalR(); // Adds ability #1 and #2 to Orleans.
+    siloBuilder.RegisterHub<MyHub>(); // Required for each hub type if the backplane ability #1 is being used.
+});
+
+builder.Services
+    .AddSignalR()  // Adds SignalR hubs to the web application
+    .AddOrleans(); // Tells the SignalR hubs in the web application to use Orleans as a backplane (ability #1)
+
+var app = builder.Build();
+app.MapHub<MyHub>("/myhub");
+await app.RunAsync();
+
+// A SignalR Hub. https://learn.microsoft.com/en-us/aspnet/core/signalr/hubs?view=aspnetcore-7.0
+class MyHub : Hub
+{
+}
 ```
 
+### Silo configuration - grain storage
 
+The SignalR.Orleans backplane (ability #1) uses grains under the hood that use storage to keep track of where each SignalR client is connected and what groups it belongs to. The storage used by default is `MemoryStorage`.
+
+Use the given storage name constant to configure the correct storage provider.
+
+```csharp
+// **************************************************************************
+// Use memory storage ONLY when your app is not clustered, otherwise you'll
+// need to use proper external storage providers
+// **************************************************************************
+          
+// Customize the storage used by the SignalR Orleans backplane grains.
+siloBuilder.AddSomeOtherGrainStorage(SignalROrleansConstants.SIGNALR_ORLEANS_STORAGE_PROVIDER);
+
+// THEN
+siloBuilder.UseSignalR();
+```
+
+### Silo configuration - stream type and stream storage
+
+SignalR.Orleans uses streams under the hood to provide the backplane (ability #1). The default stream type is `MemoryStream`. All streams in a given Orleans instance must use the same storage provider, named `PubSubStore`, currently defaulted to `MemoryStorage`.
+
+```csharp
+// FIRST customize the storage used by ALL stream providers in the entire Orleans host:
+// Remember, memory storage won't work if you're using a cluster.
+siloBuilder.AddSomeOtherGrainStorage("PubSubStore");
+
+// THEN customize the type of stream used for the backplane, using the correct stream provider name
+siloBuilder.AddPersistentStreams(SignalROrleansConstants.SIGNALR_ORLEANS_STREAM_PROVIDER, adapterFactory, configureStream);
+
+// THEN
+siloBuilder.UseSignalR();
+```
+
+## Sending messages from Orleans grains
+
+If the SignalR app is cohosted as demonstrated above, you don't need this package to send messages from an Orleans grain. Simply inject `IHubContext<MyHub>` to the grain's constructor and call its methods to send messages. [Read more about it here.](https://learn.microsoft.com/en-us/aspnet/core/signalr/hubcontext?view=aspnetcore-7.0)
+
+However, if the SignalR app is not cohosted, and if it's using Orleans as a backplane, then it's possible to use this package to send messages to the SignalR clients using the backplane streams in Orleans as a conduit (ability #2).
+
+```csharp
+class SampleGrain : Grain, ISampleGrain
+{
+  private readonly SignalR.Orleans.Core.HubContext<MyHub> _hubContext;
+
+  public SampleGrain(SignalR.Orleans.Core.HubContext<MyHub> hubContext)
+  {
+    _hubContext = hubContext;
+  }
+
+  public async Task SendMessageToClients()
+  {
+    // Create an invocation message
+    var msg = new InvocationMessage("method", new object?[]{ 1, 2, 3 }).ToImmutable();
+
+    // Send a message to a single client
+    await _hubContext.Client("someConnectionId").Send(msg);
+
+    // Send a message to a group
+    await _hubContext.Group("someGroupName").Send(msg);
+
+    // Send a message to all connections made by a particular authenticated user
+    await _hubContext.Group("someUserId").Send(msg);
+
+    // TODO: We have not implemented ability to send a message to ALL clients yet.
+  }
+}
+```
+
+## Configuring the `IClusterClient`
+If your SignalR app is cohosted with Orleans, it will automatically grab an `IClusterClient` from the service provider and connect to the Orleans backplane. 
+
+However, if it's not cohosted, you'll have to give it an `IClusterClient` to use: 
+
+```csharp
+using Microsoft.AspNetCore.SignalR;
+using Orleans.Hosting;
+using SignalR.Orleans;
+
+// Create a web application that will connect to a remote Orleans cluster
+var builder = WebApplication.CreateBuilder(args);
+builder.Services
+    // Adds an IClusterClient to the service provider.
+    .AddOrleansClient(clientBuilder =>
+    {
+        // Tell the client how to connect to Orleans (you'll need to customize this for yourself)
+        clientBuilder.UseLocalhostClustering();
+        // Tells the client how to connect to the SignalR.Orleans backplane.
+        clientBuilder.UseSignalR(configure: null);
+    })
+    .AddSignalR()  // Adds SignalR hubs to the web application
+    .AddOrleans(); // Tells SignalR to use Orleans as a backplane (ability #1)
+
+var app = builder.Build();
+app.MapHub<MyHub>("/myhub");
+await app.RunAsync();
+
+// A SignalR Hub. https://learn.microsoft.com/en-us/aspnet/core/signalr/hubs?view=aspnetcore-7.0
+class MyHub : Hub
+{
+}
+```
+
+This is the end of documentation for versions >= 7.0.0. Below is older documenation for previous versions.
 
 ---
 # Earlier version documentation
-# Configuration
 
-## Silo
+## Configure the Silo
 We need to configure the Orleans Silo with the below:
 * Use `.UseSignalR()` on `ISiloHostBuilder`.
 * Make sure to call `RegisterHub<THub>()` where `THub` is the type of the Hub you want to be added to the backplane.
