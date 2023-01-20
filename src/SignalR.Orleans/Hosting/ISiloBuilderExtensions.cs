@@ -27,7 +27,7 @@ public static class ISiloBuilderExtensions
 
         try
         {
-            builder.AddMemoryGrainStorage(SignalROrleansConstants.SIGNALR_ORLEANS_STREAM_STORAGE_PROVIDER); // "ORLEANS_SIGNALR_STORAGE_PROVIDER"
+            builder.AddMemoryGrainStorage(SignalROrleansConstants.SIGNALR_ORLEANS_STORAGE_PROVIDER); // "ORLEANS_SIGNALR_STORAGE_PROVIDER"
         }
         catch
         {

@@ -13,5 +13,11 @@ namespace Orleans.Hosting
             builder.Services.AddSingleton(typeof(HubLifetimeManager<>), typeof(OrleansHubLifetimeManager<>));
             return builder;
         }
+
+        public static ISignalRServerBuilder AddOrleans(this ISignalRServerBuilder builder)
+        {
+            builder.Services.AddSingleton(typeof(HubLifetimeManager<>), typeof(OrleansHubLifetimeManager<>));
+            return builder;
+        }
     }
 }

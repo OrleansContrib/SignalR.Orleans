@@ -15,7 +15,7 @@ namespace SignalR.Orleans.Core
 
         public ServerDirectoryGrain(
             ILogger<ServerDirectoryGrain> logger,
-            [PersistentState(nameof(ServerDirectoryState), SignalROrleansConstants.SIGNALR_ORLEANS_STREAM_STORAGE_PROVIDER)] IPersistentState<ServerDirectoryState> state)
+            [PersistentState(nameof(ServerDirectoryState), SignalROrleansConstants.SIGNALR_ORLEANS_STORAGE_PROVIDER)] IPersistentState<ServerDirectoryState> state)
         {
             _logger = logger;
             _state = state;
