@@ -101,7 +101,12 @@ internal class ClientGrain : Grain<ClientState>, IClientGrain
 
 	private void SetupStreams()
 	{
-		_serverStream = _streamProvider.GetStreamReplicaRandom<ClientMessage>(State.ServerId, Constants.SERVERS_STREAM, Constants.STREAM_SEND_REPLICAS);
+		_serverStream = _streamProvider.GetStreamReplica<ClientMessage>(
+			State.ServerId,
+			Constants.SERVERS_STREAM,
+			Constants.STREAM_SEND_REPLICAS,
+			this.GetPrimaryKeyString()
+		);
 		_serverDisconnectedStream = _streamProvider.GetStream<Guid>(State.ServerId, Constants.SERVER_DISCONNECTED);
 	}
 }

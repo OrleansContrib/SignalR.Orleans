@@ -2,6 +2,12 @@
 
 [_vNext_](https://github.com/sketch7/SignalR.Orleans/compare/1.0.0...1.1.0) (2019-X-X)
 
+## [4.0.1](https://github.com/sketch7/SignalR.Orleans/compare/4.0.0...4.0.1) (2023-02-06)
+
+### Bug Fixes
+
+- **orleans:** generate stream replica consistent instead of random, in order to reuse same stream
+
 ## [4.0.0](https://github.com/sketch7/SignalR.Orleans/compare/3.1.0...4.0.0) (2022-03-08)
 
 ### Features

@@ -26,6 +26,7 @@
     <PackageReference Include="Microsoft.Orleans.OrleansProviders" Version="$(OrleansVersion)" />
     <PackageReference Include="Microsoft.Orleans.Runtime.Abstractions" Version="$(OrleansVersion)" />
     <PackageReference Include="Orleans.Streams.Utils" Version="$(OrleansStreamsUtilsVersion)" />
+    <PackageReference Include="System.Data.HashFunction.xxHash" Version="2.0.0" />
   </ItemGroup>
 
 </Project>
