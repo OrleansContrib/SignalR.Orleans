@@ -1,18 +1,15 @@
-﻿using Microsoft.Extensions.Logging;
-using Orleans.Providers;
-using SignalR.Orleans.Core;
+﻿using SignalR.Orleans.Core;
 
-namespace SignalR.Orleans.Users
+namespace SignalR.Orleans.Users;
+
+[StorageProvider(ProviderName = Constants.STORAGE_PROVIDER)]
+internal class UserGrain : ConnectionGrain<UserState>, IUserGrain
 {
-    [StorageProvider(ProviderName = Constants.STORAGE_PROVIDER)]
-    internal class UserGrain : ConnectionGrain<UserState>, IUserGrain
-    {
-        public UserGrain(ILogger<UserGrain> logger) : base(logger)
-        {
-        }
-    }
+	public UserGrain(ILogger<UserGrain> logger) : base(logger)
+	{
+	}
+}
 
-    internal class UserState : ConnectionState
-    {
-    }
+internal class UserState : ConnectionState
+{
 }

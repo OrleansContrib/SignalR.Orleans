@@ -1,8 +1,7 @@
 ﻿using SignalR.Orleans.Core;
 
-namespace SignalR.Orleans.Users
+namespace SignalR.Orleans.Users;
+
+public interface IUserGrain : IConnectionGrain
 {
-    public interface IUserGrain : IConnectionGrain
-    {
-    }
 }
