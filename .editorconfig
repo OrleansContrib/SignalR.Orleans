@@ -1,8 +1,16 @@
-# Remove the line below if you want to inherit .editorconfig settings from higher directories
 root = true
+# Remove the line below if you want to inherit .editorconfig settings from higher directories
 
 [*]
 indent_style = tab
+
+# Microsoft .NET properties
+dotnet_style_parentheses_in_arithmetic_binary_operators = always_for_clarity:none
+dotnet_style_parentheses_in_other_binary_operators = always_for_clarity:none
+dotnet_style_parentheses_in_relational_binary_operators = always_for_clarity:none
+
+# ReSharper inspection severities
+resharper_arrange_redundant_parentheses_highlighting = warning
 
 [*.{json,yml,yaml,csproj,props,md}]
 indent_size = 2
@@ -15,8 +23,10 @@ indent_style = space
 
 # Indentation and spacing
 indent_size = 4
-indent_style = space
+indent_style = tab
 tab_width = 4
+max_line_length = 140
+trim_trailing_whitespace = true
 
 # New line preferences
 end_of_line = crlf
@@ -74,7 +84,7 @@ dotnet_code_quality_unused_parameters = all:suggestion
 
 # var preferences
 csharp_style_var_elsewhere = true:suggestion
-csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_for_built_in_types = true:suggestion
 csharp_style_var_when_type_is_apparent = true:suggestion
 
 # Expression-bodied members
@@ -114,6 +124,8 @@ csharp_style_unused_value_expression_statement_preference = discard_variable:sil
 # 'using' directive preferences
 csharp_using_directive_placement = outside_namespace:silent
 
+csharp_style_namespace_declarations = file_scoped:warning
+
 #### C# Formatting Rules ####
 
 # New line preferences
@@ -124,6 +136,8 @@ csharp_new_line_before_members_in_anonymous_types = true
 csharp_new_line_before_members_in_object_initializers = true
 csharp_new_line_before_open_brace = all
 csharp_new_line_between_query_expression_clauses = true
+csharp_keep_existing_initializer_arrangement = true
+csharp_place_simple_initializer_on_single_line = true
 
 # Indentation preferences
 csharp_indent_block_contents = true
@@ -173,6 +187,14 @@ dotnet_naming_rule.types_should_be_pascal_case.severity = suggestion
 dotnet_naming_rule.types_should_be_pascal_case.symbols = types
 dotnet_naming_rule.types_should_be_pascal_case.style = pascal_case
 
+dotnet_naming_rule.static_fieldprop_pascal_case.severity = suggestion
+dotnet_naming_rule.static_fieldprop_pascal_case.symbols = static_fieldprop
+dotnet_naming_rule.static_fieldprop_pascal_case.style = pascal_case
+
+dotnet_naming_rule.const_fieldprop.severity = suggestion
+dotnet_naming_rule.const_fieldprop.symbols = const_fieldprop
+dotnet_naming_rule.const_fieldprop.style = pascal_case
+
 dotnet_naming_rule.non_field_members_should_be_pascal_case.severity = suggestion
 dotnet_naming_rule.non_field_members_should_be_pascal_case.symbols = non_field_members
 dotnet_naming_rule.non_field_members_should_be_pascal_case.style = pascal_case
@@ -186,6 +208,14 @@ dotnet_naming_rule.private_or_internal_static_field_should_be_starts_with__.styl
 dotnet_naming_symbols.interface.applicable_kinds = interface
 dotnet_naming_symbols.interface.applicable_accessibilities = public, internal, private, protected, protected_internal
 dotnet_naming_symbols.interface.required_modifiers = 
+
+dotnet_naming_symbols.static_fieldprop.applicable_kinds = field, property
+dotnet_naming_symbols.static_fieldprop.applicable_accessibilities = private, public, internal
+dotnet_naming_symbols.static_fieldprop.required_modifiers = static, readonly
+
+dotnet_naming_symbols.const_fieldprop.applicable_kinds = field, property
+dotnet_naming_symbols.const_fieldprop.applicable_accessibilities = private, public, internal
+dotnet_naming_symbols.const_fieldprop.required_modifiers = const
 
 dotnet_naming_symbols.private_or_internal_static_field.applicable_kinds = field
 dotnet_naming_symbols.private_or_internal_static_field.applicable_accessibilities = internal, private

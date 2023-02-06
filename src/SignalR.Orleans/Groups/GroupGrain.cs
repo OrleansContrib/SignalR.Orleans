@@ -1,18 +1,15 @@
-using Microsoft.Extensions.Logging;
-using Orleans.Providers;
 using SignalR.Orleans.Core;
 
-namespace SignalR.Orleans.Groups
-{
-    [StorageProvider(ProviderName = Constants.STORAGE_PROVIDER)]
-    internal class GroupGrain : ConnectionGrain<GroupState>, IGroupGrain
-    {
-        public GroupGrain(ILogger<GroupGrain> logger) : base(logger)
-        {
-        }
-    }
+namespace SignalR.Orleans.Groups;
 
-    internal class GroupState : ConnectionState
-    {
-    }
+[StorageProvider(ProviderName = Constants.STORAGE_PROVIDER)]
+internal class GroupGrain : ConnectionGrain<GroupState>, IGroupGrain
+{
+	public GroupGrain(ILogger<GroupGrain> logger) : base(logger)
+	{
+	}
+}
+
+internal class GroupState : ConnectionState
+{
 }
