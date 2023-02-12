@@ -1,7 +1,6 @@
 ﻿using Orleans.Runtime;
 using Orleans.Streams;
 using SignalR.Orleans;
-using SignalR.Orleans.Clients;
 
 // ReSharper disable once CheckNamespace
 namespace Orleans

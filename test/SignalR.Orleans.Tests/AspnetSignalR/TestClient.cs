@@ -1,12 +1,8 @@
 // COPIED AND REFACTORED :: Microsoft.AspNetCore.SignalR.Tests
 // TODO: Since we're up a couple of SignalR versions now, this could have changed -- should revisit original implementation
 
-using System;
-using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Security.Claims;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Connections.Features;
 using Microsoft.AspNetCore.SignalR;

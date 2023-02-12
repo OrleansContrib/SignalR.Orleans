@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using SignalR.Orleans;
-using SignalR.Orleans.Clients;
+﻿using SignalR.Orleans;
 
 // ReSharper disable once CheckNamespace
 namespace Orleans.Hosting

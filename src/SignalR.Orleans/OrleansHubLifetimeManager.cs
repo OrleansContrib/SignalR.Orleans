@@ -15,8 +15,8 @@ namespace SignalR.Orleans
         private readonly ILogger _logger;
         private readonly string _hubName;
         private readonly IClusterClient _clusterClient;
-        private readonly SemaphoreSlim _streamSetupLock = new SemaphoreSlim(1);
-        private readonly HubConnectionStore _connections = new HubConnectionStore();
+        private readonly SemaphoreSlim _streamSetupLock = new(1);
+        private readonly HubConnectionStore _connections = new();
 
         private IStreamProvider? _streamProvider;
         private IAsyncStream<ClientMessage> _serverStream = default!;

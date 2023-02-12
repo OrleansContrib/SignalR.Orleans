@@ -1,6 +1,6 @@
 ﻿namespace SignalR.Orleans.ConnectionGroups
 {
-    internal record struct ConnectionGroupKey
+    internal readonly record struct ConnectionGroupKey
     {
         public required ConnectionGroupType GroupType { get; init; }
         public required string HubType { get; init; }

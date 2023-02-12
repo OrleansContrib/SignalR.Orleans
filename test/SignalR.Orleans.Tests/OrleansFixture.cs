@@ -1,11 +1,7 @@
-using System;
 using System.Net;
 using Microsoft.Extensions.DependencyInjection;
-using Orleans;
-using Orleans.Hosting;
 using Orleans.Configuration;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace SignalR.Orleans.Tests
 {

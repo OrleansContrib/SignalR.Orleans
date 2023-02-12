@@ -1,13 +1,8 @@
-using System;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.SignalR.Protocol;
-using Orleans;
 using Orleans.Runtime;
 using Orleans.Streams;
 using Orleans.Concurrency;
-using SignalR.Orleans.Core;
-using System.Diagnostics;
 
 namespace SignalR.Orleans.Clients
 {

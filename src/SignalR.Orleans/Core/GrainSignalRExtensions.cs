@@ -1,7 +1,5 @@
-﻿using System.Threading.Tasks;
-using Microsoft.AspNetCore.SignalR.Protocol;
+﻿using Microsoft.AspNetCore.SignalR.Protocol;
 using Orleans.Concurrency;
-using Orleans.Streams;
 using SignalR.Orleans.Core;
 
 // ReSharper disable once CheckNamespace
