@@ -1,13 +1,12 @@
 using SignalR.Orleans.Core;
 
-namespace SignalR.Orleans.Clients
+namespace SignalR.Orleans.Clients;
+
+/// <summary>
+/// A single connection
+/// </summary>
+public interface IClientGrain : IHubMessageInvoker, IGrainWithStringKey
 {
-    /// <summary>
-    /// A single connection
-    /// </summary>
-    public interface IClientGrain : IHubMessageInvoker, IGrainWithStringKey
-    {
-        Task OnConnect(Guid serverId);
-        Task OnDisconnect(string? reason = null);
-    }
+    Task OnConnect(Guid serverId);
+    Task OnDisconnect(string? reason = null);
 }

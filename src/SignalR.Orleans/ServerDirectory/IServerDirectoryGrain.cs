@@ -1,8 +1,7 @@
-﻿namespace SignalR.Orleans.Core
+﻿namespace SignalR.Orleans.Core;
+
+public interface IServerDirectoryGrain : IGrainWithIntegerKey
 {
-    public interface IServerDirectoryGrain : IGrainWithIntegerKey
-    {
-        Task Heartbeat(Guid serverId);
-        Task Unregister(Guid serverId);
-    }
+    Task Heartbeat(Guid serverId);
+    Task Unregister(Guid serverId);
 }

@@ -1,7 +1,6 @@
-﻿namespace SignalR.Orleans.Core
+﻿namespace SignalR.Orleans.Core;
+
+public sealed class ServerDirectoryState
 {
-    public sealed class ServerDirectoryState
-    {
-        public Dictionary<Guid, DateTime> ServerHeartBeats { get; set; } = new();
-    }
+    public Dictionary<Guid, DateTime> ServerHeartBeats { get; set; } = new();
 }

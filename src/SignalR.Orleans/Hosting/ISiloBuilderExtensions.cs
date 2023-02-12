@@ -1,12 +1,12 @@
-﻿using Orleans.Runtime;
-using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
+using Orleans.Runtime;
 using SignalR.Orleans;
 
 // ReSharper disable once CheckNamespace
-namespace Orleans.Hosting
-{
-    public static class ISiloBuilderExtensions
+namespace Orleans.Hosting;
+
+public static class ISiloBuilderExtensions
 {
     public static ISiloBuilder UseSignalR(this ISiloBuilder builder, Action<SignalROrleansSiloConfigBuilder>? configure = null)
     {
@@ -48,5 +48,4 @@ namespace Orleans.Hosting
 
         return builder;
     }
-}
 }

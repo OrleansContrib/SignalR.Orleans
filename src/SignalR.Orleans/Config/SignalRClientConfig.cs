@@ -1,7 +1,7 @@
-﻿namespace SignalR.Orleans
+﻿namespace SignalR.Orleans;
+
+public class SignalRClientConfig
 {
-    public class SignalRClientConfig
-    {
-        public bool UseFireAndForgetDelivery { get; set; }
-    }
+    public bool UseFireAndForgetDelivery { get; set; }
 }
+
