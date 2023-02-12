@@ -1,6 +1,6 @@
 ﻿// COPIED AND REFACTORED :: Microsoft.AspNetCore.SignalR.Tests
+// TODO: Since we're up a couple of SignalR versions now, this could have changed -- should revisit original implementation
 
-using System;
 using System.Reflection;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.SignalR;
@@ -16,7 +16,7 @@ namespace SignalR.Orleans.Tests.AspnetSignalR
             var ctx = new HubConnectionContext(connection, new HubConnectionContextOptions() { ClientTimeoutInterval = TimeSpan.FromSeconds(15) }, NullLoggerFactory.Instance);
             var protocolProp = ctx.GetType().GetProperty("Protocol", BindingFlags.Instance |
                                                                      BindingFlags.NonPublic |
-                                                                     BindingFlags.Public);
+                                                                     BindingFlags.Public)!;
             protocolProp.SetValue(ctx, new JsonHubProtocol());
             return ctx;
         }

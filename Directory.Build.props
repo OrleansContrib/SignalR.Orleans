@@ -1,5 +1,5 @@
 <Project>
-    <!-- Set the repository root into a variable -->
+    <!-- Set the repository root into a variable  -->
     <PropertyGroup>
         <SourceRoot>$(MSBuildThisFileDirectory)</SourceRoot>
     </PropertyGroup>
@@ -19,24 +19,12 @@
 
     <!-- Common compile parameters -->
     <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <LangVersion>latest</LangVersion>
+        <Nullable>enable</Nullable>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <NoWarn>$(NoWarn);1701;1702;1705;1591</NoWarn>
-        <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-        <LangVersion>latest</LangVersion>
-    </PropertyGroup>
-
-    <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
-    </PropertyGroup>
-
-    <!-- Shared Package Versions -->
-    <PropertyGroup>
-        <!-- vendors -->
-        <OrleansCoreVersion>3.6.3</OrleansCoreVersion>
-        <OrleansProvidersVersion>3.6.3</OrleansProvidersVersion>
-        <OrleansCodeGeneratorVersion>3.6.3</OrleansCodeGeneratorVersion>
-        <OrleansRuntimeAbstractionsVersion>3.6.3</OrleansRuntimeAbstractionsVersion>
-        <OrleansRuntimeVersion>3.6.3</OrleansRuntimeVersion>
     </PropertyGroup>
 
     <ItemGroup>

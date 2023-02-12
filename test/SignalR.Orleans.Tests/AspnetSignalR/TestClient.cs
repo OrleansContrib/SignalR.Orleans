@@ -1,11 +1,8 @@
 // COPIED AND REFACTORED :: Microsoft.AspNetCore.SignalR.Tests
+// TODO: Since we're up a couple of SignalR versions now, this could have changed -- should revisit original implementation
 
-using System;
-using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Security.Claims;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Connections.Features;
 using Microsoft.AspNetCore.SignalR;
@@ -21,9 +18,10 @@ namespace SignalR.Orleans.Tests.AspnetSignalR
         private readonly CancellationTokenSource _cts;
 
         public DefaultConnectionContext Connection { get; }
-        public Task Connected => ((TaskCompletionSource<bool>)Connection.Items["ConnectedTask"]).Task;
 
-        public TestClient(bool synchronousCallbacks = false, IHubProtocol protocol = null, IInvocationBinder invocationBinder = null, bool addClaimId = false)
+        public Task Connected => ((TaskCompletionSource<bool>)Connection.Items["ConnectedTask"]!).Task;
+
+        public TestClient(bool synchronousCallbacks = false, IHubProtocol? protocol = null, IInvocationBinder? invocationBinder = null, bool addClaimId = false)
         {
             var pair = DuplexPipePair.GetConnectionTransport(synchronousCallbacks);
             Connection = new DefaultConnectionContext(Guid.NewGuid().ToString(), pair.Transport, pair.Application);
@@ -57,7 +55,7 @@ namespace SignalR.Orleans.Tests.AspnetSignalR
             {
                 var message = await ReadAsync();
 
-                if (message == null)
+                if (message is null)
                 {
                     throw new InvalidOperationException("Connection aborted!");
                 }
@@ -114,33 +112,33 @@ namespace SignalR.Orleans.Tests.AspnetSignalR
             }
         }
 
-        public Task<string> SendInvocationAsync(string methodName, params object[] args)
+        public Task<string?> SendInvocationAsync(string methodName, params object[] args)
         {
             return SendInvocationAsync(methodName, nonBlocking: false, args: args);
         }
 
-        public Task<string> SendInvocationAsync(string methodName, bool nonBlocking, params object[] args)
+        public Task<string?> SendInvocationAsync(string methodName, bool nonBlocking, params object[] args)
         {
             var invocationId = nonBlocking ? null : GetInvocationId();
             return SendHubMessageAsync(new InvocationMessage(invocationId, methodName, args));
         }
 
-        public Task<string> SendStreamInvocationAsync(string methodName, params object[] args)
+        public Task<string?> SendStreamInvocationAsync(string methodName, params object[] args)
         {
             var invocationId = GetInvocationId();
             return SendHubMessageAsync(new StreamInvocationMessage(invocationId, methodName, args));
         }
 
 
-        public async Task<string> SendHubMessageAsync(HubMessage message)
+        public async Task<string?> SendHubMessageAsync(HubMessage message)
         {
             var payload = _protocol.GetMessageBytes(message);
 
-            await Connection.Application.Output.WriteAsync(payload);
+            await Connection.Application!.Output.WriteAsync(payload);
             return message is HubInvocationMessage hubMessage ? hubMessage.InvocationId : null;
         }
 
-        public async Task<HubMessage> ReadAsync(bool isHandshake = false)
+        public async Task<HubMessage?> ReadAsync(bool isHandshake = false)
         {
             while (true)
             {
@@ -148,7 +146,7 @@ namespace SignalR.Orleans.Tests.AspnetSignalR
 
                 if (message == null)
                 {
-                    var result = await Connection.Application.Input.ReadAsync().OrTimeout();
+                    var result = await Connection.Application!.Input.ReadAsync().OrTimeout();
                     var buffer = result.Buffer;
 
                     try
@@ -175,9 +173,9 @@ namespace SignalR.Orleans.Tests.AspnetSignalR
             }
         }
 
-        public HubMessage TryRead(bool isHandshake = false)
+        public HubMessage? TryRead(bool isHandshake = false)
         {
-            if (!Connection.Application.Input.TryRead(out var result))
+            if (!Connection.Application!.Input.TryRead(out var result))
             {
                 return null;
             }
@@ -214,7 +212,7 @@ namespace SignalR.Orleans.Tests.AspnetSignalR
         {
             _cts.Cancel();
 
-            Connection.Application.Output.Complete();
+            Connection.Application!.Output.Complete();
         }
 
         private static string GetInvocationId()
@@ -244,17 +242,13 @@ namespace SignalR.Orleans.Tests.AspnetSignalR
         public TransferFormat SupportedFormats { get; set; } = TransferFormat.Text | TransferFormat.Binary;
         public TransferFormat ActiveFormat { get; set; }
         private readonly object _heartbeatLock = new object();
-        private List<(Action<object> handler, object state)> _heartbeatHandlers;
-
+        private List<(Action<object> handler, object state)>? _heartbeatHandlers;
 
         public void OnHeartbeat(Action<object> action, object state)
         {
             lock (_heartbeatLock)
             {
-                if (_heartbeatHandlers == null)
-                {
-                    _heartbeatHandlers = new List<(Action<object> handler, object state)>();
-                }
+                _heartbeatHandlers ??= new();
                 _heartbeatHandlers.Add((action, state));
             }
         }

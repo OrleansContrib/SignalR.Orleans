@@ -1,44 +1,47 @@
-using System;
 using System.Net;
 using Microsoft.Extensions.DependencyInjection;
-using Orleans;
-using Orleans.Hosting;
 using Orleans.Configuration;
-using SignalR.Orleans.Clients;
+using Microsoft.Extensions.Hosting;
 
 namespace SignalR.Orleans.Tests
 {
     public class OrleansFixture : IDisposable
     {
-        public ISiloHost Silo { get; }
-        public IClusterClientProvider ClientProvider { get; }
+        public IHost Silo { get; }
+        public IClusterClient Client { get; }
+        public IHost ClientHost { get; }
 
         public OrleansFixture()
         {
-            var silo = new SiloHostBuilder()
-                .UseLocalhostClustering()
-                .Configure<EndpointOptions>(options => options.AdvertisedIPAddress = IPAddress.Loopback)
-                .AddMemoryGrainStorage(Constants.PUBSUB_PROVIDER)
-                .UseSignalR()
-                .Build();
-            silo.StartAsync().Wait();
-            Silo = silo;
-
-            var client = new ClientBuilder()
-                .UseLocalhostClustering()
-                .Configure<EndpointOptions>(options => options.AdvertisedIPAddress = IPAddress.Loopback)
-                .UseSignalR()
-                .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(IClientGrain).Assembly).WithReferences())
+            Silo = new HostBuilder()
+                .UseOrleans(siloBuilder =>
+                {
+                    siloBuilder.UseLocalhostClustering();
+                    siloBuilder.Configure<EndpointOptions>(options => options.AdvertisedIPAddress = IPAddress.Loopback);
+                    siloBuilder.UseSignalR();
+                })
                 .Build();
 
-            client.Connect().Wait();
-            ClientProvider = new DefaultClusterClientProvider(client);
+            Silo.StartAsync().GetAwaiter().GetResult();
+
+            ClientHost = new HostBuilder()
+                .UseOrleansClient(clientBuilder =>
+                {
+                    clientBuilder.UseLocalhostClustering();
+                    clientBuilder.UseSignalR(config: null); // fixes compiler confusion
+                })
+                .Build();
+
+            ClientHost.StartAsync().GetAwaiter().GetResult();
+            Client = ClientHost.Services.GetRequiredService<IClusterClient>();
         }
 
         public void Dispose()
         {
-            ClientProvider.GetClient().Close().Wait();
-            Silo.StopAsync().Wait();
+            ClientHost.StopAsync().GetAwaiter().GetResult();
+            Silo.StopAsync().GetAwaiter().GetResult();
+            ClientHost.Dispose();
+            Silo.Dispose();
         }
     }
 }
