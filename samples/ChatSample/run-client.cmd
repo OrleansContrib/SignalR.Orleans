@@ -1,1 +1,0 @@
-dotnet run --project .\Client\Client.csproj

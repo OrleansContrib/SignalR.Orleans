@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Protocol;
 using Orleans.Runtime;
 using Orleans.Streams;
-using Orleans.Concurrency;
 
 namespace SignalR.Orleans;
 
@@ -30,7 +29,7 @@ public sealed class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>, 
     {
         var hubType = typeof(THub).BaseType?.GenericTypeArguments.FirstOrDefault() ?? typeof(THub);
         _hubName = hubType.IsInterface && hubType.Name[0] == 'I'
-            ? hubType.Name.Substring(1)
+            ? hubType.Name[1..]
             : hubType.Name;
         _serverId = Guid.NewGuid();
         _logger = logger;
@@ -291,6 +290,6 @@ public sealed class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>, 
         lifecycle.Subscribe(
            observerName: nameof(OrleansHubLifetimeManager<THub>),
            stage: ServiceLifecycleStage.Active,
-           onStart: _ => EnsureStreamSetup());
+           onStart: async cts => await Task.Run(EnsureStreamSetup, cts));
     }
 }
