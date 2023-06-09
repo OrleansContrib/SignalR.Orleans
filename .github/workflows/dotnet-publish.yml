@@ -1,0 +1,25 @@
+name: Package build/publish
+
+on:
+  push:
+    branches:
+      - master
+      - '*.x'
+      # - feature/*
+
+  pull_request:
+    branches:
+      - master
+      - '*.x'
+
+jobs:
+  build:
+    name: dotnet package
+    uses: sketch7/.github/.github/workflows/dotnet-package.yml@feature/reusable-workflow-setup
+    with:
+      dotnet-version: 6.0.x
+      publishable: ${{ contains(fromJSON('["develop", "master", "workflow", "feature/reusable-workflow"]'), github.ref_name) || endsWith(github.ref_name, '.x')  }}
+    secrets:
+      nuget-auth-token: ${{ secrets.NUGET_KEY }}
+
+
