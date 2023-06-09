@@ -3,7 +3,7 @@
   <h1>Sketch7 SignalR.Orleans</h1><small>fork from <a href="https://github.com/OrleansContrib/SignalR.Orleans">OrleansContrib/SignalR.Orleans</a></small>
 </p>
 
-[![CircleCI](https://circleci.com/gh/sketch7/Sketch7.SignalR.Orleans.svg?style=shield)](https://circleci.com/gh/sketch7/Sketch7.SignalR.Orleans)
+[![Package build/publish](https://github.com/sketch7/SignalR.Orleans/actions/workflows/dotnet-publish.yml/badge.svg)](https://github.com/sketch7/SignalR.Orleans/actions/workflows/dotnet-publish.yml)
 [![NuGet version](https://badge.fury.io/nu/Sketch7.SignalR.Orleans.svg)](https://badge.fury.io/nu/Sketch7.SignalR.Orleans)
 
 [Orleans](https://github.com/dotnet/orleans) is a framework that provides a straight-forward approach to building distributed high-scale computing applications, without the need to learn and apply complex concurrency or other scaling patterns. 
@@ -17,11 +17,11 @@
 
 Installation is performed via [NuGet](https://www.nuget.org/packages/Sketch7.SignalR.Orleans/)
 
-## Netcore support
+## dotnet support
 - Use 1.x for netcore2
 - Use 2.x for netcore3
-- Use 3.x for netcore5
-- Use 4.x for netcore6
+- Use 3.x for net5
+- Use 4.x for net6
 
 From Package Manager:
 
