@@ -18,10 +18,13 @@
 Installation is performed via [NuGet](https://www.nuget.org/packages/Sketch7.SignalR.Orleans/)
 
 ## dotnet support
-- Use 1.x for netcore2
-- Use 2.x for netcore3
-- Use 3.x for net5
-- Use 4.x for net6
+
+| Version | .NET     | Status                                                                                                                                                                                                            |
+| ------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.x     | netcore2 |                                                                                                                                                                                                                   |
+| 2.x     | netcore3 |                                                                                                                                                                                                                   |
+| 3.x     | net5     |                                                                                                                                                                                                                   |
+| 4.x     | net6     | [![Package build/publish](https://github.com/sketch7/SignalR.Orleans/actions/workflows/dotnet-publish.yml/badge.svg?branch=4.x)](https://github.com/sketch7/SignalR.Orleans/actions/workflows/dotnet-publish.yml) |
 
 From Package Manager:
 
