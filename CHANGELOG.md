@@ -2,6 +2,12 @@
 
 [_vNext_](https://github.com/sketch7/SignalR.Orleans/compare/1.0.0...1.1.0) (2019-X-X)
 
+## [4.0.3](https://github.com/sketch7/SignalR.Orleans/compare/4.0.2...4.0.3) (2023-06-09)
+No changes CI switching testing
+
+## [4.0.2](https://github.com/sketch7/SignalR.Orleans/compare/4.0.1...4.0.2) (2023-06-09)
+No changes CI switching testing
+
 ## [4.0.1](https://github.com/sketch7/SignalR.Orleans/compare/4.0.0...4.0.1) (2023-02-06)
 
 ### Bug Fixes
