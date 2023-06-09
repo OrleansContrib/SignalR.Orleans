@@ -1,4 +1,4 @@
-name: Package build/publish
+name: CI
 
 on:
   push:
@@ -17,8 +17,8 @@ on:
       - '**.md'
 
 jobs:
-  build:
-    name: dotnet package
+  package:
+    name: Package
     uses: sketch7/.github/.github/workflows/dotnet-package.yml@master
     with:
       dotnet-version: 6.0.x

@@ -19,12 +19,12 @@ Installation is performed via [NuGet](https://www.nuget.org/packages/Sketch7.Sig
 
 ## dotnet support
 
-| Version | .NET     | Status                                                                                                                                                                                                            |
-| ------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1.x     | netcore2 |                                                                                                                                                                                                                   |
-| 2.x     | netcore3 |                                                                                                                                                                                                                   |
-| 3.x     | net5     |                                                                                                                                                                                                                   |
-| 4.x     | net6     | [![Package build/publish](https://github.com/sketch7/SignalR.Orleans/actions/workflows/dotnet-publish.yml/badge.svg?branch=4.x)](https://github.com/sketch7/SignalR.Orleans/actions/workflows/dotnet-publish.yml) |
+| Version | .NET     | Status                                                                                                                                                                                         |
+| ------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.x     | netcore2 |                                                                                                                                                                                                |
+| 2.x     | netcore3 |                                                                                                                                                                                                |
+| 3.x     | net5     |                                                                                                                                                                                                |
+| 4.x     | net6     | [![CI](https://github.com/sketch7/SignalR.Orleans/actions/workflows/dotnet-publish.yml/badge.svg?branch=4.x)](https://github.com/sketch7/SignalR.Orleans/actions/workflows/dotnet-publish.yml) |
 
 From Package Manager:
 
