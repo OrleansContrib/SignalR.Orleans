@@ -11,6 +11,10 @@ internal class ClientState
 	public Guid ServerId { get; set; }
 }
 
+/// <summary>
+/// Client (connection) which manage the connection to a server and dispatch messages to the hub manager e.g. Client -> HubManager
+/// (via stream) to the connected server. e.g. '{hubName}:{connectionId}' ('hero:xyz123')
+/// </summary>
 [StorageProvider(ProviderName = Constants.STORAGE_PROVIDER)]
 internal class ClientGrain : Grain<ClientState>, IClientGrain
 {

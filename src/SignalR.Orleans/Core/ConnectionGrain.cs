@@ -3,6 +3,12 @@ using Orleans.Runtime;
 
 namespace SignalR.Orleans.Core;
 
+// todo: rename to ConnectionGroupGrain
+/// <summary>
+/// Connection grain is responsible for grouping connections by hub name and group e.g. '{hubName}:{groupName}' ('hero:top').
+/// This will be used to send messages to all connections in the group e.g. Group -> Client -> HubManager
+/// </summary>
+/// <typeparam name="TGrainState"></typeparam>
 internal abstract class ConnectionGrain<TGrainState> : Grain<TGrainState>, IConnectionGrain
 	where TGrainState : ConnectionState, new()
 {
