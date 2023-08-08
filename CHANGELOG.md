@@ -2,6 +2,12 @@
 
 [_vNext_](https://github.com/sketch7/SignalR.Orleans/compare/1.0.0...1.1.0) (2019-X-X)
 
+## [4.0.4](https://github.com/sketch7/SignalR.Orleans/compare/4.0.3...4.0.4) (2023-08-08)
+
+### Features
+
+- **hub context:** add `HubContext` non generic version (for dynamic usages)
+
 ## [4.0.3](https://github.com/sketch7/SignalR.Orleans/compare/4.0.2...4.0.3) (2023-06-09)
 No changes CI switching testing
 

@@ -33,8 +33,11 @@ public static class GrainSignalRExtensions
 
 public static class GrainFactoryExtensions
 {
+	public static HubContext GetHub(this IGrainFactory grainFactory, string hubName)
+		=> new(grainFactory, hubName);
+
 	public static HubContext<THub> GetHub<THub>(this IGrainFactory grainFactory)
-		=> new HubContext<THub>(grainFactory);
+		=> new(grainFactory);
 
 	internal static IClientGrain GetClientGrain(this IGrainFactory factory, string hubName, string connectionId)
 		=> factory.GetGrain<IClientGrain>(ConnectionGrainKey.Build(hubName, connectionId));
