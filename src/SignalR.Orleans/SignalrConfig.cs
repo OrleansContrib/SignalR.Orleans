@@ -27,7 +27,7 @@ namespace SignalR.Orleans
     {
         public bool UseFireAndForgetDelivery { get; set; }
 
-        public bool ConflateStorageAccess { get; } = false;
+        public bool ConflateStorageAccess { get; set; } = false;
     }
 
     public class SignalrOrleansSiloConfigBuilder : SignalrOrleansConfigBaseBuilder
