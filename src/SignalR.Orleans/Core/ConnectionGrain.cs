@@ -1,13 +1,14 @@
-﻿using System.Linq;
-using System.Buffers;
-using System.Threading.Tasks;
+﻿using System.Buffers;
 using System.Collections.Generic;
-using Microsoft.Extensions.Logging;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Protocol;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Orleans;
-using Orleans.Streams;
-using Orleans.Runtime;
 using Orleans.Concurrency;
+using Orleans.Runtime;
+using Orleans.Streams;
 
 namespace SignalR.Orleans.Core
 {
@@ -23,10 +24,11 @@ namespace SignalR.Orleans.Core
 
         internal ConnectionGrain(
             ILogger logger,
-            IPersistentState<TGrainState> connectionState)
+            IPersistentState<TGrainState> connectionState,
+            IOptions<InternalOptions> options)
         {
             _logger = logger;
-            _connectionState = connectionState;
+            _connectionState = options.Value.ConflateStorageAccess ? connectionState.WithConflation() : connectionState;
         }
 
         public override async Task OnActivateAsync()

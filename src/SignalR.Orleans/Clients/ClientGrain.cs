@@ -1,12 +1,13 @@
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.SignalR.Protocol;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Orleans;
+using Orleans.Concurrency;
 using Orleans.Runtime;
 using Orleans.Streams;
-using Orleans.Concurrency;
 using SignalR.Orleans.Core;
 
 namespace SignalR.Orleans.Clients
@@ -36,10 +37,11 @@ namespace SignalR.Orleans.Clients
 
         public ClientGrain(
             ILogger<ClientGrain> logger,
-            [PersistentState(CLIENT_STORAGE, Constants.STORAGE_PROVIDER)] IPersistentState<ClientState> clientState)
+            [PersistentState(CLIENT_STORAGE, Constants.STORAGE_PROVIDER)] IPersistentState<ClientState> clientState,
+            IOptions<InternalOptions> options)
         {
             _logger = logger;
-            _clientState = clientState;
+            _clientState = options.Value.ConflateStorageAccess ? clientState.WithConflation() : clientState;
         }
 
         public override async Task OnActivateAsync()

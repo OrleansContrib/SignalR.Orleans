@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using SignalR.Orleans;
 using SignalR.Orleans.Clients;
+using SignalR.Orleans.Core;
 
 // ReSharper disable once CheckNamespace
 namespace Orleans.Hosting
@@ -106,7 +107,14 @@ namespace Orleans.Hosting
             }
 
             builder.ConfigureServices(services =>
-                services.AddSingleton<IConfigurationValidator, SignalRConfigurationValidator>());
+            {
+                services
+                    .AddSingleton<IConfigurationValidator, SignalRConfigurationValidator>()
+                    .Configure<InternalOptions>(options =>
+                    {
+                        options.ConflateStorageAccess = cfg.ConflateStorageAccess;
+                    });
+            });
 
             return builder
                 .AddSimpleMessageStreamProvider(Constants.STREAM_PROVIDER,
@@ -147,7 +155,14 @@ namespace Orleans.Hosting
             }
 
             builder.ConfigureServices(services =>
-                services.AddSingleton<IConfigurationValidator, SignalRConfigurationValidator>());
+            {
+                services
+                    .AddSingleton<IConfigurationValidator, SignalRConfigurationValidator>()
+                    .Configure<InternalOptions>(options =>
+                    {
+                        options.ConflateStorageAccess = cfg.ConflateStorageAccess;
+                    });
+            });
 
             return builder
                 .AddSimpleMessageStreamProvider(Constants.STREAM_PROVIDER,

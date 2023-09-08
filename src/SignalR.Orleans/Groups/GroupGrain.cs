@@ -1,6 +1,7 @@
-using Orleans.Runtime;
-using Orleans.Concurrency;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Orleans.Concurrency;
+using Orleans.Runtime;
 using SignalR.Orleans.Core;
 
 namespace SignalR.Orleans.Groups
@@ -11,8 +12,9 @@ namespace SignalR.Orleans.Groups
         private const string GROUP_STORAGE = "GroupState";
         public GroupGrain(
             ILogger<GroupGrain> logger,
-            [PersistentState(GROUP_STORAGE, Constants.STORAGE_PROVIDER)] IPersistentState<GroupState> groupState)
-            : base(logger, groupState)
+            [PersistentState(GROUP_STORAGE, Constants.STORAGE_PROVIDER)] IPersistentState<GroupState> groupState,
+            IOptions<InternalOptions> options)
+            : base(logger, groupState, options)
         {
         }
     }
