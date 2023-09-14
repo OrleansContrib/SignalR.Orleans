@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.Extensions.Logging;
@@ -15,12 +15,12 @@ using Utils = SignalR.Orleans.Core.Utils;
 
 namespace SignalR.Orleans
 {
-    public class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>, ILifecycleParticipant<ISiloLifecycle>,
-        IDisposable where THub : Hub
+    public partial class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>, ILifecycleParticipant<ISiloLifecycle>,
+        IDisposable, IAsyncDisposable where THub : Hub
     {
-        private readonly HubConnectionStore _connections = new HubConnectionStore();
+        private readonly HubConnectionStore _connections = new();
         private readonly IClusterClientProvider _clusterClientProvider;
-        private readonly SemaphoreSlim _streamSetupLock = new SemaphoreSlim(1);
+        private readonly SemaphoreSlim _streamSetupLock = new(1);
         private readonly ILogger _logger;
         private readonly Guid _serverId;
         private readonly string _hubName;
@@ -37,7 +37,7 @@ namespace SignalR.Orleans
             var hubType = typeof(THub).BaseType?.GenericTypeArguments.FirstOrDefault() ?? typeof(THub);
             var name = hubType.Name.AsSpan();
             _hubName = hubType.IsInterface && name[0] == 'I'
-                ? new string(name.Slice(1))
+                ? new string(name[1..])
                 : hubType.Name;
             _serverId = Guid.NewGuid();
             _logger = logger;
@@ -61,7 +61,7 @@ namespace SignalR.Orleans
 
                 if (_streamProvider is not null)
                     return;
-                    
+
                 await SetupStreams();
             }
             finally
@@ -269,35 +269,117 @@ namespace SignalR.Orleans
 
         public void Dispose()
         {
-            _timer?.Dispose();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
+        public async ValueTask DisposeAsync()
+        {
+            await DisposeAsyncCore();
+            Dispose(false);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            // sync disposables
+            if (disposing)
+            {
+                _timer?.Dispose();
+                _timer = null!;
+            }
+
+            // no async disposables are sync compatible on this class
+        }
+
+        protected virtual async ValueTask DisposeAsyncCore()
+        {
+            // sync disposables
+            _timer?.Dispose();
+            _timer = null!;
+
+            // async disposables
             var toUnsubscribe = new List<Task>();
+
             if (_serverStream is not null)
             {
-                toUnsubscribe.Add(Task.Factory.StartNew(async () =>
+                var serverStream = _serverStream;
+
+                toUnsubscribe.Add(Task.Run(async () =>
                 {
-                    var subscriptions = await _serverStream.GetAllSubscriptionHandles();
-                    var subs = new List<Task>();
-                    subs.AddRange(subscriptions.Select(s => s.UnsubscribeAsync()));
-                    await Task.WhenAll(subs);
+                    IEnumerable<StreamSubscriptionHandle<ClientMessage>> subscriptions;
+                    try
+                    {
+                        subscriptions = await serverStream.GetAllSubscriptionHandles();
+                    }
+                    catch
+                    {
+                        return;
+                    }
+
+                    try
+                    {
+                        await Task.WhenAll(subscriptions.Select(s => s.UnsubscribeAsync()));
+                    }
+                    catch
+                    {
+                        return;
+                    }
                 }));
+
+                _serverStream = null!;
             }
 
             if (_allStream is not null)
             {
-                toUnsubscribe.Add(Task.Factory.StartNew(async () =>
+                var allStream = _allStream;
+
+                toUnsubscribe.Add(Task.Run(async () =>
                 {
-                    var subscriptions = await _allStream.GetAllSubscriptionHandles();
-                    var subs = new List<Task>();
-                    subs.AddRange(subscriptions.Select(s => s.UnsubscribeAsync()));
-                    await Task.WhenAll(subs);
+                    IEnumerable<StreamSubscriptionHandle<AllMessage>> subscriptions;
+
+                    try
+                    {
+                        subscriptions = await allStream.GetAllSubscriptionHandles();
+                    }
+                    catch
+                    {
+                        return;
+                    }
+
+                    try
+                    {
+                        await Task.WhenAll(subscriptions.Select(s => s.UnsubscribeAsync()));
+                    }
+                    catch
+                    {
+                        return;
+                    }
                 }));
+
+                _allStream = null!;
             }
 
-            var serverDirectoryGrain = _clusterClientProvider.GetClient().GetServerDirectoryGrain();
-            toUnsubscribe.Add(serverDirectoryGrain.Unregister(_serverId));
+            toUnsubscribe.Add(Task.Run(async () =>
+            {
+                try
+                {
+                    await _clusterClientProvider.GetClient().GetServerDirectoryGrain().Unregister(_serverId);
+                }
+                catch
+                {
+                    return;
+                }
+            }));
 
-            Task.WhenAll(toUnsubscribe.ToArray()).GetAwaiter().GetResult();
+            try
+            {
+                await Task.WhenAll(toUnsubscribe);
+            }
+            catch
+            {
+                // noop
+            }
         }
 
         public void Participate(ISiloLifecycle lifecycle)
