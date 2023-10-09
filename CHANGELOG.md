@@ -2,6 +2,12 @@
 
 [_vNext_](https://github.com/sketch7/SignalR.Orleans/compare/1.0.0...1.1.0) (2019-X-X)
 
+## [5.0.0](https://github.com/sketch7/SignalR.Orleans/compare/4.0.4...5.0.0) (2023-10-09)
+
+### Features
+
+- **deps:** update to .NET7 and Orleans 7
+
 ## [4.0.4](https://github.com/sketch7/SignalR.Orleans/compare/4.0.3...4.0.4) (2023-08-08)
 
 ### Features
