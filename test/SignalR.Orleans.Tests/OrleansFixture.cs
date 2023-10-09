@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Orleans;
 using Orleans.Configuration;
 using Orleans.Hosting;
@@ -8,33 +9,40 @@ namespace SignalR.Orleans.Tests;
 
 public class OrleansFixture : IDisposable
 {
-	public ISiloHost Silo { get; }
-	public IClusterClientProvider ClientProvider { get; }
+	public IHost Silo { get; } 
+	public IClusterClient Client { get; }
+    public IHost ClientHost { get; }
 
 	public OrleansFixture()
 	{
-		var silo = new SiloHostBuilder()
+		var siloHost = new HostBuilder()
+			.UseOrleans(builder => builder
 			.UseLocalhostClustering()
 			.Configure<EndpointOptions>(options => options.AdvertisedIPAddress = IPAddress.Loopback)
 			.AddMemoryGrainStorage(Constants.PUBSUB_PROVIDER)
 			.UseSignalR()
+			)
 			.Build();
-		silo.StartAsync().Wait();
-		Silo = silo;
+		siloHost.StartAsync().Wait();
+		Silo = siloHost;
 
-		var client = new ClientBuilder()
-			.UseLocalhostClustering()
-			.Configure<EndpointOptions>(options => options.AdvertisedIPAddress = IPAddress.Loopback)
-			.UseSignalR()
+		ClientHost = new HostBuilder()
+			.UseOrleansClient(client => 
+				client
+				.UseLocalhostClustering()
+				.Configure<EndpointOptions>(options => options.AdvertisedIPAddress = IPAddress.Loopback)
+				.UseSignalR())
 			.Build();
 
-		client.Connect().Wait();
-		ClientProvider = new DefaultClusterClientProvider(client);
+		ClientHost.StartAsync().GetAwaiter().GetResult();
+		Client = ClientHost.Services.GetRequiredService<IClusterClient>();
 	}
 
 	public void Dispose()
 	{
-		ClientProvider.GetClient().Close().Wait();
-		Silo.StopAsync().Wait();
+		 ClientHost.StopAsync().GetAwaiter().GetResult();
+		 Silo.StopAsync().GetAwaiter().GetResult();
+		 ClientHost.Dispose();
+		 Silo.Dispose();
 	}
 }

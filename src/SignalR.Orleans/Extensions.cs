@@ -1,6 +1,4 @@
-using Orleans.Hosting;
 using SignalR.Orleans;
-using SignalR.Orleans.Clients;
 
 // ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.DependencyInjection;
@@ -20,7 +18,6 @@ public static class OrleansClientExtensions
 		if (config == null)
 			config = new SignalrClientConfig();
 
-		return builder.AddSimpleMessageStreamProvider(Constants.STREAM_PROVIDER, opt => opt.FireAndForgetDelivery = config.UseFireAndForgetDelivery)
-			.ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(IClientGrain).Assembly).WithReferences());
+		return builder.AddMemoryStreams(Constants.STREAM_PROVIDER);
 	}
 }

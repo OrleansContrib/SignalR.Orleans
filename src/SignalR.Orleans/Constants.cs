@@ -11,8 +11,8 @@ public static class Constants
 	public const string SERVERS_STREAM = "SERVERS_STREAM";
 	public const string SERVER_DISCONNECTED = "SERVER_DISCONNECTED";
 	public const string STREAM_PROVIDER = "ORLEANS_SIGNALR_STREAM_PROVIDER";
-	public static readonly Guid CLIENT_DISCONNECT_STREAM_ID = Guid.Parse("bdcff7e7-3734-48ab-8599-17d915011b85");
-	public static readonly Guid ALL_STREAM_ID = Guid.Parse("fbe53ecd-d896-4916-8281-5571d6733566");
+	public static readonly string CLIENT_DISCONNECT_STREAM_ID = "CLIENT_DISCONNECT_STREAM";
+	public static readonly string ALL_STREAM_ID = "ALL_STREAM";
 
 	internal const int STREAM_SEND_REPLICAS = 10; // todo: make configurable instead
 	internal const double HEARTBEAT_PULSE_IN_MINUTES = 30;

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.SignalR.Protocol;
+using Orleans.Runtime;
 using SignalR.Orleans.Core;
 
 namespace SignalR.Orleans.Clients;
@@ -31,10 +32,10 @@ internal class ClientGrain : Grain<ClientState>, IClientGrain
 		_logger = logger;
 	}
 
-	public override async Task OnActivateAsync()
+	public override async Task OnActivateAsync(CancellationToken cancellationToken)
 	{
 		_keyData = new ConnectionGrainKey(this.GetPrimaryKeyString());
-		_streamProvider = GetStreamProvider(Constants.STREAM_PROVIDER);
+		_streamProvider = this.GetStreamProvider(Constants.STREAM_PROVIDER);
 
 		if (State.ServerId == Guid.Empty)
 			return;
@@ -76,6 +77,12 @@ internal class ClientGrain : Grain<ClientState>, IClientGrain
 		}
 	}
 
+	public Task SendOneWay(Immutable<InvocationMessage> message)
+	{
+		Send(message).Ignore();
+		return Task.CompletedTask;
+	}
+
 	public async Task OnConnect(Guid serverId)
 	{
 		State.ServerId = serverId;
@@ -111,6 +118,6 @@ internal class ClientGrain : Grain<ClientState>, IClientGrain
 			Constants.STREAM_SEND_REPLICAS,
 			this.GetPrimaryKeyString()
 		);
-		_serverDisconnectedStream = _streamProvider.GetStream<Guid>(State.ServerId, Constants.SERVER_DISCONNECTED);
+		_serverDisconnectedStream = _streamProvider.GetStream<Guid>(StreamId.Create(Constants.SERVER_DISCONNECTED, State.ServerId));
 	}
 }

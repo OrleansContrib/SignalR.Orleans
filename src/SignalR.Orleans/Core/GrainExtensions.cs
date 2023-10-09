@@ -28,7 +28,10 @@ public static class GrainSignalRExtensions
 	/// <param name="methodName">Target method name to invoke.</param>
 	/// <param name="args">Arguments to pass to the target method.</param>
 	public static void SendOneWay(this IHubMessageInvoker grain, string methodName, params object[] args)
-		=> grain.InvokeOneWay(g => g.Send(methodName, args));
+	{
+		var invocationMessage = new InvocationMessage(methodName, args).AsImmutable();
+		grain.SendOneWay(invocationMessage);
+	}
 }
 
 public static class GrainFactoryExtensions

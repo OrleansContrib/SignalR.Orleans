@@ -6,8 +6,10 @@ public interface IServerDirectoryGrain : IGrainWithIntegerKey
 	Task Unregister(Guid serverId);
 }
 
+[GenerateSerializer]
 public class ServerDirectoryState
 {
+	[Id(0)]
 	public Dictionary<Guid, DateTime> Servers { get; set; } = new();
 }
 
@@ -24,9 +26,9 @@ public class ServerDirectoryGrain : Grain<ServerDirectoryState>, IServerDirector
 		_logger = logger;
 	}
 
-	public override Task OnActivateAsync()
+	public override Task OnActivateAsync(CancellationToken cancellationToken)
 	{
-		_streamProvider = GetStreamProvider(Constants.STREAM_PROVIDER);
+		_streamProvider = this.GetStreamProvider(Constants.STREAM_PROVIDER);
 
 		_logger.LogInformation("Available servers {serverIds}",
 			string.Join(", ", State.Servers?.Count > 0 ? string.Join(", ", State.Servers) : "empty"));
@@ -40,7 +42,7 @@ public class ServerDirectoryGrain : Grain<ServerDirectoryState>, IServerDirector
 		return Task.CompletedTask;
 	}
 
-	public override Task OnDeactivateAsync()
+	public override Task OnDeactivateAsync(DeactivationReason reason, CancellationToken cancellationToken)
 	{
 		_cleanupTimer?.Dispose();
 		return Task.CompletedTask;
@@ -67,7 +69,7 @@ public class ServerDirectoryGrain : Grain<ServerDirectoryState>, IServerDirector
 		var expiredServers = State.Servers.Where(server => server.Value < DateTime.UtcNow.AddMinutes(-Constants.SERVERDIRECTORY_CLEANUP_IN_MINUTES)).ToList();
 		foreach (var server in expiredServers)
 		{
-			var serverDisconnectedStream = _streamProvider.GetStream<Guid>(server.Key, Constants.SERVER_DISCONNECTED);
+			var serverDisconnectedStream = _streamProvider.GetStream<Guid>(Constants.SERVER_DISCONNECTED, server.Key);
 
 			_logger.LogWarning("Removing server {serverId} due to inactivity {lastUpdatedDate}", server.Key, server.Value);
 			await serverDisconnectedStream.OnNextAsync(server.Key);
