@@ -13,10 +13,9 @@ public static class SiloBuilderExtensions
 		var cfg = new SignalrOrleansSiloConfigBuilder();
 		configure?.Invoke(cfg);
 
-		cfg.ConfigureBuilder?.Invoke(builder, new HostBuilderConfig());
+		builder.AddMemoryGrainStorage(Constants.STORAGE_PROVIDER);
 
-		try { builder.AddMemoryGrainStorage(Constants.STORAGE_PROVIDER); }
-		catch { /* Grain storage provider was already added. Do nothing. */ }
+		cfg.ConfigureBuilder?.Invoke(builder, new HostBuilderConfig());
 
 		builder.ConfigureServices(services => services.AddSingleton<IConfigurationValidator, SignalRConfigurationValidator>());
 
