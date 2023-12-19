@@ -66,19 +66,34 @@ public class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>, IDispos
 	{
 		_logger.LogInformation("Initializing: Orleans HubLifetimeManager {hubName} (serverId: {serverId})...", _hubName, _serverId);
 
-		_streamProvider = _clusterClient.GetStreamProvider(Constants.STREAM_PROVIDER);
-		_serverStreamsReplicaContainer = new StreamReplicaContainer<ClientMessage>(_streamProvider, _serverId, Constants.SERVERS_STREAM, Constants.STREAM_SEND_REPLICAS);
-
-		_allStream = _streamProvider.GetStream<AllMessage>(Utils.BuildStreamHubName(_hubName), Constants.ALL_STREAM_ID);
-		_timer = new Timer(_ => Task.Run(HeartbeatCheck), null, TimeSpan.FromSeconds(0), TimeSpan.FromMinutes(Constants.HEARTBEAT_PULSE_IN_MINUTES));
-
-		var subscribeTasks = new List<Task>
+		try
 		{
-			_allStream.SubscribeAsync((msg, _) => ProcessAllMessage(msg)),
-			_serverStreamsReplicaContainer.SubscribeAsync((msg, _) => ProcessServerMessage(msg))
-		};
+			_streamProvider = _clusterClient.GetStreamProvider(Constants.STREAM_PROVIDER);
+			_serverStreamsReplicaContainer = new StreamReplicaContainer<ClientMessage>(_streamProvider, _serverId, Constants.SERVERS_STREAM, Constants.STREAM_SEND_REPLICAS);
 
-		await Task.WhenAll(subscribeTasks);
+			_allStream = _streamProvider.GetStream<AllMessage>(Utils.BuildStreamHubName(_hubName), Constants.ALL_STREAM_ID);
+			_timer = new Timer(_ => Task.Run(HeartbeatCheck), null, TimeSpan.FromSeconds(0), TimeSpan.FromMinutes(Constants.HEARTBEAT_PULSE_IN_MINUTES));
+
+			var subscribeTasks = new List<Task>
+			{
+				_allStream.SubscribeAsync((msg, _) => ProcessAllMessage(msg)),
+				_serverStreamsReplicaContainer.SubscribeAsync((msg, _) => ProcessServerMessage(msg))
+			};
+
+			await Task.WhenAll(subscribeTasks);
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Initialization failed: An error has occurred while initializing Orleans HubLifetimeManager {hubName} (serverId: {serverId})", _hubName, _serverId);
+
+			_streamProvider = null;
+			_serverStreamsReplicaContainer = null;
+			_allStream = null;
+			_timer?.Dispose();
+			_timer = null;
+
+			throw;
+		}
 
 		_logger.LogInformation("Initialized complete: Orleans HubLifetimeManager {hubName} (serverId: {serverId})", _hubName, _serverId);
 	}
