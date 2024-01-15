@@ -1,37 +1,35 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Orleans;
 using Orleans.Configuration;
-using Orleans.Hosting;
 using System.Net;
 
 namespace SignalR.Orleans.Tests;
 
 public class OrleansFixture : IDisposable
 {
-	public IHost Silo { get; } 
+	public IHost Silo { get; }
 	public IClusterClient Client { get; }
-    public IHost ClientHost { get; }
+	public IHost ClientHost { get; }
 
 	public OrleansFixture()
 	{
 		var siloHost = new HostBuilder()
 			.UseOrleans(builder => builder
-			.UseLocalhostClustering()
-			.Configure<EndpointOptions>(options => options.AdvertisedIPAddress = IPAddress.Loopback)
-			.AddMemoryGrainStorage(Constants.PUBSUB_PROVIDER)
-			.UseSignalR()
+				.UseLocalhostClustering()
+				.Configure<EndpointOptions>(options => options.AdvertisedIPAddress = IPAddress.Loopback)
+				.AddMemoryGrainStorage(Constants.PUBSUB_PROVIDER)
+				.UseSignalR()
 			)
 			.Build();
 		siloHost.StartAsync().Wait();
 		Silo = siloHost;
 
 		ClientHost = new HostBuilder()
-			.UseOrleansClient(client => 
-				client
+			.UseOrleansClient(client => client
 				.UseLocalhostClustering()
 				.Configure<EndpointOptions>(options => options.AdvertisedIPAddress = IPAddress.Loopback)
-				.UseSignalR())
+				.UseSignalR()
+			)
 			.Build();
 
 		ClientHost.StartAsync().GetAwaiter().GetResult();
@@ -40,9 +38,9 @@ public class OrleansFixture : IDisposable
 
 	public void Dispose()
 	{
-		 ClientHost.StopAsync().GetAwaiter().GetResult();
-		 Silo.StopAsync().GetAwaiter().GetResult();
-		 ClientHost.Dispose();
-		 Silo.Dispose();
+		ClientHost.StopAsync().GetAwaiter().GetResult();
+		Silo.StopAsync().GetAwaiter().GetResult();
+		ClientHost.Dispose();
+		Silo.Dispose();
 	}
 }

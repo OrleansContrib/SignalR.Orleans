@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <PackageId>Sketch7.SignalR.Orleans</PackageId>
-    <TargetFramework>net7.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>

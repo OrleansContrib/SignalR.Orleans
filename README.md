@@ -25,6 +25,7 @@ Installation is performed via [NuGet](https://www.nuget.org/packages/Sketch7.Sig
 | 2.x     | netcore3 |                                                                                                                                                                                                |
 | 3.x     | net5     |                                                                                                                                                                                                |
 | 4.x     | net6     | [![CI](https://github.com/sketch7/SignalR.Orleans/actions/workflows/dotnet-publish.yml/badge.svg?branch=4.x)](https://github.com/sketch7/SignalR.Orleans/actions/workflows/dotnet-publish.yml) |
+| 5.x     | net7     | [![CI](https://github.com/sketch7/SignalR.Orleans/actions/workflows/dotnet-publish.yml/badge.svg?branch=5.x)](https://github.com/sketch7/SignalR.Orleans/actions/workflows/dotnet-publish.yml) |
 
 From Package Manager:
 

@@ -8,6 +8,12 @@ namespace Orleans.Hosting;
 
 public static class SiloBuilderExtensions
 {
+	/// <summary>
+	/// Configures the Silo to use SignalR.
+	/// </summary>
+	/// <param name="builder"></param>
+	/// <param name="configure"></param>
+	/// <returns></returns>
 	public static ISiloBuilder UseSignalR(this ISiloBuilder builder, Action<SignalrOrleansSiloConfigBuilder> configure = null)
 	{
 		var cfg = new SignalrOrleansSiloConfigBuilder();
@@ -25,7 +31,7 @@ public static class SiloBuilderExtensions
 	}
 }
 
-internal class SignalRConfigurationValidator : IConfigurationValidator
+internal sealed class SignalRConfigurationValidator : IConfigurationValidator
 {
 	private readonly IServiceProvider _sp;
 	private readonly ILogger _logger;
@@ -43,11 +49,11 @@ internal class SignalRConfigurationValidator : IConfigurationValidator
 		var pubSubProvider = _sp.GetServiceByName<IGrainStorage>(Constants.PUBSUB_PROVIDER);
 		if (pubSubProvider == null)
 		{
-			var err = "No PubSub storage provider was registered. You need to register one. To use the default/in-memory provider, call 'siloBuilder.AddMemoryGrainStorage(\"PubSubStore\")' when building your Silo.";
+			const string err = "No PubSub storage provider was registered. You need to register one. To use the default/in-memory provider, call 'siloBuilder.AddMemoryGrainStorage(\"PubSubStore\")' when building your Silo.";
 			_logger.LogError(err);
 			throw new InvalidOperationException(err);
 		}
 
-		_logger.LogInformation($"Found the PubSub storage provider of type '{pubSubProvider.GetType().FullName}'.");
+		_logger.LogInformation("Found the PubSub storage provider of type {TypeName}.", pubSubProvider.GetType().FullName);
 	}
 }
