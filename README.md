@@ -76,11 +76,11 @@ Now your SignalR application needs to connect to the Orleans Cluster by using an
 
 ***Example***
 ```cs
-			var hostBuilder = new HostBuilder()
-				.UseOrleans((ctx, builder) =>
-				{
-					builder.UseSignalR()
-				});
+var hostBuilder = new HostBuilder()
+  .UseOrleans((ctx, builder) =>
+  {
+    builder.UseSignalR()
+  });
 
 hostBuilder.RunConsoleAsync();
 ```
