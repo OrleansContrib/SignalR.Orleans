@@ -41,7 +41,7 @@
   <!-- Shared Package Versions -->
   <PropertyGroup>
     <!-- vendors -->
-    <OrleansVersion>7.2.3</OrleansVersion>
+    <OrleansVersion>7.2.4</OrleansVersion>
     <OrleansStreamsUtilsVersion>13.1.3</OrleansStreamsUtilsVersion>
   </PropertyGroup>
 </Project>
