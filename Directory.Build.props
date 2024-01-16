@@ -35,13 +35,13 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
 
   <!-- Shared Package Versions -->
   <PropertyGroup>
     <!-- vendors -->
-    <OrleansVersion>7.2.4</OrleansVersion>
+    <OrleansVersion>8.0.0</OrleansVersion>
     <OrleansStreamsUtilsVersion>13.1.3</OrleansStreamsUtilsVersion>
   </PropertyGroup>
 </Project>

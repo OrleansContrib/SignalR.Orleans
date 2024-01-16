@@ -22,7 +22,9 @@ Installation is performed via [NuGet](https://www.nuget.org/packages/Sketch7.Sig
 - Use 2.x for netcore3
 - Use 3.x for netcore5
 - Use 4.x for netcore6
-
+- Use 5.x for netcore7
+- Use 6.x for netcore8
+- 
 From Package Manager:
 
 > PS> Install-Package Sketch7.SignalR.Orleans

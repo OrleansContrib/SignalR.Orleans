@@ -1,5 +1,4 @@
 using Microsoft.Extensions.DependencyInjection;
-using Orleans.Runtime;
 using Orleans.Storage;
 using SignalR.Orleans;
 
@@ -25,9 +24,7 @@ public static class SiloBuilderExtensions
 
 		builder.ConfigureServices(services => services.AddSingleton<IConfigurationValidator, SignalRConfigurationValidator>());
 
-		return builder
-			.AddMemoryStreams(Constants.STREAM_PROVIDER)
-			;
+		return builder.AddMemoryStreams(Constants.STREAM_PROVIDER);
 	}
 }
 
@@ -46,7 +43,7 @@ internal sealed class SignalRConfigurationValidator : IConfigurationValidator
 	{
 		_logger.LogInformation("Checking if a PubSub storage provider was registered...");
 
-		var pubSubProvider = _sp.GetServiceByName<IGrainStorage>(Constants.PUBSUB_PROVIDER);
+		var pubSubProvider = _sp.GetKeyedService<IGrainStorage>(Constants.PUBSUB_PROVIDER);
 		if (pubSubProvider == null)
 		{
 			const string err = "No PubSub storage provider was registered. You need to register one. To use the default/in-memory provider, call 'siloBuilder.AddMemoryGrainStorage(\"PubSubStore\")' when building your Silo.";
