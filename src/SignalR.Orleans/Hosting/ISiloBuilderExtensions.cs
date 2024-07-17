@@ -18,7 +18,7 @@ public static class ISiloBuilderExtensions
 
         try
         {
-            builder.AddMemoryGrainStorage(SignalROrleansConstants.PUBSUB_STORAGE_PROVIDER); // "ORLEANS_SIGNALR_PUBSUB_PROVIDER"
+            //builder.AddMemoryGrainStorage(SignalROrleansConstants.PUBSUB_STORAGE_PROVIDER); // "ORLEANS_SIGNALR_PUBSUB_PROVIDER"
         }
         catch
         {
@@ -27,7 +27,7 @@ public static class ISiloBuilderExtensions
 
         try
         {
-            builder.AddMemoryGrainStorage(SignalROrleansConstants.SIGNALR_ORLEANS_STORAGE_PROVIDER); // "ORLEANS_SIGNALR_STORAGE_PROVIDER"
+            //builder.AddMemoryGrainStorage(SignalROrleansConstants.SIGNALR_ORLEANS_STORAGE_PROVIDER); // "ORLEANS_SIGNALR_STORAGE_PROVIDER"
         }
         catch
         {

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Protocol;
 using Orleans.Runtime;
 using Orleans.Streams;
+using Orleans;
 
 namespace SignalR.Orleans;
 
@@ -13,7 +14,7 @@ public partial class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>,
     private readonly Guid _serverId;
     private readonly ILogger _logger;
     private readonly string _hubName;
-    private readonly IClusterClient _clusterClient;
+    private IClusterClient? _clusterClient;
     private readonly SemaphoreSlim _streamSetupLock = new(1);
     private readonly HubConnectionStore _connections = new();
 
@@ -37,7 +38,10 @@ public partial class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>,
     }
 
     private Task HeartbeatCheck()
-      => _clusterClient.GetServerDirectoryGrain().Heartbeat(_serverId);
+    {
+        if (_clusterClient is null) return Task.CompletedTask;
+        return _clusterClient.GetServerDirectoryGrain().Heartbeat(_serverId);
+    }
 
     private async Task EnsureStreamSetup()
     {
@@ -55,7 +59,7 @@ public partial class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>,
                 "Initializing: Orleans HubLifetimeManager {hubName} (serverId: {serverId})...",
                 _hubName, _serverId);
 
-            _streamProvider = _clusterClient.GetOrleansSignalRStreamProvider();
+            _streamProvider = _clusterClient!.GetOrleansSignalRStreamProvider();
             _serverStream = _streamProvider.GetServerStream(_serverId);
             _allStream = _streamProvider.GetAllStream(_hubName);
 
@@ -107,6 +111,8 @@ public partial class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>,
 
         try
         {
+            if (_clusterClient is null) return;
+
             _connections.Add(connection);
 
             var client = _clusterClient.GetClientGrain(_hubName, connection.ConnectionId);
@@ -132,6 +138,8 @@ public partial class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>,
     {
         try
         {
+            if (_clusterClient is null) return;
+
             _logger.LogDebug("Handle disconnection {connectionId} on hub {hubName} (serverId: {serverId})",
                 connection.ConnectionId, _hubName, _serverId);
             var client = _clusterClient.GetClientGrain(_hubName, connection.ConnectionId);
@@ -143,23 +151,19 @@ public partial class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>,
         }
     }
 
-    public override Task SendAllAsync(string methodName, object?[] args,
-        CancellationToken cancellationToken = default)
+    public override Task SendAllAsync(string methodName, object?[] args, CancellationToken cancellationToken = default)
     {
         var message = new InvocationMessage(methodName, args);
         return _allStream.OnNextAsync(new AllMessage(message));
     }
 
-    public override Task SendAllExceptAsync(string methodName, object?[] args,
-        IReadOnlyList<string> excludedConnectionIds,
-        CancellationToken cancellationToken = default)
+    public override Task SendAllExceptAsync(string methodName, object?[] args, IReadOnlyList<string> excludedConnectionIds, CancellationToken cancellationToken = default)
     {
         var message = new InvocationMessage(methodName, args);
         return _allStream.OnNextAsync(new AllMessage(message, excludedConnectionIds));
     }
 
-    public override Task SendConnectionAsync(string connectionId, string methodName, object?[] args,
-        CancellationToken cancellationToken = default)
+    public override Task SendConnectionAsync(string connectionId, string methodName, object?[] args, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(connectionId)) throw new ArgumentNullException(nameof(connectionId));
         if (string.IsNullOrWhiteSpace(methodName)) throw new ArgumentNullException(nameof(methodName));
@@ -172,16 +176,16 @@ public partial class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>,
         return SendExternal(connectionId, message);
     }
 
-    public override Task SendConnectionsAsync(IReadOnlyList<string> connectionIds, string methodName, object?[] args,
-        CancellationToken cancellationToken = default)
+    public override Task SendConnectionsAsync(IReadOnlyList<string> connectionIds, string methodName, object?[] args, CancellationToken cancellationToken = default)
     {
         var tasks = connectionIds.Select(c => SendConnectionAsync(c, methodName, args, cancellationToken));
         return Task.WhenAll(tasks);
     }
 
-    public override Task SendGroupAsync(string groupName, string methodName, object?[] args,
-        CancellationToken cancellationToken = default)
+    public override Task SendGroupAsync(string groupName, string methodName, object?[] args, CancellationToken cancellationToken = default)
     {
+        if (_clusterClient is null) return Task.CompletedTask;
+
         if (string.IsNullOrWhiteSpace(groupName)) throw new ArgumentNullException(nameof(groupName));
         if (string.IsNullOrWhiteSpace(methodName)) throw new ArgumentNullException(nameof(methodName));
 
@@ -189,17 +193,16 @@ public partial class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>,
         return group.Send(methodName, args);
     }
 
-    public override Task SendGroupsAsync(IReadOnlyList<string> groupNames, string methodName, object?[] args,
-        CancellationToken cancellationToken = default)
+    public override Task SendGroupsAsync(IReadOnlyList<string> groupNames, string methodName, object?[] args, CancellationToken cancellationToken = default)
     {
         var tasks = groupNames.Select(g => SendGroupAsync(g, methodName, args, cancellationToken));
         return Task.WhenAll(tasks);
     }
 
-    public override Task SendGroupExceptAsync(string groupName, string methodName, object?[] args,
-        IReadOnlyList<string> excludedConnectionIds,
-        CancellationToken cancellationToken = default)
+    public override Task SendGroupExceptAsync(string groupName, string methodName, object?[] args, IReadOnlyList<string> excludedConnectionIds, CancellationToken cancellationToken = default)
     {
+        if (_clusterClient is null) return Task.CompletedTask;
+
         if (string.IsNullOrWhiteSpace(groupName)) throw new ArgumentNullException(nameof(groupName));
         if (string.IsNullOrWhiteSpace(methodName)) throw new ArgumentNullException(nameof(methodName));
 
@@ -207,9 +210,10 @@ public partial class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>,
         return group.SendExcept(methodName, args, excludedConnectionIds);
     }
 
-    public override Task SendUserAsync(string userId, string methodName, object?[] args,
-        CancellationToken cancellationToken = default)
+    public override Task SendUserAsync(string userId, string methodName, object?[] args, CancellationToken cancellationToken = default)
     {
+        if (_clusterClient is null) return Task.CompletedTask;
+
         if (string.IsNullOrWhiteSpace(userId)) throw new ArgumentNullException(nameof(userId));
         if (string.IsNullOrWhiteSpace(methodName)) throw new ArgumentNullException(nameof(methodName));
 
@@ -217,23 +221,24 @@ public partial class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>,
         return user.Send(methodName, args);
     }
 
-    public override Task SendUsersAsync(IReadOnlyList<string> userIds, string methodName, object?[] args,
-        CancellationToken cancellationToken = default)
+    public override Task SendUsersAsync(IReadOnlyList<string> userIds, string methodName, object?[] args, CancellationToken cancellationToken = default)
     {
         var tasks = userIds.Select(u => SendGroupAsync(u, methodName, args, cancellationToken));
         return Task.WhenAll(tasks);
     }
 
-    public override Task AddToGroupAsync(string connectionId, string groupName,
-        CancellationToken cancellationToken = default)
+    public override Task AddToGroupAsync(string connectionId, string groupName, CancellationToken cancellationToken = default)
     {
+        if (_clusterClient is null) return Task.CompletedTask;
+
         var group = _clusterClient.GetGroupGrain(_hubName, groupName);
         return group.Add(connectionId);
     }
 
-    public override Task RemoveFromGroupAsync(string connectionId, string groupName,
-        CancellationToken cancellationToken = default)
+    public override Task RemoveFromGroupAsync(string connectionId, string groupName, CancellationToken cancellationToken = default)
     {
+        if (_clusterClient is null) return Task.CompletedTask;
+
         var group = _clusterClient.GetGroupGrain(_hubName, groupName);
         return group.Remove(connectionId);
     }
@@ -248,6 +253,8 @@ public partial class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>,
 
     private Task SendExternal(string connectionId, InvocationMessage hubMessage)
     {
+        if (_clusterClient is null) return Task.CompletedTask;
+
         var client = _clusterClient.GetClientGrain(_hubName, connectionId);
         return client.Send(hubMessage);
     }
@@ -261,6 +268,7 @@ public partial class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>,
     public async ValueTask DisposeAsync()
     {
         await DisposeAsyncCore();
+        _clusterClient = null;
         Dispose(false);
         GC.SuppressFinalize(this);
     }
@@ -272,6 +280,7 @@ public partial class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>,
         {
             _timer?.Dispose();
             _timer = null!;
+            _clusterClient = null;
         }
 
         // no async disposables are sync compatible on this class
@@ -282,7 +291,9 @@ public partial class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>,
         _timer?.Dispose();
         _timer = null!;
 
-        var toUnsubscribe = new List<Task>();
+        // Note: We can't UnsubscribeAsync these because by the time we get
+        // here, the backing objects in the cluster are already disposed.
+        /*var toUnsubscribe = new List<Task>();
         if (_serverStream is not null)
         {
             var serverStream = _serverStream;
@@ -338,27 +349,33 @@ public partial class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>,
 
             _allStream = null!;
         }
+        
+        if (_clusterClient  is not null)
+        { 
+            toUnsubscribe.Add(Task.Run(async () =>
+            {
+                try
+                {
+                    await _clusterClient.GetServerDirectoryGrain().Unregister(_serverId);
+                }
+                catch
+                {
+                    return;
+                }
+            }));
 
-        toUnsubscribe.Add(Task.Run(async () =>
-        {
             try
             {
-                await _clusterClient.GetServerDirectoryGrain().Unregister(_serverId);
+                await Task.WhenAll(toUnsubscribe);
             }
             catch
             {
-                return;
+                // noop
             }
-        }));
-
-        try
-        {
-            await Task.WhenAll(toUnsubscribe);
         }
-        catch
-        {
-            // noop
-        }
+        */
+        _clusterClient = null;
+        await Task.CompletedTask;
     }
 
     public void Participate(ISiloLifecycle lifecycle)
