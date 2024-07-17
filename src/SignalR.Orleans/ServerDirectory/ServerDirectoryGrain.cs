@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Orleans.Runtime;
 using Orleans.Streams;
 using Orleans.Timers;
@@ -21,7 +22,7 @@ internal sealed class ServerDirectoryGrain : IGrainBase, IServerDirectoryGrain
         ILogger<ServerDirectoryGrain> logger,
         IGrainContext grainContext,
         ITimerRegistry timerRegistry,
-        [PersistentState(nameof(ServerDirectoryState), SignalROrleansConstants.SIGNALR_ORLEANS_STORAGE_PROVIDER)] IPersistentState<ServerDirectoryState> state)
+        [PersistentState(nameof(ServerDirectoryState), SignalROrleansConstants.SIGNALR_ORLEANS_STORAGE_PROVIDER)] IPersistentState<ServerDirectoryState> state, IOptions<InternalOptions> options)
     {
         this.GrainContext = grainContext;
         _timerRegistry = timerRegistry;

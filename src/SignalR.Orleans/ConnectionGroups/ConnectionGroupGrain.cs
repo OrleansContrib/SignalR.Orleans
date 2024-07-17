@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.SignalR.Protocol;
 using Orleans.Runtime;
 using Orleans.Streams;
+using Microsoft.Extensions.Options;
+using SignalR.Orleans.Core;
 
 namespace SignalR.Orleans.ConnectionGroups;
 
@@ -21,7 +23,7 @@ internal sealed class ConnectionGroupGrain : IConnectionGroupGrain, IGrainBase
         IGrainContext grainContext,
         IGrainFactory grainFactory,
         ILogger<ConnectionGroupGrain> logger,
-        [PersistentState("ConnectionGroups", SignalROrleansConstants.SIGNALR_ORLEANS_STORAGE_PROVIDER)] IPersistentState<ConnectionGroupGrainState> state)
+        [PersistentState("ConnectionGroups", SignalROrleansConstants.SIGNALR_ORLEANS_STORAGE_PROVIDER)] IPersistentState<ConnectionGroupGrainState> state, IOptions<InternalOptions> options)
     {
         _logger = logger;
         _state = state;
