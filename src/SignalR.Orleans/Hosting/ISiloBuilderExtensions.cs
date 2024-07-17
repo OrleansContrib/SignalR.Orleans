@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Orleans.Runtime;
 using SignalR.Orleans;
+using SignalR.Orleans.Core;
 
 // ReSharper disable once CheckNamespace
 namespace Orleans.Hosting;
@@ -32,6 +33,14 @@ public static class ISiloBuilderExtensions
         {
             /** Grain storage provider was already added. Do nothing. **/
         }
+
+        builder.ConfigureServices(services =>
+        {
+            services.Configure<InternalOptions>(options =>
+                {
+                    options.ConflateStorageAccess = cfg.ConflateStorageAccess;
+                });
+        });
 
         builder.AddMemoryStreams(SignalROrleansConstants.SIGNALR_ORLEANS_STREAM_PROVIDER); // "ORLEANS_SIGNALR_STREAM_PROVIDER"
 

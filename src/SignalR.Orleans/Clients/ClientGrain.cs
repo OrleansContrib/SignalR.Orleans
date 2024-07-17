@@ -1,8 +1,10 @@
-using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.SignalR.Protocol;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Orleans.Runtime;
 using Orleans.Streams;
 using Orleans.Concurrency;
+using SignalR.Orleans.Core;
 
 namespace SignalR.Orleans.Clients;
 
@@ -29,10 +31,10 @@ internal sealed class ClientGrain : IGrainBase, IClientGrain
     public ClientGrain(
         ILogger<ClientGrain> logger,
         IGrainContext grainContext,
-        [PersistentState(CLIENT_STORAGE, SignalROrleansConstants.SIGNALR_ORLEANS_STORAGE_PROVIDER)] IPersistentState<ClientGrainState> clientState)
+        [PersistentState(CLIENT_STORAGE, SignalROrleansConstants.SIGNALR_ORLEANS_STORAGE_PROVIDER)] IPersistentState<ClientGrainState> clientState, IOptions<InternalOptions> options)
     {
         _logger = logger;
-        _clientState = clientState;
+        _clientState = options.Value.ConflateStorageAccess ? clientState.WithConflation() : clientState;
         this.GrainContext = grainContext;
     }
 

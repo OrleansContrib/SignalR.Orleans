@@ -7,8 +7,8 @@ using Orleans.Streams;
 namespace SignalR.Orleans;
 
 // TODO: Is this thing called in a threadsafe manner by signalR? 
-public sealed class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>, ILifecycleParticipant<ISiloLifecycle>,
-    IDisposable where THub : Hub
+public partial class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>, ILifecycleParticipant<ISiloLifecycle>,
+    IDisposable, IAsyncDisposable where THub : Hub
 {
     private readonly Guid _serverId;
     private readonly ILogger _logger;
@@ -254,35 +254,111 @@ public sealed class OrleansHubLifetimeManager<THub> : HubLifetimeManager<THub>, 
 
     public void Dispose()
     {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await DisposeAsyncCore();
+        Dispose(false);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        // sync disposables
+        if (disposing)
+        {
+            _timer?.Dispose();
+            _timer = null!;
+        }
+
+        // no async disposables are sync compatible on this class
+    }
+
+    protected virtual async ValueTask DisposeAsyncCore()
+    {
         _timer?.Dispose();
+        _timer = null!;
 
         var toUnsubscribe = new List<Task>();
         if (_serverStream is not null)
         {
-            toUnsubscribe.Add(Task.Factory.StartNew(async () =>
+            var serverStream = _serverStream;
+
+            toUnsubscribe.Add(Task.Run(async () =>
             {
-                var subscriptions = await _serverStream.GetAllSubscriptionHandles();
-                var subs = new List<Task>();
-                subs.AddRange(subscriptions.Select(s => s.UnsubscribeAsync()));
-                await Task.WhenAll(subs);
+                IEnumerable<StreamSubscriptionHandle<ClientMessage>> subscriptions;
+                try
+                {
+                    subscriptions = await serverStream.GetAllSubscriptionHandles();
+                }
+                catch
+                {
+                    return;
+                }
+                try
+                {
+                    await Task.WhenAll(subscriptions.Select(s => s.UnsubscribeAsync()));
+                }
+                catch
+                {
+                    return;
+                }
             }));
+
+            _serverStream = null!;
         }
 
         if (_allStream is not null)
         {
-            toUnsubscribe.Add(Task.Factory.StartNew(async () =>
+            var allStream = _allStream;
+
+            toUnsubscribe.Add(Task.Run(async () =>
             {
-                var subscriptions = await _allStream.GetAllSubscriptionHandles();
-                var subs = new List<Task>();
-                subs.AddRange(subscriptions.Select(s => s.UnsubscribeAsync()));
-                await Task.WhenAll(subs);
+                IEnumerable<StreamSubscriptionHandle<AllMessage>> subscriptions;
+                try
+                {
+                    subscriptions = await allStream.GetAllSubscriptionHandles();
+                }
+                catch
+                {
+                    return;
+                }
+                try
+                {
+                    await Task.WhenAll(subscriptions.Select(s => s.UnsubscribeAsync()));
+                }
+                catch
+                {
+                    return;
+                }
             }));
+
+            _allStream = null!;
         }
 
-        var serverDirectoryGrain = _clusterClient.GetServerDirectoryGrain();
-        toUnsubscribe.Add(serverDirectoryGrain.Unregister(_serverId));
+        toUnsubscribe.Add(Task.Run(async () =>
+        {
+            try
+            {
+                await _clusterClient.GetServerDirectoryGrain().Unregister(_serverId);
+            }
+            catch
+            {
+                return;
+            }
+        }));
 
-        Task.WhenAll(toUnsubscribe.ToArray()).GetAwaiter().GetResult();
+        try
+        {
+            await Task.WhenAll(toUnsubscribe);
+        }
+        catch
+        {
+            // noop
+        }
     }
 
     public void Participate(ISiloLifecycle lifecycle)
