@@ -42,7 +42,7 @@ public static class ISiloBuilderExtensions
                 });
         });
 
-        builder.AddMemoryStreams(SignalROrleansConstants.SIGNALR_ORLEANS_STREAM_PROVIDER); // "ORLEANS_SIGNALR_STREAM_PROVIDER"
+        //builder.AddMemoryStreams(SignalROrleansConstants.SIGNALR_ORLEANS_STREAM_PROVIDER); // "ORLEANS_SIGNALR_STREAM_PROVIDER"
 
         return builder;
     }
