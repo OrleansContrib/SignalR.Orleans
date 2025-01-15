@@ -4,26 +4,24 @@ on:
   push:
     branches:
       - master
-      - '*.x'
+      - "*.x"
       # - feature/*
     paths-ignore:
-      - '**.md'
+      - "**.md"
 
   pull_request:
     branches:
       - master
-      - '*.x'
+      - "*.x"
     paths-ignore:
-      - '**.md'
+      - "**.md"
 
 jobs:
   package:
     name: Package
-    uses: sketch7/.github/.github/workflows/dotnet-package.yml@master
+    uses: sketch7/.github/.github/workflows/dotnet-package.yml@dotnet-libs-v1
     with:
       dotnet-version: 8.0.x
-      publishable: ${{ contains(fromJSON('["develop", "master", "workflow", "feature/reusable-workflow"]'), github.ref_name) || endsWith(github.ref_name, '.x')  }}
+      publishable: ${{ contains(fromJSON('["develop", "master", "workflow", "feature/workflow"]'), github.ref_name) || endsWith(github.ref_name, '.x')  }}
     secrets:
       nuget-auth-token: ${{ secrets.NUGET_KEY }}
-
-
