@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using Orleans.Concurrency;
 using Orleans.Streams;
 using SignalR.Orleans.Clients;
-using SignalR.Orleans.Core;
+using Utils = SignalR.Orleans.Core.Utils;
 
 namespace SignalR.Orleans;
 

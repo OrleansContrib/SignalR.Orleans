@@ -1,6 +1,6 @@
 {
   "name": "@sketch7/signalr-orleans",
-  "version": "6.0.0",
+  "version": "7.0.0",
   "versionSuffix": "",
   "scripts": {
     "pack": "bash ./tools/pack.sh",
