@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <None Include="$(SourceRoot)assets/logo_128.png" Pack="true" Visible="false" PackagePath="/" />
+    <None Include="$(SourceRoot)README.md" Pack="true" PackagePath=""/>
   </ItemGroup>
 
   <!-- Common compile parameters -->
