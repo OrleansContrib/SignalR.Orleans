@@ -1,14 +1,15 @@
 using Microsoft.AspNetCore.SignalR.Protocol;
-using Orleans.Runtime;
 using SignalR.Orleans.Core;
 
 namespace SignalR.Orleans.Clients;
 
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
+[GenerateSerializer]
 internal class ClientState
 {
 	private string DebuggerDisplay => $"ServerId: '{ServerId}'";
 
+	[Id(0)]
 	public Guid ServerId { get; set; }
 }
 

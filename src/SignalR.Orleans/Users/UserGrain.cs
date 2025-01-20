@@ -14,6 +14,7 @@ internal class UserGrain : ConnectionGrain<UserState>, IUserGrain
 	}
 }
 
+[GenerateSerializer]
 internal class UserState : ConnectionState
 {
 }

@@ -13,6 +13,7 @@ internal class GroupGrain : ConnectionGrain<GroupState>, IGroupGrain
 	}
 }
 
+[GenerateSerializer]
 internal class GroupState : ConnectionState
 {
 }

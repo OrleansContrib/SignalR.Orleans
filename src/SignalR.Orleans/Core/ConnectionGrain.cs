@@ -108,7 +108,7 @@ internal abstract class ConnectionGrain<TGrainState> : Grain<TGrainState>, IConn
 		_logger.LogDebug("Sending message to {hubName}.{targetMethod} on group {groupId} to {connectionsCount} connection(s)",
 			KeyData.HubName, message.Value.Target, KeyData.Id, connections.Count);
 
-		foreach (var connection in connections) 
+		foreach (var connection in connections)
 			GrainFactory.GetClientGrain(KeyData.HubName, connection).SendOneWay(message);
 
 		return Task.CompletedTask;
@@ -130,7 +130,9 @@ internal abstract class ConnectionGrain<TGrainState> : Grain<TGrainState>, IConn
 		=> _streamProvider.GetStream<string>(Constants.CLIENT_DISCONNECT_STREAM_ID, connectionId);
 }
 
+[GenerateSerializer]
 internal abstract class ConnectionState
 {
+	[Id(0)]
 	public HashSet<string> Connections { get; set; } = new HashSet<string>();
 }

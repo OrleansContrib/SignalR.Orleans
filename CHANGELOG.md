@@ -2,11 +2,18 @@
 
 [_vNext_](https://github.com/sketch7/SignalR.Orleans/compare/1.0.0...1.1.0) (2024-X-X)
 
+
 ## [7.0.0](https://github.com/sketch7/SignalR.Orleans/compare/6.0.0...7.0.0) (2025-01-15)
 
 ### Features
 
 - **deps:** update to Orleans 9
+
+## [6.0.1](https://github.com/sketch7/SignalR.Orleans/compare/6.0.0...6.0.1) (2025-01-20)
+
+### Bug Fixes
+
+- **orleans:** add generate serializer for state objects
 
 ## [6.0.0](https://github.com/sketch7/SignalR.Orleans/compare/5.0.0...6.0.0) (2024-01-15)
 
