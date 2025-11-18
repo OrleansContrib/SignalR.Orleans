@@ -2,13 +2,13 @@
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
 
-    <OrleansVersion>9.0.1</OrleansVersion>
+    <OrleansVersion>9.2.1</OrleansVersion>
   </PropertyGroup>
   <ItemGroup>
     <!-- system -->
     <PackageVersion Include="System.Data.HashFunction.xxHash" Version="2.0.0" />
     <!-- microsoft packages -->
-    <PackageVersion Include="Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson" Version="8.0.1" />
+    <PackageVersion Include="Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson" Version="10.0.0" />
     <!-- orleans -->
     <PackageVersion Include="Microsoft.Orleans.Core" Version="$(OrleansVersion)" />
     <PackageVersion Include="Microsoft.Orleans.Sdk" Version="$(OrleansVersion)" />
@@ -16,8 +16,8 @@
     <PackageVersion Include="Microsoft.Orleans.Persistence.Memory" Version="$(OrleansVersion)" />
     <!-- 3rd party -->
     <!-- testing -->
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageVersion Include="xunit" Version="2.9.3" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="3.0.1" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
   </ItemGroup>
 </Project>
