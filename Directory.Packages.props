@@ -16,7 +16,7 @@
     <PackageVersion Include="Microsoft.Orleans.Persistence.Memory" Version="$(OrleansVersion)" />
     <!-- 3rd party -->
     <!-- testing -->
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
     <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
   </ItemGroup>
