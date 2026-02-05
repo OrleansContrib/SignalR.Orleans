@@ -24,7 +24,7 @@
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-        <NoWarn>$(NoWarn);1701;1702;1705;1591</NoWarn>
+        <NoWarn>$(NoWarn);1701;1702;1705;1591;NU1507</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
