@@ -36,12 +36,9 @@ internal sealed class ServerDirectoryGrain : IGrainBase, IServerDirectoryGrain
         _logger.LogInformation("Available servers {serverIds}",
             string.Join(", ", _state.State.ServerHeartBeats?.Count > 0 ? string.Join(", ", _state.State.ServerHeartBeats) : "empty"));
 
-        _timerRegistry.RegisterTimer(
-            this.GrainContext,
-            ValidateAndCleanUp,
-            _state.State,
-            TimeSpan.FromSeconds(15),
-            TimeSpan.FromMinutes(SERVERDIRECTORY_CLEANUP_IN_MINUTES));
+        _timerRegistry.RegisterGrainTimer(this.GrainContext, ValidateAndCleanUp,
+           _state.State, new GrainTimerCreationOptions(TimeSpan.FromSeconds(15),
+           TimeSpan.FromMinutes(SERVERDIRECTORY_CLEANUP_IN_MINUTES)));
 
         return Task.CompletedTask;
     }
@@ -62,7 +59,7 @@ internal sealed class ServerDirectoryGrain : IGrainBase, IServerDirectoryGrain
         await _state.WriteStateAsync();
     }
 
-    private async Task ValidateAndCleanUp(object serverDirectory)
+    private async Task ValidateAndCleanUp(ServerDirectoryState serverDirectory, CancellationToken token)
     {
         var inactiveTime = DateTime.UtcNow.AddMinutes(-SERVERDIRECTORY_CLEANUP_IN_MINUTES);
         var expiredHeartBeats = _state.State.ServerHeartBeats.Where(heartBeat => heartBeat.Value < inactiveTime).ToList();
