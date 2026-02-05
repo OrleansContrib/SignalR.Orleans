@@ -6,11 +6,11 @@
 
 [Orleans](https://learn.microsoft.com/en-us/dotnet/orleans/overview) is a cross-platform framework for building robust, scalable distributed applications. Distributed applications are defined as apps that span more than a single process, often beyond hardware boundaries using peer-to-peer communication. Orleans scales from a single on-premises server to hundreds to thousands of distributed, highly available applications in the cloud. [See Orleans source code on Github](https://github.com/dotnet/orleans)
 
-[ASP.NET Core SignalR](https://learn.microsoft.com/en-us/aspnet/core/signalr/introduction?view=aspnetcore-7.0) is an open-source library that simplifies adding real-time web functionality to apps. Real-time web functionality enables server-side code to push content to clients instantly.
+[ASP.NET Core SignalR](https://learn.microsoft.com/en-us/aspnet/core/signalr/introduction?view=aspnetcore-10.0) is an open-source library that simplifies adding real-time web functionality to apps. Real-time web functionality enables server-side code to push content to clients instantly.
 
 **SignalR.Orleans** is a package that gives you two abilities: 
 
-1. Use your Orleans cluster as a backplane for SignalR. [Learn about scaling out SignalR on multiple servers.](https://learn.microsoft.com/en-us/aspnet/core/signalr/scale?view=aspnetcore-7.0)
+1. Use your Orleans cluster as a backplane for SignalR. [Learn about scaling out SignalR on multiple servers.](https://learn.microsoft.com/en-us/aspnet/core/signalr/scale?view=aspnetcore-10.0)
 
 > There are various choices of backplane that you can use for SignalR, as you will see in the link above. If you're already using Orleans, then you might want to use Orleans as the backplane to reduce the number of dependencies used by your application and to reduce the number of network hops (and latency) that would be required when calling an external service.
 
@@ -26,7 +26,7 @@ TODO: These two abilities should be provided independently of each other. Unfort
 
 Installation is performed via [NuGet.](https://www.nuget.org/packages/SignalR.Orleans/)
 
-Packages with version `7.x.x` are compatible with Orleans `v7.x.x` and above. If you're still using an earlier version of Orleans, you will need to use earlier versions of the package.
+Packages with version `10.x.x` are compatible with Orleans `v10.x.x` and above. If you're still using an earlier version of Orleans, you will need to use earlier versions of the package.
 
 Package Manager:
 
@@ -41,7 +41,7 @@ Paket:
 > \# paket add SignalR.Orleans
 
 ---
-# Version 7.0.0 documentation
+# Version 10.0.0 documentation
 > Scroll down to see documentation for earlier versions.
 
 Here is a complete starter example featuring cohosted aspnetcore app with SignalR and Orleans.
@@ -68,7 +68,7 @@ var app = builder.Build();
 app.MapHub<MyHub>("/myhub");
 await app.RunAsync();
 
-// A SignalR Hub. https://learn.microsoft.com/en-us/aspnet/core/signalr/hubs?view=aspnetcore-7.0
+// A SignalR Hub. https://learn.microsoft.com/en-us/aspnet/core/signalr/hubs?view=aspnetcore-10.0
 class MyHub : Hub
 {
 }
@@ -111,7 +111,7 @@ siloBuilder.UseSignalR();
 
 ## Sending messages from Orleans grains
 
-If the SignalR app is cohosted as demonstrated above, you don't need this package to send messages from an Orleans grain. Simply inject `IHubContext<MyHub>` to the grain's constructor and call its methods to send messages. [Read more about it here.](https://learn.microsoft.com/en-us/aspnet/core/signalr/hubcontext?view=aspnetcore-7.0)
+If the SignalR app is cohosted as demonstrated above, you don't need this package to send messages from an Orleans grain. Simply inject `IHubContext<MyHub>` to the grain's constructor and call its methods to send messages. [Read more about it here.](https://learn.microsoft.com/en-us/aspnet/core/signalr/hubcontext?view=aspnetcore-10.0)
 
 However, if the SignalR app is not cohosted, and if it's using Orleans as a backplane, then it's possible to use this package to send messages to the SignalR clients using the backplane streams in Orleans as a conduit (ability #2).
 
@@ -172,13 +172,13 @@ var app = builder.Build();
 app.MapHub<MyHub>("/myhub");
 await app.RunAsync();
 
-// A SignalR Hub. https://learn.microsoft.com/en-us/aspnet/core/signalr/hubs?view=aspnetcore-7.0
+// A SignalR Hub. https://learn.microsoft.com/en-us/aspnet/core/signalr/hubs?view=aspnetcore-10.0
 class MyHub : Hub
 {
 }
 ```
 
-This is the end of documentation for versions >= 7.0.0. Below is older documenation for previous versions.
+This is the end of documentation for versions >= 10.0.0. Below is older documenation for previous versions.
 
 ---
 # Earlier version documentation
